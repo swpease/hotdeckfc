@@ -137,3 +137,23 @@ get_local_rows <- function(.data,
 
   local_rows
 }
+
+#' Remove leading rows with NA observations.
+#'
+#' Use this function before passing your data to `hot_deck_forecast`,
+#' which requires that the most recent observation exists (is not NA).
+#'
+#' @param .data The data. Passed via pipe.
+#' @param .observation The observation column of .data. Passed via pipe.
+#'
+#' @export
+trim_leading_nas <- function(.data, .observation) {
+  .data %>%
+    dplyr::slice(
+      1:purrr::detect_index(
+        {{ .observation }},
+        \(x) !is.na(x),
+        .dir = "backward"
+      )
+    )
+}

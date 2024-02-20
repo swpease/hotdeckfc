@@ -82,3 +82,27 @@ test_that("get_local_rows", {
                                    window_fwd = 1)
   expect_equal(output, expected)
 })
+
+test_that("trim leading NAs", {
+  data = tibble(
+    datetime = c(
+      as.Date("2022-03-01"),
+      as.Date("2023-04-01") + 0:4,
+      as.Date("2024-02-28") + 0:1  # leap year
+    ),
+    obs = c(NA, 2, NA, NA, 5, NA, NA, NA)
+  ) %>%
+    as_tsibble(index = datetime)
+
+  output = data %>% trim_leading_nas(obs)
+  expected = tibble(
+    datetime = c(
+      as.Date("2022-03-01"),
+      as.Date("2023-04-01") + 0:3
+    ),
+    obs = c(NA, 2, NA, NA, 5)
+  ) %>%
+    as_tsibble(index = datetime)
+
+  expect_equal(output, expected)
+})
