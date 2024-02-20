@@ -1,3 +1,38 @@
+test_that("hot deck fc basic test", {
+  data = tibble(
+    datetime = c(
+      as.Date("2021-01-01") + 0:3,
+      as.Date("2022-04-01") + 0:3,
+      as.Date("2023-01-01") + 0:2
+    ),
+    obs = c(
+      1, 3, 1, 2,
+      1, 1, 1, 1,
+      1, 2, 3
+    )
+  ) %>%
+    as_tsibble(index = datetime)
+
+  output = data %>%
+    hot_deck_forecast(
+      .datetime = datetime,
+      .observation = obs,
+      times = 2,
+      h = 2,
+      window_back = 2,
+      window_fwd = 2,
+      n_closest = 1  # only get closest obs; tsibble designed to yield unique closest obs
+    )
+  expected = tibble(
+    datetime = c(as.Date("2023-01-04") + 0:1,
+                 as.Date("2023-01-04") + 0:1),
+    forecast = c(1, 2, 1, 2),
+    simulation_num = c(1, 1, 2, 2)
+  )
+
+  expect_equal(output, expected)
+})
+
 # window = +- 2
 # h = 1
 # "now":                                 x
@@ -31,7 +66,7 @@ test_that("simulate sample path basic test", {
       h = 2,
       window_back = 2,
       window_fwd = 2,
-      n = 1  # only get closest obs; tsibble designed to yield unique closest obs
+      n_closest = 1  # only get closest obs; tsibble designed to yield unique closest obs
     )
   expected = tibble(
     datetime = as.Date("2023-01-04") + 0:1,

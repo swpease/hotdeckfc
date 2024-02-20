@@ -1,3 +1,66 @@
+#' Produce a hot deck forecast.
+#'
+#' Produces multiple h-step forecast simulated sample paths.
+#'
+#' For `times` times, it produces a simulated sample paths. For each
+#' simulation, the process proceeds as follows:
+#' This method is iterative. At the most recent observation, it:
+#'   - Takes all historical observations from a window around
+#'   the same portion of the season.
+#'     - e.g., Jun 30 +- 5 days across all years.
+#'   - Takes the `n_closest` closest observations from these.
+#'   - Randomly selects one of these `n_closest` observations.
+#'   - Uses the observation of the day after that one as the forecasted value.
+#'   - Repeats, using this new forecasted value and its respective date as
+#'   the new "most recent observation", up to h forecasts.
+#'
+#'
+#' @param .data tsibble. The data. Passed via pipe.
+#' @param .datetime The datetime column of .data. Passed via pipe.
+#' @param .observation The observation column of .data. Passed via pipe.
+#' @param times The number of simulated sample paths to produce.
+#' @param h How many days to forecast.
+#' @param window_back How many days back to include in the window for
+#' a given season.
+#' @param window_fwd How many days forward to include in the window for
+#' a given season.
+#' @param n_closest The number of closest observations to pick from
+#' per hot deck random sampling.
+#' @returns tibble of forecasts:
+#'   - nrow = h * times,
+#'   - columns:
+#'     - datetime: the date for the forecast
+#'     - forecast: the forecasted value
+#'     - simulation_num: the simulated sample path number
+#'
+#' @export
+hot_deck_forecast <- function(.data,
+                              .datetime,
+                              .observation,
+                              times,
+                              h,
+                              window_back,
+                              window_fwd,
+                              n_closest) {
+  forecasts = NULL
+  n_time = 1
+  while (n_time <= times) {
+    fc = .data %>%
+      simulate_sample_path({{ .datetime }},
+                           {{ .observation }},
+                           h = h,
+                           window_back = window_back,
+                           window_fwd = window_fwd,
+                           n_closest = n_closest)
+    fc = fc %>%
+      dplyr::mutate(simulation_num = n_time)
+    forecasts = dplyr::bind_rows(forecasts, fc)
+    n_time = n_time + 1
+  }
+
+  forecasts
+}
+
 #' Simulate a sample path for a hot deck forecast.
 #'
 #' Produces a single possible sample path of an h-step forecast.
