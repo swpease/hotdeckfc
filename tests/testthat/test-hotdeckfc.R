@@ -9,7 +9,7 @@
 # "now":                                   x
 # near_rows:   _______                 _____
 #            1 3 1 2     1 1 1 1     1 2 3
-test_that("hot deck fc basic test", {
+test_that("simulate sample path basic test", {
   data = tibble(
     datetime = c(
       as.Date("2021-01-01") + 0:3,
@@ -25,7 +25,7 @@ test_that("hot deck fc basic test", {
     as_tsibble(index = datetime)
 
   output = data %>%
-    hot_deck_forecast(
+    simulate_sample_path(
       .datetime = datetime,
       .observation = obs,
       h = 2,
@@ -40,7 +40,7 @@ test_that("hot deck fc basic test", {
   expect_equal(output, expected)
 })
 
-test_that("hot deck fc error if latest obs is NA", {
+test_that("simulate sample path error if latest obs is NA", {
   data = tibble(
     datetime = c(
       as.Date("2022-03-01") + 0:1
@@ -49,7 +49,7 @@ test_that("hot deck fc error if latest obs is NA", {
   ) %>%
     as_tsibble(index = datetime)
 
-  expect_error(data %>% hot_deck_forecast(datetime, obs, 1, 1, 1, 1))
+  expect_error(data %>% simulate_sample_path(datetime, obs, 1, 1, 1, 1))
 })
 
 

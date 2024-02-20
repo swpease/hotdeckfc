@@ -1,13 +1,13 @@
-#' Generate a hot deck forecast.
+#' Simulate a sample path for a hot deck forecast.
 #'
-#' Produces a single possible realization of an h-step forecast.
+#' Produces a single possible sample path of an h-step forecast.
 #'
 #' This method is iterative. At the most recent observation, it:
 #'   - Takes all historical observations from a window around
 #'   the same portion of the season.
 #'     - e.g., Jun 30 +- 5 days across all years.
-#'   - Takes the `n` closest observations from these.
-#'   - Randomly selects one of these `n` observations.
+#'   - Takes the `n_closest` closest observations from these.
+#'   - Randomly selects one of these `n_closest` observations.
 #'   - Uses the observation of the day after that one as the forecasted value.
 #'   - Repeats, using this new forecasted value and its respective date as
 #'   the new "most recent observation", up to h forecasts.
@@ -21,22 +21,20 @@
 #' a given season.
 #' @param window_fwd How many days forward to include in the window for
 #' a given season.
-#' @param n The number of closest observations to pick from
+#' @param n_closest The number of closest observations to pick from
 #' per hot deck random sampling.
 #' @returns tibble of forecasts:
 #'   - nrow = h,
 #'   - columns:
 #'     - datetime: the date for the forecast
 #'     - forecast: the forecasted value
-#'
-#' @export
-hot_deck_forecast <- function(.data,
-                              .datetime,
-                              .observation,
-                              h,
-                              window_back,
-                              window_fwd,
-                              n) {
+simulate_sample_path <- function(.data,
+                                 .datetime,
+                                 .observation,
+                                 h,
+                                 window_back,
+                                 window_fwd,
+                                 n_closest) {
   .data = .data %>%
     dplyr::mutate(next_obs = dplyr::lead({{ .observation }}))
   T_date = .data %>%
@@ -64,7 +62,7 @@ hot_deck_forecast <- function(.data,
     local_rows = local_rows %>%
       dplyr::filter(!is.na(next_obs))
     closest_rows = local_rows %>%
-      dplyr::slice_min(order_by = distance, n = n)
+      dplyr::slice_min(order_by = distance, n = n_closest)
     rand_row = closest_rows %>%
       dplyr::slice_sample(n = 1)
     # What was tomorrow's obs for our randomly selected row that had
