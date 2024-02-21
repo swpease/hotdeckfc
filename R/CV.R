@@ -88,40 +88,14 @@ cv_hot_deck_forecast <- function(.data,
     }
 
     # A working case
-
-    # Split and arrange data
-    # Need to move the data that is beyond the test_data back in time to
-    # before the start of the data, then join it.
-    #
-    # training data = mobile + ante
-    # start:    ante_split < test_data < mobile_data
-    # want:     mobile_data < ante_split < test_data
-    # unused:   data in `window_fwd` rows after test_data
-    # TODO: h + window_fwd - 1?
-    ante_split = .data %>% dplyr::filter({{ .datetime }} <= ref_date)
-    post_split = .data %>% dplyr::filter({{ .datetime }} > ref_date)
-    post_split = post_split %>% dplyr::mutate(idx = dplyr::row_number())
-    test_data = post_split %>%
-      dplyr::filter(idx <= h) %>%
-      dplyr::select(-idx)
-    mobile_data = post_split %>%
-      dplyr::filter(idx > (h + window_fwd)) %>%
-      dplyr::select(-idx)
-    # Shift mobile_data back to before the start of your original data
-    while (TRUE) {
-      max_mobile_date = mobile_data %>%
-        dplyr::pull({{ .datetime }}) %>%
-        max()
-      if (max_mobile_date < min_date) {
-        break
-      }
-      mobile_data = mobile_data %>%
-        dplyr::mutate(
-          {{ .datetime }} := case_when(
-            lubridate::leap_year(max_mobile_date) ~ {{ .datetime }} - 366,
-            .default = {{ .datetime }} - 365))
-    }
-    train_data = dplyr::bind_rows(mobile_data, ante_split)
+    train_test_split = .data %>%
+      train_test_split_conservative({{ .datetime }},
+                                    ref_date = ref_date,
+                                    h = h,
+                                    window_fwd = window_fwd,
+                                    min_date = min_date)
+    train_data = train_test_split$train_data
+    test_data = train_test_split$test_data
 
     # Forecasting
     fc = train_data %>%
@@ -155,4 +129,60 @@ subtract_year <- function(date) {
   as.Date(ifelse(lubridate::leap_year(date),
                  date - 366,
                  date - 365))
+}
+
+#' Conservative train test split for hot deck CV.
+#'
+#' Excludes the test data, plus the data in the window_fwd region
+#' beyond the final date to forecast.
+#'
+#' @param .data tsibble. The data. Passed via pipe.
+#' @param .datetime The datetime column of .data. Passed via pipe.
+#' @param ref_date The current "now" per the CV.
+#' @param h How many days to forecast.
+#' @param window_fwd How many days forward to include in the window for
+#' a given season.
+#' @param min_date The earliest date in `.data`.
+#' @returns list(train_data = train_data, test_data = test_data)
+train_test_split_conservative <- function(.data,
+                                          .datetime,
+                                          ref_date,
+                                          h,
+                                          window_fwd,
+                                          min_date) {
+  # Split and arrange data
+  # Need to move the data that is beyond the test_data back in time to
+  # before the start of the data, then join it.
+  #
+  # training data = mobile + ante
+  # start:    ante_split < test_data < mobile_data
+  # want:     mobile_data < ante_split < test_data
+  # unused:   data in `window_fwd` rows after test_data
+  # TODO: h + window_fwd - 1?
+  ante_split = .data %>% dplyr::filter({{ .datetime }} <= ref_date)
+  post_split = .data %>% dplyr::filter({{ .datetime }} > ref_date)
+  post_split = post_split %>% dplyr::mutate(idx = dplyr::row_number())
+  test_data = post_split %>%
+    dplyr::filter(idx <= h) %>%
+    dplyr::select(-idx)
+  mobile_data = post_split %>%
+    dplyr::filter(idx > (h + window_fwd)) %>%
+    dplyr::select(-idx)
+  # Shift mobile_data back to before the start of your original data
+  while (TRUE) {
+    max_mobile_date = mobile_data %>%
+      dplyr::pull({{ .datetime }}) %>%
+      max()
+    if (max_mobile_date < min_date) {
+      break
+    }
+    mobile_data = mobile_data %>%
+      dplyr::mutate(
+        {{ .datetime }} := case_when(
+          lubridate::leap_year(max_mobile_date) ~ {{ .datetime }} - 366,
+          .default = {{ .datetime }} - 365))
+  }
+  train_data = dplyr::bind_rows(mobile_data, ante_split)
+
+  list(train_data = train_data, test_data = test_data)
 }
