@@ -43,13 +43,17 @@
 #' @param n_closest The number of closest observations to pick from
 #' per hot deck random sampling.
 #' @param train_test_split_type default = "conservative". See help for details.
-#' @returns tibble of hot deck forecasts:
-#'   - nrow = (h * times) \* k (k is # of viable seasons),
-#'   - columns:
-#'     - datetime: the date for the forecast
-#'     - forecast: the forecasted value
-#'     - simulation_num: the simulated sample path number
-#'     - k: the CV number, i.e. the hot deck forecast number
+#' @returns list containing:
+#'   forecasts: a `tibble` of hot deck forecasts:
+#'     - nrow = (h * times) \* k (k is # of viable seasons),
+#'     - columns:
+#'       - datetime: the date for the forecast
+#'       - forecast: the forecasted value
+#'       - simulation_num: the simulated sample path number
+#'       - k: the CV number, i.e. the hot deck forecast number
+#'   test_data_sets: a `tsibble` of test data sets from your `.data`
+#'     - new columns:
+#'       - k: the CV number, i.e. the hot deck forecast number
 #' @export
 cv_hot_deck_forecast <- function(.data,
                                  .datetime,
@@ -77,6 +81,7 @@ cv_hot_deck_forecast <- function(.data,
 
   k = 1
   forecasts = NULL
+  test_data_sets = NULL
   while (TRUE) {
     ref_row = .data %>% dplyr::filter({{ .datetime }} == ref_date)
     ref_row_obs = ref_row %>% dplyr::pull({{ .observation }})
@@ -100,7 +105,11 @@ cv_hot_deck_forecast <- function(.data,
                                     min_date = min_date,
                                     split_type = train_test_split_type)
     train_data = train_test_data$train_data
-    test_data = train_test_data$test_data
+    # TODO: test_data is a tsibble right now. Do I want it and forecasts
+    # to be both tibbles or both tsibbles?
+    test_data = train_test_data$test_data %>%
+      mutate(k = k)
+    test_data_sets = dplyr::bind_rows(test_data_sets, test_data)
 
     # Forecasting
     fc = train_data %>%
@@ -119,9 +128,9 @@ cv_hot_deck_forecast <- function(.data,
     ref_date = subtract_year(ref_date)
   }
 
-  # make this a tsibble? If so, need to change tests
+  # make forecasts a tsibble? If so, need to change tests
   # key = simulation_num, k
-  forecasts
+  list(forecasts = forecasts, test_data_sets = test_data_sets)
 }
 
 #' Subtract a year(ish) from a date.

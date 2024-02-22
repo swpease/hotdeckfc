@@ -43,17 +43,17 @@ per hot deck random sampling.}
 \item{train_test_split_type}{default = "conservative". See help for details.}
 }
 \value{
-tibble of hot deck forecasts:
-\itemize{
-\item nrow = (h * times) \* k (k is # of viable seasons),
-\item columns:
-\itemize{
-\item datetime: the date for the forecast
-\item forecast: the forecasted value
-\item simulation_num: the simulated sample path number
-\item k: the CV number, i.e. the hot deck forecast number
-}
-}
+list containing:
+forecasts: a \code{tibble} of hot deck forecasts:
+- nrow = (h * times) \* k (k is # of viable seasons),
+- columns:
+- datetime: the date for the forecast
+- forecast: the forecasted value
+- simulation_num: the simulated sample path number
+- k: the CV number, i.e. the hot deck forecast number
+test_data_sets: a \code{tsibble} of test data sets from your \code{.data}
+- new columns:
+- k: the CV number, i.e. the hot deck forecast number
 }
 \description{
 Produces a set of hot deck forecasts, one per season if possible.

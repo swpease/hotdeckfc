@@ -30,7 +30,14 @@ test_that("cv works", {
     k = 2
   )
   # if change to tsibble, reverse these args
-  expected = bind_rows(expected_2023, expected_2022)
+  expected_fcs = bind_rows(expected_2023, expected_2022)
+
+  expected_test_data_sets = tibble(
+    datetime = c(as.Date("2022-04-04") + 0:1,
+                 as.Date("2023-04-04") + 0:1),
+    obs = c(5, 5, NA, 8),
+    k = c(2,2,1,1)
+  )
 
   out = data %>%
     cv_hot_deck_forecast(
@@ -44,7 +51,8 @@ test_that("cv works", {
       n_closest = 1
     )
 
-  expect_equal(out, expected)
+  expect_equal(out$forecasts, expected_fcs)
+  expect_equal(out$test_data_sets %>% as_tibble() %>% ungroup(), expected_test_data_sets)
 })
 
 
