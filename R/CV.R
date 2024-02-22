@@ -11,21 +11,21 @@
 #' If `offset` is non-zero, then the starting point will be the latest
 #' datetime + the offset.
 #'
-#' The parameters after `offset`, i.e. `times` through `n_closest`,
-#' are passed to `hot_deck_forecast`.
+#' The parameters `times` through `n_closest`, are passed to `hot_deck_forecast`.
 #'
-#' The current implementation splits the data into training and testing sets
-#' as follows: The testing set is any data in the forecast horizon (`h`) for
+#' The current implementation has two train-test data splitting methods.
+#' The default is "conservative", which goes as follows:
+#' The testing set is any data in the forecast horizon (`h`) for
 #' the current season in question. The training data is any data before
-#' that or after the `window_fwd` from the largest `h`. This is
-#' a conservative approach, aimed at eliminating data leakage. While the data
-#' after the largest `h` but within the `window_fwd` should be minimally leaky,
-#' it seemed off for larger `h`'s to have increasing pools of data to draw from.
+#' that or after the `window_fwd` from the largest `h`. This is aimed at
+#' eliminating data leakage. While the data after the largest `h` but within
+#' the `window_fwd` should be minimally leaky, it seemed off for larger `h`'s
+#' to have increasing pools of data to draw from.
 #'
-#' I think that it might be worthwhile to offer an alternative splitting method,
-#' in which all of the data is in the training set. While this would leak data,
-#' it might be a better option for cases of only a few seasons worth of data.
-#' In that case, the current, conservative implementation would have markedly
+#' The alternative splitting method, "leaky", uses all of the data
+#' in the training set. While this leaks data, it might be a better option
+#' (TBD) for cases of only a few seasons worth of data.
+#' In that case, the default conservative implementation would have markedly
 #' reduced data to draw from, which seems like it could significantly effect
 #' the conclusion on which hyperparameter values to select.
 #'
@@ -42,6 +42,7 @@
 #' a given season.
 #' @param n_closest The number of closest observations to pick from
 #' per hot deck random sampling.
+#' @param train_test_split_type default = "conservative". See help for details.
 #' @returns tibble of hot deck forecasts:
 #'   - nrow = (h * times) \* k (k is # of viable seasons),
 #'   - columns:
@@ -58,7 +59,10 @@ cv_hot_deck_forecast <- function(.data,
                                  h,
                                  window_back,
                                  window_fwd,
-                                 n_closest) {
+                                 n_closest,
+                                 train_test_split_type = c("conservative", "leaky")) {
+  train_test_split_type = match.arg(train_test_split_type)
+
   max_date = .data %>%
     dplyr::pull({{ .datetime }}) %>%
     max()
@@ -88,14 +92,15 @@ cv_hot_deck_forecast <- function(.data,
     }
 
     # A working case
-    train_test_split = .data %>%
-      train_test_split_conservative({{ .datetime }},
+    train_test_data = .data %>%
+      train_test_split({{ .datetime }},
                                     ref_date = ref_date,
                                     h = h,
                                     window_fwd = window_fwd,
-                                    min_date = min_date)
-    train_data = train_test_split$train_data
-    test_data = train_test_split$test_data
+                                    min_date = min_date,
+                                    split_type = train_test_split_type)
+    train_data = train_test_data$train_data
+    test_data = train_test_data$test_data
 
     # Forecasting
     fc = train_data %>%
@@ -131,10 +136,13 @@ subtract_year <- function(date) {
                  date - 365))
 }
 
-#' Conservative train test split for hot deck CV.
+#' Train test split for hot deck CV.
 #'
-#' Excludes the test data, plus the data in the window_fwd region
-#' beyond the final date to forecast.
+#' re `split_type`:
+#' "conservataive" excludes the test data, plus the data in the window_fwd
+#' region beyond the final date to forecast, from the training data.
+#'
+#' "leaky" uses all the data as training data.
 #'
 #' @param .data tsibble. The data. Passed via pipe.
 #' @param .datetime The datetime column of .data. Passed via pipe.
@@ -143,13 +151,16 @@ subtract_year <- function(date) {
 #' @param window_fwd How many days forward to include in the window for
 #' a given season.
 #' @param min_date The earliest date in `.data`.
+#' @param split_type c("conservative", "leaky"). See `cv_hot_deck_forecast`
+#' help for details.
 #' @returns list(train_data = train_data, test_data = test_data)
-train_test_split_conservative <- function(.data,
-                                          .datetime,
-                                          ref_date,
-                                          h,
-                                          window_fwd,
-                                          min_date) {
+train_test_split <- function(.data,
+                             .datetime,
+                             ref_date,
+                             h,
+                             window_fwd,
+                             min_date,
+                             split_type) {
   # Split and arrange data
   # Need to move the data that is beyond the test_data back in time to
   # before the start of the data, then join it.
@@ -165,9 +176,14 @@ train_test_split_conservative <- function(.data,
   test_data = post_split %>%
     dplyr::filter(idx <= h) %>%
     dplyr::select(-idx)
-  mobile_data = post_split %>%
-    dplyr::filter(idx > (h + window_fwd)) %>%
-    dplyr::select(-idx)
+  if (split_type == "conservative") {
+    mobile_data = post_split %>%
+      dplyr::filter(idx > (h + window_fwd)) %>%
+      dplyr::select(-idx)
+  } else {
+    mobile_data = post_split %>% dplyr::select(-idx)
+  }
+
   # Shift mobile_data back to before the start of your original data
   while (TRUE) {
     max_mobile_date = mobile_data %>%

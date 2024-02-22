@@ -13,7 +13,8 @@ cv_hot_deck_forecast(
   h,
   window_back,
   window_fwd,
-  n_closest
+  n_closest,
+  train_test_split_type = c("conservative", "leaky")
 )
 }
 \arguments{
@@ -38,6 +39,8 @@ a given season.}
 
 \item{n_closest}{The number of closest observations to pick from
 per hot deck random sampling.}
+
+\item{train_test_split_type}{default = "conservative". See help for details.}
 }
 \value{
 tibble of hot deck forecasts:
@@ -65,21 +68,21 @@ data to use for its forecasts.
 If \code{offset} is non-zero, then the starting point will be the latest
 datetime + the offset.
 
-The parameters after \code{offset}, i.e. \code{times} through \code{n_closest},
-are passed to \code{hot_deck_forecast}.
+The parameters \code{times} through \code{n_closest}, are passed to \code{hot_deck_forecast}.
 
-The current implementation splits the data into training and testing sets
-as follows: The testing set is any data in the forecast horizon (\code{h}) for
+The current implementation has two train-test data splitting methods.
+The default is "conservative", which goes as follows:
+The testing set is any data in the forecast horizon (\code{h}) for
 the current season in question. The training data is any data before
-that or after the \code{window_fwd} from the largest \code{h}. This is
-a conservative approach, aimed at eliminating data leakage. While the data
-after the largest \code{h} but within the \code{window_fwd} should be minimally leaky,
-it seemed off for larger \code{h}'s to have increasing pools of data to draw from.
+that or after the \code{window_fwd} from the largest \code{h}. This is aimed at
+eliminating data leakage. While the data after the largest \code{h} but within
+the \code{window_fwd} should be minimally leaky, it seemed off for larger \code{h}'s
+to have increasing pools of data to draw from.
 
-I think that it might be worthwhile to offer an alternative splitting method,
-in which all of the data is in the training set. While this would leak data,
-it might be a better option for cases of only a few seasons worth of data.
-In that case, the current, conservative implementation would have markedly
+The alternative splitting method, "leaky", uses all of the data
+in the training set. While this leaks data, it might be a better option
+(TBD) for cases of only a few seasons worth of data.
+In that case, the default conservative implementation would have markedly
 reduced data to draw from, which seems like it could significantly effect
 the conclusion on which hyperparameter values to select.
 }
