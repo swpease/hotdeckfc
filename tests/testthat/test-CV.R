@@ -230,12 +230,13 @@ test_that("cv_crps", {
       window_fwd = 2,
       n_closest = 1
     )
-  crps_out = cv_crps(out, "datetime", "obs")
+  crps_out = cv_crps(out, "obs")
 
   expect_equal(crps_out, expected_cv_crps_out)
 })
 
 
+# TODO: fix
 test_that("subtract a year", {
   d1 = as.Date("2024-03-01")
   d2 = as.Date("2024-02-28")

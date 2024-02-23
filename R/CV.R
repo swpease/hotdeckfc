@@ -219,20 +219,36 @@ train_test_split <- function(.data,
   list(train_data = train_data, test_data = test_data)
 }
 
-cv_crps <- function(cv_out, datetime_col_name, obs_col_name) {
+
+#' Calculate the CRPS from hot deck CV.
+#'
+#' Augments the CV's test data with a "score" column of CRPSes, calculated
+#' by `scoringRules::crps_sample`.
+#'
+#' The score is listed as NA for missing test data observations.
+#'
+#' The CRPS uses the `times` (arg passed to `hot_deck_forecast`
+#' via `cv_hot_deck_forecast`) number of simulated values, e.g. if
+#' `times = 30` then the 30 forecasted values, for each row in the test data.
+#'
+#' @param cv_out Output of `cv_hot_deck_forecast`.
+#' @param obs_col_name string. the observation column name.
+#' @returns `cv_out$test_data_sets`, augmented with the column `score`,
+#' which is the CRPS of the simulated values against the given observation.
+#'
+#' @export
+cv_crps <- function(cv_out, obs_col_name) {
   # Joining
-  forecasts = cv_out$forecasts %>% select(-simulation_num)
+  forecasts = cv_out$forecasts %>% select(-simulation_num, -datetime)
   # Have this here for now b/c unsure if tsibble will affect `rowwise`,
   # and still not sure if I want tds as a tsibble or not.
   test_data_sets = cv_out$test_data_sets %>% as_tibble() %>% ungroup()
-  # working around NSE; remove .tmpdt at end.
-  test_data_sets = test_data_sets %>%
-    mutate(.tmpdt = .data[[datetime_col_name]])
+  # Joining by h and k groups all of the replicates at a particular horizon h,
+  # for a particular CV season k, together. `datetime` is redundant to h.
   test_data_sets = test_data_sets %>%
     nest_join(forecasts,
-              by = join_by(.tmpdt == datetime, k),
+              by = join_by(h, k),
               name = "forecasts")
-  test_data_sets = test_data_sets %>% select(-.tmpdt)
 
   # Scoring
   # crps doesn't handle NAs so I have to check in that hideous looking if else
