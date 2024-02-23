@@ -182,7 +182,7 @@ get_local_rows <- function(.data,
   local_rows = NULL
   while (TRUE) {
     # dodge Feb 29th
-    if ((lubridate::month(ref_date) == 2) & (lubridate::day(ref_date) == 29)) {
+    if ((lubridate::month(ref_date) == 2) && (lubridate::day(ref_date) == 29)) {
       lubridate::day(ref_date) = 28
     }
     window_start = as.character(ref_date - window_back)
@@ -192,7 +192,7 @@ get_local_rows <- function(.data,
       tibble::as_tibble() %>%
       dplyr::ungroup()
     # If we're before our earliest obs and have nothing in our slice.
-    if ((ref_date < t0_date) & (nrow(local_rows_part) == 0)) {
+    if ((ref_date < t0_date) && (nrow(local_rows_part) == 0)) {
       break
     }
     local_rows = dplyr::bind_rows(local_rows, local_rows_part)
