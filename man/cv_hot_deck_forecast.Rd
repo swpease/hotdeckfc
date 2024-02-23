@@ -53,6 +53,7 @@ forecasts: a \code{tibble} of hot deck forecasts:
 - k: the CV number, i.e. the hot deck forecast number
 test_data_sets: a \code{tsibble} of test data sets from your \code{.data}
 - new columns:
+- h: the horizon number
 - k: the CV number, i.e. the hot deck forecast number
 }
 \description{

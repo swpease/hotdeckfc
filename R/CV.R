@@ -53,6 +53,7 @@
 #'       - k: the CV number, i.e. the hot deck forecast number
 #'   test_data_sets: a `tsibble` of test data sets from your `.data`
 #'     - new columns:
+#'       - h: the horizon number
 #'       - k: the CV number, i.e. the hot deck forecast number
 #' @export
 cv_hot_deck_forecast <- function(.data,
@@ -162,7 +163,11 @@ subtract_year <- function(date) {
 #' @param min_date The earliest date in `.data`.
 #' @param split_type c("conservative", "leaky"). See `cv_hot_deck_forecast`
 #' help for details.
-#' @returns list(train_data = train_data, test_data = test_data)
+#' @returns list(
+#' train_data = train_data fraction of .data,
+#' test_data  = test_data fraction of .data, augmented with:
+#'                h = forecast horizon
+#' )
 train_test_split <- function(.data,
                              .datetime,
                              ref_date,
@@ -184,7 +189,8 @@ train_test_split <- function(.data,
   post_split = post_split %>% dplyr::mutate(idx = dplyr::row_number())
   test_data = post_split %>%
     dplyr::filter(idx <= h) %>%
-    dplyr::select(-idx)
+    dplyr::select(-idx) %>%
+    dplyr::mutate(h = row_number())
   if (split_type == "conservative") {
     mobile_data = post_split %>%
       dplyr::filter(idx > (h + window_fwd)) %>%

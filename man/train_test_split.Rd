@@ -32,7 +32,11 @@ a given season.}
 help for details.}
 }
 \value{
-list(train_data = train_data, test_data = test_data)
+list(
+train_data = train_data fraction of .data,
+test_data  = test_data fraction of .data, augmented with:
+h = forecast horizon
+)
 }
 \description{
 re \code{split_type}:

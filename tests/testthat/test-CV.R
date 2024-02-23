@@ -36,6 +36,7 @@ test_that("cv works", {
     datetime = c(as.Date("2022-04-04") + 0:1,
                  as.Date("2023-04-04") + 0:1),
     obs = c(5, 5, NA, 8),
+    h = c(1,2,1,2),
     k = c(2,2,1,1)
   )
 
@@ -109,7 +110,8 @@ test_that("conservative train-test split", {
 
   expected_test = tibble(
     datetime = as.Date("2022-04-04") + 0:1,
-    obs = c(5,5)
+    obs = c(5,5),
+    h = c(1,2)
   )
   # If I use the `- 1` adjustment, then I'd need to tack on a 10 in 2018.
   expected_train = tibble(
@@ -163,7 +165,8 @@ test_that("leaky train-test split", {
 
   expected_test = tibble(
     datetime = as.Date("2022-04-04") + 0:1,
-    obs = c(5,5)
+    obs = c(5,5),
+    h = c(1,2)
   )
 
   expected_train = tibble(
