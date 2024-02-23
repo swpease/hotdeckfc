@@ -141,6 +141,7 @@ cv_hot_deck_forecast <- function(.data,
 #'
 #' @param date A datetime.
 subtract_year <- function(date) {
+  # TODO: https://stackoverflow.com/a/50654058/6074637
   as.Date(ifelse(lubridate::leap_year(date),
                  date - 366,
                  date - 365))
@@ -216,4 +217,32 @@ train_test_split <- function(.data,
   train_data = dplyr::bind_rows(mobile_data, ante_split)
 
   list(train_data = train_data, test_data = test_data)
+}
+
+cv_crps <- function(cv_out, datetime_col_name, obs_col_name) {
+  # Joining
+  forecasts = cv_out$forecasts %>% select(-simulation_num)
+  # Have this here for now b/c unsure if tsibble will affect `rowwise`,
+  # and still not sure if I want tds as a tsibble or not.
+  test_data_sets = cv_out$test_data_sets %>% as_tibble() %>% ungroup()
+  # working around NSE; remove .tmpdt at end.
+  test_data_sets = test_data_sets %>%
+    mutate(.tmpdt = .data[[datetime_col_name]])
+  test_data_sets = test_data_sets %>%
+    nest_join(forecasts,
+              by = join_by(.tmpdt == datetime, k),
+              name = "forecasts")
+  test_data_sets = test_data_sets %>% select(-.tmpdt)
+
+  # Scoring
+  # crps doesn't handle NAs so I have to check in that hideous looking if else
+  test_data_sets = test_data_sets %>%
+    rowwise() %>%
+    mutate(score = if (is.na(.data[[obs_col_name]])) NA else {
+      scoringRules::crps_sample(.data[[obs_col_name]],
+                                forecasts %>% select(forecast) %>% pull())
+    }) %>%
+    ungroup()
+
+  test_data_sets %>% select(-forecasts)
 }

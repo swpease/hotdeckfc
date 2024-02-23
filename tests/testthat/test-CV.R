@@ -191,6 +191,49 @@ test_that("leaky train-test split", {
 })
 
 
+test_that("cv_crps", {
+  data = tibble(
+    datetime = c(
+      as.Date("2021-04-02"),
+      as.Date("2022-03-31") + 0:7,
+      as.Date("2023-04-01") + 0:6,
+      as.Date("2024-04-03")
+    ),
+    obs = c(
+      10,
+      1, 3, 1, 2, 5, 6, 5, 10,  # NB: change 5,5,5 -> 5,6,5 from "cv works" test
+      1, 2, 3, NA, 8, 8, 10,
+      10
+    )
+  ) %>%
+    as_tsibble(index = datetime)
+
+  expected_cv_crps_out = tibble(
+    datetime = c(as.Date("2022-04-04") + 0:1,
+                 as.Date("2023-04-04") + 0:1),
+    obs = c(5, 6, NA, 8),
+    h = c(1,2,1,2),
+    k = c(2,2,1,1),
+    score = c(2,3,NA,6)
+  )
+
+  out = data %>%
+    cv_hot_deck_forecast(
+      datetime,
+      obs,
+      offset = 0,
+      times = 2,
+      h = 2,
+      window_back = 2,
+      window_fwd = 2,
+      n_closest = 1
+    )
+  crps_out = cv_crps(out, "datetime", "obs")
+
+  expect_equal(crps_out, expected_cv_crps_out)
+})
+
+
 test_that("subtract a year", {
   d1 = as.Date("2024-03-01")
   d2 = as.Date("2024-02-28")

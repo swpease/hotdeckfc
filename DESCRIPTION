@@ -19,6 +19,7 @@ Imports:
     magrittr,
     purrr,
     rlang,
+    scoringRules,
     tibble,
     tsibble
 Config/testthat/edition: 3
