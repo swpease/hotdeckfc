@@ -141,10 +141,7 @@ cv_hot_deck_forecast <- function(.data,
 #'
 #' @param date A datetime.
 subtract_year <- function(date) {
-  # TODO: https://stackoverflow.com/a/50654058/6074637
-  as.Date(ifelse(lubridate::leap_year(date),
-                 date - 366,
-                 date - 365))
+  if (lubridate::leap_year(date)) (date - 366) else (date - 365)
 }
 
 #' Train test split for hot deck CV.

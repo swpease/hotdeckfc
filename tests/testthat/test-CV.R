@@ -244,4 +244,7 @@ test_that("subtract a year", {
   expect_equal(subtract_year(d1), as.Date("2023-03-01"))
   expect_equal(subtract_year(d2), as.Date("2023-02-27"))
   expect_equal(subtract_year(d3), as.Date("2022-03-01"))
+  expect_equal(lubridate::is.Date(d1), TRUE)
+  expect_equal(lubridate::is.Date(d2), TRUE)
+  expect_equal(lubridate::is.Date(d3), TRUE)
 })
