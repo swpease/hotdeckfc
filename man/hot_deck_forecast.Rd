@@ -42,6 +42,7 @@ tibble of forecasts:
 \item columns:
 \itemize{
 \item datetime: the date for the forecast
+\item h: the forecast horizon
 \item forecast: the forecasted value
 \item simulation_num: the simulated sample path number
 }

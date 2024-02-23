@@ -18,6 +18,7 @@ test_that("cv works", {
   expected_2023 = tibble(
     datetime = c(as.Date("2023-04-04") + 0:1,
                  as.Date("2023-04-04") + 0:1),
+    h = c(1, 2, 1, 2),
     forecast = c(1, 2, 1, 2),
     simulation_num = c(1, 1, 2, 2),
     k = 1
@@ -25,6 +26,7 @@ test_that("cv works", {
   expected_2022 = tibble(
     datetime = c(as.Date("2022-04-04") + 0:1,
                  as.Date("2022-04-04") + 0:1),
+    h = c(1, 2, 1, 2),
     forecast = 3,
     simulation_num = c(1, 1, 2, 2),
     k = 2

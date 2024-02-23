@@ -26,6 +26,7 @@ test_that("hot deck fc basic test", {
   expected = tibble(
     datetime = c(as.Date("2023-01-04") + 0:1,
                  as.Date("2023-01-04") + 0:1),
+    h = c(1, 2, 1, 2),
     forecast = c(1, 2, 1, 2),
     simulation_num = c(1, 1, 2, 2)
   )
@@ -70,6 +71,7 @@ test_that("simulate sample path basic test", {
     )
   expected = tibble(
     datetime = as.Date("2023-01-04") + 0:1,
+    h = c(1, 2),
     forecast = c(1, 2)
   )
   expect_equal(output, expected)

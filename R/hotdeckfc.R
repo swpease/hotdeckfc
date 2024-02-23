@@ -30,6 +30,7 @@
 #'   - nrow = h * times,
 #'   - columns:
 #'     - datetime: the date for the forecast
+#'     - h: the forecast horizon
 #'     - forecast: the forecasted value
 #'     - simulation_num: the simulated sample path number
 #'
@@ -90,6 +91,7 @@ hot_deck_forecast <- function(.data,
 #'   - nrow = h,
 #'   - columns:
 #'     - datetime: the date for the forecast
+#'     - h:        the forecast horizon
 #'     - forecast: the forecasted value
 simulate_sample_path <- function(.data,
                                  .datetime,
@@ -138,6 +140,7 @@ simulate_sample_path <- function(.data,
 
   tibble(
     datetime = T_date + 1:h,
+    h = 1:h,
     forecast = forecast
   )
 }
