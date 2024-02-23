@@ -114,7 +114,8 @@ test_that("conservative train-test split", {
     datetime = as.Date("2022-04-04") + 0:1,
     obs = c(5,5),
     h = c(1,2)
-  )
+  ) %>%
+    as_tsibble()
   # If I use the `- 1` adjustment, then I'd need to tack on a 10 in 2018.
   expected_train = tibble(
     datetime = c(
@@ -129,10 +130,12 @@ test_that("conservative train-test split", {
       10,
       1, 3, 1, 2
     )
-  )
+  ) %>%
+    as_tsibble() %>%
+    fill_gaps()
 
-  expect_equal(output$train_data %>% as_tibble() %>% ungroup(), expected_train)
-  expect_equal(output$test_data %>% as_tibble() %>% ungroup(), expected_test)
+  expect_equal(output$train_data, expected_train)
+  expect_equal(output$test_data, expected_test)
 })
 
 
@@ -169,7 +172,8 @@ test_that("leaky train-test split", {
     datetime = as.Date("2022-04-04") + 0:1,
     obs = c(5,5),
     h = c(1,2)
-  )
+  ) %>%
+    as_tsibble()
 
   expected_train = tibble(
     datetime = c(
@@ -186,10 +190,12 @@ test_that("leaky train-test split", {
       10,
       1, 3, 1, 2
     )
-  )
+  ) %>%
+    as_tsibble() %>%
+    fill_gaps()
 
-  expect_equal(output$train_data %>% as_tibble() %>% ungroup(), expected_train)
-  expect_equal(output$test_data %>% as_tibble() %>% ungroup(), expected_test)
+  expect_equal(output$train_data, expected_train)
+  expect_equal(output$test_data, expected_test)
 })
 
 

@@ -212,6 +212,7 @@ train_test_split <- function(.data,
           .default = {{ .datetime }} - 365))
   }
   train_data = dplyr::bind_rows(mobile_data, ante_split)
+  train_data = train_data %>% tsibble::fill_gaps()
 
   list(train_data = train_data, test_data = test_data)
 }
