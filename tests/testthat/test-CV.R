@@ -13,7 +13,8 @@ test_that("cv works", {
       10
     )
   ) %>%
-    as_tsibble(index = datetime)
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
 
   expected_2023 = tibble(
     datetime = c(as.Date("2023-04-04") + 0:1,
@@ -337,7 +338,8 @@ test_that("cv_crps", {
       10
     )
   ) %>%
-    as_tsibble(index = datetime)
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
 
   expected_cv_crps_out = tibble(
     datetime = c(as.Date("2022-04-04") + 0:1,

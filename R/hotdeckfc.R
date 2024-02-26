@@ -43,6 +43,8 @@ hot_deck_forecast <- function(.data,
                               window_back,
                               window_fwd,
                               n_closest) {
+  partially_validate_hotdeckfc_input(.data)  # Put here or in simulate_s_p?
+
   forecasts = NULL
   n_time = 1
   while (n_time <= times) {
@@ -220,4 +222,29 @@ trim_leading_nas <- function(.data, .observation) {
         .dir = "backward"
       )
     )
+}
+
+
+#' Some validators for hot deck forecast input.
+#'
+#' Does not check if final obs is NA; put that in the code itself
+#' b/c it logically goes w/ `current_obs`. Subject to change.
+#'
+#' @param data The input `.data` to `hot_deck_forecast`.
+partially_validate_hotdeckfc_input <- function(data) {
+  if (isFALSE(tsibble::is_tsibble(data))) {
+    stop("Your data needs to be a `tsibble`.", call. = FALSE)
+  }
+  # keyless tsibbles have n_keys == 1
+  if (tsibble::n_keys(data) > 1) {
+    stop(paste("`hot_deck_forecast` cannot handle multi-key tsibbles.\n",
+               "Multiple keys means multiple time series.",
+               "Examine your keys with `tsibble::key`,",
+               "and filter to one key's data."))
+  }
+  if (isTRUE(tsibble::has_gaps(data) %>% pull())) {
+    stop(paste("Your tsibble contains gaps.\n",
+               "Try using `tsibble::fill_gaps`."),
+         call. = FALSE)
+  }
 }

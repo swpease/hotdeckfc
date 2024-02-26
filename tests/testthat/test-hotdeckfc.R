@@ -11,7 +11,8 @@ test_that("hot deck fc basic test", {
       1, 2, 3
     )
   ) %>%
-    as_tsibble(index = datetime)
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
 
   output = data %>%
     hot_deck_forecast(
@@ -33,6 +34,86 @@ test_that("hot deck fc basic test", {
 
   expect_equal(output, expected)
 })
+
+
+test_that("hot deck fc partial validators", {
+  data_not_tsib = tibble(
+    datetime = c(
+      as.Date("2021-01-01") + 0:3,
+      as.Date("2022-04-01") + 0:3,
+      as.Date("2023-01-01") + 0:2
+    ),
+    obs = c(
+      1, 3, 1, 2,
+      1, 1, 1, 1,
+      1, 2, 3
+    )
+  )
+
+  data_w_gaps = tibble(
+    datetime = c(
+      as.Date("2021-01-01") + 0:3,
+      as.Date("2022-04-01") + 0:3,
+      as.Date("2023-01-01") + 0:2
+    ),
+    obs = c(
+      1, 3, 1, 2,
+      1, 1, 1, 1,
+      1, 2, 3
+    )
+  ) %>%
+    as_tsibble(index = datetime)
+
+  data_w_keys = tibble(
+    datetime = c(
+      as.Date("2021-01-01") + 0:3,
+      as.Date("2022-04-01") + 0:3,
+      as.Date("2023-01-01") + 0:2
+    ),
+    obs = c(
+      1, 3, 1, 2,
+      1, 1, 1, 1,
+      1, 2, 3
+    ),
+    k = c(rep("A", 4), rep("B", 7))
+  ) %>%
+    as_tsibble(index = datetime, key = k)
+
+  expect_error(data_not_tsib %>%
+    hot_deck_forecast(
+      .datetime = datetime,
+      .observation = obs,
+      times = 2,
+      h = 2,
+      window_back = 2,
+      window_fwd = 2,
+      n_closest = 1
+    ),
+    regexp = "needs to be a")
+  expect_error(data_w_gaps %>%
+                 hot_deck_forecast(
+                   .datetime = datetime,
+                   .observation = obs,
+                   times = 2,
+                   h = 2,
+                   window_back = 2,
+                   window_fwd = 2,
+                   n_closest = 1
+                 ),
+               regexp = "gap")
+  expect_error(data_w_keys %>%
+                 hot_deck_forecast(
+                   .datetime = datetime,
+                   .observation = obs,
+                   times = 2,
+                   h = 2,
+                   window_back = 2,
+                   window_fwd = 2,
+                   n_closest = 1
+                 ),
+               regexp = "key")
+})
+
 
 # window = +- 2
 # h = 1
