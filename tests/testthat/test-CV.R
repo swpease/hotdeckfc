@@ -115,7 +115,7 @@ test_that("conservative train-test split", {
     obs = c(5,5),
     h = c(1,2)
   ) %>%
-    as_tsibble()
+    as_tsibble(index = datetime)
   # If I use the `- 1` adjustment, then I'd need to tack on a 10 in 2018.
   expected_train = tibble(
     datetime = c(
@@ -131,7 +131,7 @@ test_that("conservative train-test split", {
       1, 3, 1, 2
     )
   ) %>%
-    as_tsibble() %>%
+    as_tsibble(index = datetime) %>%
     fill_gaps()
 
   expect_equal(output$train_data, expected_train)
@@ -173,7 +173,7 @@ test_that("leaky train-test split", {
     obs = c(5,5),
     h = c(1,2)
   ) %>%
-    as_tsibble()
+    as_tsibble(index = datetime)
 
   expected_train = tibble(
     datetime = c(
@@ -191,7 +191,130 @@ test_that("leaky train-test split", {
       1, 3, 1, 2
     )
   ) %>%
-    as_tsibble() %>%
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
+
+  expect_equal(output$train_data, expected_train)
+  expect_equal(output$test_data, expected_test)
+})
+
+
+test_that("train-test split no mobile part", {
+  # Testing empty mobile part.
+  data = tibble(
+    datetime = c(
+      as.Date("2021-04-02"),
+      as.Date("2022-03-31") + 0:7,
+      as.Date("2023-04-01") + 0:6,
+      as.Date("2024-04-03") + 0:4  # adding four els s.t. `mobile` is empty
+    ),
+    obs = c(
+      10,
+      1, 3, 1, 2, 5, 5, 5, 10,
+      1, 2, 3, NA, 8, 8, 10,
+      10, 4, 4, 4, 4
+    )
+  ) %>%
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
+  min_date = data %>%
+    dplyr::pull(datetime) %>%
+    min()
+  ref_date = as.Date("2024-04-03")  # NB Date: four els after = 2 h + 2 w_fwd
+
+  output = data %>%
+    train_test_split(datetime,
+                     ref_date = ref_date,
+                     h = 2,
+                     window_fwd = 2,
+                     min_date = min_date,
+                     split_type = "conservative")
+
+  expected_test = tibble(
+    datetime = as.Date("2024-04-04") + 0:1,
+    obs = c(4,4),
+    h = c(1,2)
+  ) %>%
+    as_tsibble(index = datetime)
+
+  expected_train = tibble(
+    datetime = c(
+      as.Date("2021-04-02"),
+      as.Date("2022-03-31") + 0:7,
+      as.Date("2023-04-01") + 0:6,
+      as.Date("2024-04-03")
+    ),
+    obs = c(
+      10,
+      1, 3, 1, 2, 5, 5, 5, 10,
+      1, 2, 3, NA, 8, 8, 10,
+      10
+    )
+  ) %>%
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
+
+  expect_equal(output$train_data, expected_train)
+  expect_equal(output$test_data, expected_test)
+
+  # Testing len 1 mobile part
+  next_row = tsibble(
+    datetime = as.Date("2024-04-08"),
+    obs = 44)
+  data = bind_rows(data, next_row)
+
+  expect_equal(output$train_data, expected_train)
+  expect_equal(output$test_data, expected_test)
+})
+
+
+
+test_that("train-test split mobile part day before first obs in ante", {
+  data = tibble(
+    datetime = c(
+      as.Date("2022-04-10"),
+      as.Date("2023-04-03") + 0:6  # adding 6 els s.t. `mobile` has 2 els
+    ),
+    obs = c(
+      0,
+      10, 4, 4, 4, 4, 6, 6
+    )
+  ) %>%
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
+  min_date = data %>%
+    dplyr::pull(datetime) %>%
+    min()
+  ref_date = as.Date("2023-04-03")  # NB Date: four els after = 2 h + 2 w_fwd
+
+  output = data %>%
+    train_test_split(datetime,
+                     ref_date = ref_date,
+                     h = 2,
+                     window_fwd = 2,
+                     min_date = min_date,
+                     split_type = "conservative")
+
+  expected_test = tibble(
+    datetime = as.Date("2023-04-04") + 0:1,
+    obs = c(4,4),
+    h = c(1,2)
+  ) %>%
+    as_tsibble(index = datetime)
+
+  expected_train = tibble(
+    datetime = c(
+      as.Date("2021-04-08") + 0:1,
+      as.Date("2022-04-10"),
+      as.Date("2023-04-03")
+    ),
+    obs = c(
+      6, 6,
+      0,
+      10
+    )
+  ) %>%
+    as_tsibble(index = datetime) %>%
     fill_gaps()
 
   expect_equal(output$train_data, expected_train)

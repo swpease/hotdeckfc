@@ -197,22 +197,32 @@ train_test_split <- function(.data,
     mobile_data = post_split %>% dplyr::select(-idx)
   }
 
-  # Shift mobile_data back to before the start of your original data
-  while (TRUE) {
-    max_mobile_date = mobile_data %>%
-      dplyr::pull({{ .datetime }}) %>%
-      max()
-    if (max_mobile_date < min_date) {
-      break
+  if (nrow(mobile_data) < 2) {
+    # Mobile data either empty (len 0) or has no 'next' (len 1),
+    # so just ignore it.
+    train_data = ante_split
+  } else {
+    # Guard against final day of mobile being day before first day of ante.
+    # That way, first day of ante not mistakenly put as the 'next' for final
+    # day of mobile.
+    mobile_data = mobile_data %>% append_row()
+    # Shift mobile_data back to before the start of your original data
+    while (TRUE) {
+      max_mobile_date = mobile_data %>%
+        dplyr::pull({{ .datetime }}) %>%
+        max()
+      if (max_mobile_date < min_date) {
+        break
+      }
+      mobile_data = mobile_data %>%
+        dplyr::mutate(
+          {{ .datetime }} := case_when(
+            lubridate::leap_year(max_mobile_date) ~ {{ .datetime }} - 366,
+            .default = {{ .datetime }} - 365))
     }
-    mobile_data = mobile_data %>%
-      dplyr::mutate(
-        {{ .datetime }} := case_when(
-          lubridate::leap_year(max_mobile_date) ~ {{ .datetime }} - 366,
-          .default = {{ .datetime }} - 365))
+    train_data = dplyr::bind_rows(mobile_data, ante_split)
+    train_data = train_data %>% tsibble::fill_gaps()
   }
-  train_data = dplyr::bind_rows(mobile_data, ante_split)
-  train_data = train_data %>% tsibble::fill_gaps()
 
   list(train_data = train_data, test_data = test_data)
 }
