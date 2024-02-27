@@ -19,8 +19,13 @@ test_that("grid search basic tests", {
       grid = grid,
       echo = FALSE
     )
+
+  # TODO: How to test the quosures (args 2,3 to mock)?
+  expected_cv_out = c(list(data, 3, 4), grid)
   expect_equal(out[[1]]$arg_list, grid)
-  expect_equal(out[[1]]$cv_out, grid)
+  expect_equal(length(out[[1]]$cv_out), 5)
+  expect_equal(out[[1]]$cv_out[[1]], data)
+  expect_equal(out[[1]]$cv_out[4:5], grid)
 })
 
 test_that("grid search window arg", {
@@ -46,7 +51,8 @@ test_that("grid search window arg", {
     )
   expected_grid = list(a = 3, b = 4, window_back = 10, window_fwd = 10)
   expect_equal(out[[1]]$arg_list, expected_grid)
-  expect_equal(out[[1]]$cv_out, expected_grid)
+  expect_equal(out[[1]]$cv_out[4:7], expected_grid)
+  expect_equal(out[[1]]$cv_out[[1]], data)
 })
 
 
@@ -75,9 +81,11 @@ test_that("grid search gridding", {
   expected_out_2 = list(a = 2, b = 3)
 
   expect_equal(out[[1]]$arg_list, expected_out_1)
-  expect_equal(out[[1]]$cv_out, expected_out_1)
+  expect_equal(out[[1]]$cv_out[4:5], expected_out_1)
+  expect_equal(out[[1]]$cv_out[[1]], data)
   expect_equal(out[[2]]$arg_list, expected_out_2)
-  expect_equal(out[[2]]$cv_out, expected_out_2)
+  expect_equal(out[[2]]$cv_out[4:5], expected_out_2)
+  expect_equal(out[[2]]$cv_out[[1]], data)
 })
 
 

@@ -39,7 +39,9 @@ grid_search_hot_deck_cv <- function(.data,
   # ref: https://stackoverflow.com/a/58541328/6074637
   for (arg_vec in asplit(grid, 1)) {
     arg_list = as.list(arg_vec)
-    cv_out = do.call(cv_hot_deck_forecast, args = arg_list)
+    cv_out = rlang::inject(.data %>% cv_hot_deck_forecast({{ .datetime }},
+                                                          {{ .observation }},
+                                                          !!!arg_vec))
     output = list(
       arg_list = arg_list,
       cv_out = cv_out
