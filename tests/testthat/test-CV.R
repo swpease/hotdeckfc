@@ -1,3 +1,86 @@
+test_that("grid search basic tests", {
+  # This just returns the args passed to the fn.
+  local_mocked_bindings(
+    cv_hot_deck_forecast = function(...) {rlang::list2(...)}
+  )
+
+  data = tibble(
+    datetime = as.Date("2021-04-02"),
+    obs = 10
+  ) %>%
+    as_tsibble(index = datetime)
+
+  ## basic test
+  grid = list(a = 3, b = 4)
+  out = data %>%
+    grid_search_hot_deck_cv(
+      datetime,
+      obs,
+      grid = grid,
+      echo = FALSE
+    )
+  expect_equal(out[[1]]$arg_list, grid)
+  expect_equal(out[[1]]$cv_out, grid)
+})
+
+test_that("grid search window arg", {
+  # This just returns the args passed to the fn.
+  local_mocked_bindings(
+    cv_hot_deck_forecast = function(...) {rlang::list2(...)}
+  )
+
+  data = tibble(
+    datetime = as.Date("2021-04-02"),
+    obs = 10
+  ) %>%
+    as_tsibble(index = datetime)
+
+  ## basic test
+  grid = list(a = 3, b = 4, window = 10)
+  out = data %>%
+    grid_search_hot_deck_cv(
+      datetime,
+      obs,
+      grid = grid,
+      echo = FALSE
+    )
+  expected_grid = list(a = 3, b = 4, window_back = 10, window_fwd = 10)
+  expect_equal(out[[1]]$arg_list, expected_grid)
+  expect_equal(out[[1]]$cv_out, expected_grid)
+})
+
+
+test_that("grid search gridding", {
+  # This just returns the args passed to the fn.
+  local_mocked_bindings(
+    cv_hot_deck_forecast = function(...) {rlang::list2(...)}
+  )
+
+  data = tibble(
+    datetime = as.Date("2021-04-02"),
+    obs = 10
+  ) %>%
+    as_tsibble(index = datetime)
+
+  ## basic test
+  grid = list(a = 1:2, b = 3)
+  out = data %>%
+    grid_search_hot_deck_cv(
+      datetime,
+      obs,
+      grid = grid,
+      echo = FALSE
+    )
+  expected_out_1 = list(a = 1, b = 3)
+  expected_out_2 = list(a = 2, b = 3)
+
+  expect_equal(out[[1]]$arg_list, expected_out_1)
+  expect_equal(out[[1]]$cv_out, expected_out_1)
+  expect_equal(out[[2]]$arg_list, expected_out_2)
+  expect_equal(out[[2]]$cv_out, expected_out_2)
+})
+
+
 test_that("cv works", {
   data = tibble(
     datetime = c(

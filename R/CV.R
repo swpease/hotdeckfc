@@ -1,3 +1,61 @@
+#' Perform a grid search CV on `hot_deck_forecast`.
+#'
+#' Supply a list of values you want to try with `hot_deck_forecast`, and
+#' they will be combined via `tidyr::expand_grid`.
+#'
+#' NB: If you only want symmetric windows, then supply an element of the grid
+#' arg named "window", and it will set "window_back" and "window_fwd" to that
+#' value / those values.
+#'
+#' `echo` prints progress like "Finished CV 3 of 8.".
+#'
+#' @param .data tsibble. The data. Passed via pipe.
+#' @param .datetime The datetime column of .data. Passed via pipe.
+#' @param .observation The observation column of .data. Passed via pipe.
+#' @param grid list. names correspond to `hot_deck_forecast` args.
+#' @param echo Print progress?
+#' @returns list, containing two items per element:
+#'   args: The arguments that the particular CV was called with.
+#'   cv_out: The output of `cv_hot_deck_forecast` for those args.
+#'
+#' @export
+grid_search_hot_deck_cv <- function(.data,
+                                    .datetime,
+                                    .observation,
+                                    grid,
+                                    echo = TRUE) {
+  sym_window = purrr::pluck_exists(grid, "window")
+  # list -> tibble of all combos
+  grid = tidyr::expand_grid(!!!grid)
+  # Not sure this is how I want to do this... put in a default arg in hdcv?
+  if (isTRUE(sym_window)) {
+    grid = grid %>%
+      dplyr::rename(window_back = window) %>%
+      dplyr::mutate(window_fwd = window_back)
+  }
+
+  i = 1
+  outputs = vector(mode = "list", length = nrow(grid))
+  # ref: https://stackoverflow.com/a/58541328/6074637
+  for (arg_vec in asplit(grid, 1)) {
+    arg_list = as.list(arg_vec)
+    cv_out = do.call(cv_hot_deck_forecast, args = arg_list)
+    output = list(
+      arg_list = arg_list,
+      cv_out = cv_out
+    )
+    outputs[[i]] = output
+    i = i + 1
+
+    if (isTRUE(echo)) {
+      print(paste("Finished CV", i - 1, "of", nrow(grid), "."))
+    }
+  }
+
+  outputs
+}
+
+
 #' Generate a num-seasons-fold(-ish) hot deck forecast.
 #'
 #' Produces a set of hot deck forecasts, one per season if possible.

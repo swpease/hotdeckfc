@@ -2,6 +2,7 @@
 
 export(cv_crps)
 export(cv_hot_deck_forecast)
+export(grid_search_hot_deck_cv)
 export(hot_deck_forecast)
 export(trim_leading_nas)
 import(dplyr)

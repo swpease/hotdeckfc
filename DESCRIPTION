@@ -21,5 +21,6 @@ Imports:
     rlang,
     scoringRules,
     tibble,
+    tidyr,
     tsibble
 Config/testthat/edition: 3
