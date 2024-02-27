@@ -8,12 +8,12 @@ cv_hot_deck_forecast(
   .data,
   .datetime,
   .observation,
-  offset,
   times,
   h,
   window_back,
   window_fwd,
   n_closest,
+  offset = 0,
   train_test_split_type = c("conservative", "leaky")
 )
 }
@@ -23,9 +23,6 @@ cv_hot_deck_forecast(
 \item{.datetime}{The datetime column of .data. Passed via pipe.}
 
 \item{.observation}{The observation column of .data. Passed via pipe.}
-
-\item{offset}{integer. Offset (in +- days) from the most recent row of .data
-to use as the starting point.}
 
 \item{times}{The number of simulated sample paths to produce per hot deck forecast.}
 
@@ -39,6 +36,9 @@ a given season.}
 
 \item{n_closest}{The number of closest observations to pick from
 per hot deck random sampling.}
+
+\item{offset}{integer. Offset (in +- days) from the most recent row of .data
+to use as the starting point.}
 
 \item{train_test_split_type}{default = "conservative". See help for details.}
 }

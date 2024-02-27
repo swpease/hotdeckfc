@@ -92,8 +92,6 @@ grid_search_hot_deck_cv <- function(.data,
 #' @param .data tsibble. The data. Passed via pipe.
 #' @param .datetime The datetime column of .data. Passed via pipe.
 #' @param .observation The observation column of .data. Passed via pipe.
-#' @param offset integer. Offset (in +- days) from the most recent row of .data
-#' to use as the starting point.
 #' @param times The number of simulated sample paths to produce per hot deck forecast.
 #' @param h How many days to forecast.
 #' @param window_back How many days back to include in the window for
@@ -102,6 +100,8 @@ grid_search_hot_deck_cv <- function(.data,
 #' a given season.
 #' @param n_closest The number of closest observations to pick from
 #' per hot deck random sampling.
+#' @param offset integer. Offset (in +- days) from the most recent row of .data
+#' to use as the starting point.
 #' @param train_test_split_type default = "conservative". See help for details.
 #' @returns list containing:
 #'   forecasts: a `tibble` of hot deck forecasts:
@@ -119,12 +119,12 @@ grid_search_hot_deck_cv <- function(.data,
 cv_hot_deck_forecast <- function(.data,
                                  .datetime,
                                  .observation,
-                                 offset,  # the non-hdfc arg
                                  times,
                                  h,
                                  window_back,
                                  window_fwd,
                                  n_closest,
+                                 offset = 0,  # non-hdfc arg
                                  train_test_split_type = c("conservative", "leaky")) {
   train_test_split_type = match.arg(train_test_split_type)
 
