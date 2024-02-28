@@ -170,34 +170,55 @@ get_local_rows <- function(.data,
   # hedge against neg nums
   window_back = abs(window_back)
   window_fwd = abs(window_fwd)
-  # min and max dates in data.
-  T_date = .data %>%
-    dplyr::slice_max(order_by = {{ .datetime }}) %>%
-    dplyr::pull({{ .datetime }})
-  t0_date = .data %>%
-    dplyr::slice_min(order_by = {{ .datetime }}) %>%
-    dplyr::pull({{ .datetime }})
+
+  # working by indexes
+  idx_max = nrow(.data)
+  # Need to add rows for leap year shenanigans at bottom of while loop.
+  # Otherwise, you'll index to beyond your data.
+  .data = .data %>% tsibble::append_row(n = (h_curr - 1))
+  .data = .data %>%
+    tibble::as_tibble() %>%
+    dplyr::ungroup() %>%
+    dplyr::arrange({{ .datetime }}) %>%  # Probably unnecessary.
+    dplyr::mutate(idx = dplyr::row_number())
   # `- 1` b/c we want to center around "now", which is the day before
   # whichever day we're forecasting (that is, the day before `h_curr`'s
   # date).
-  ref_date = T_date + (h_curr - 1)
+  ref_idx = idx_max + (h_curr - 1)
+
   local_rows = NULL
   while (TRUE) {
-    window_start = as.character(ref_date - window_back)
-    window_end = as.character(ref_date + window_fwd)
+    window_start = ref_idx - window_back
+    window_end = ref_idx + window_fwd
     local_rows_part = .data %>%
-      tsibble::filter_index(window_start ~ window_end) %>%
-      tibble::as_tibble() %>%
-      dplyr::ungroup()
+      dplyr::filter(
+        idx >= window_start,
+        idx <= window_end
+      )
+
     # If we're before our earliest obs and have nothing in our slice.
-    if ((ref_date < t0_date) && (nrow(local_rows_part) == 0)) {
+    if ((ref_idx < 1) && (nrow(local_rows_part) == 0)) {
       break
     }
     local_rows = dplyr::bind_rows(local_rows, local_rows_part)
-    ref_date = subtract_year(ref_date)
+
+    # Shift ref_idx back.
+
+    # Need to account for leap years, so I need a date, but ref_idx could be < 1...
+    # ...so if it is, then I can just subtract 365 w/o worrying:
+    if (ref_idx < 1) {
+      ref_idx = ref_idx - 365
+    } else {
+      # Otherwise, we need to get a date and handle a possible leap year:
+      # What's our ref_idx's respective date?
+      ref_date = .data %>%
+        dplyr::filter(idx == ref_idx) %>%
+        dplyr::pull({{ .datetime }})
+      ref_idx = if (lubridate::leap_year(ref_date)) (ref_idx - 366) else (ref_idx - 365)
+    }
   }
 
-  local_rows
+  local_rows %>% dplyr::select(-idx)
 }
 
 #' Remove leading rows with NA observations.

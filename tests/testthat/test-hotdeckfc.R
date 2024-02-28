@@ -139,7 +139,8 @@ test_that("simulate sample path basic test", {
       1, 2, 3
     )
   ) %>%
-    as_tsibble(index = datetime)
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
 
   output = data %>%
     simulate_sample_path(
@@ -184,15 +185,20 @@ test_that("get_local_rows", {
     ),
     obs = 1:8
   ) %>%
-  as_tsibble(index = datetime)
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
 
   # goes backwards in time by year
   expected = tibble(
     datetime = c(
-      as.Date("2024-02-28") + 0:1,
-      as.Date("2022-03-01")
+      as.Date("2024-02-28") + 0:1,  # +- a day around 2/28, but 3/1 dne
+      as.Date("2023-02-27") + 0:2,  # +- a day around 2/28
+      as.Date("2022-03-01")   # +- a day around 2/28, but 2/27 dne
     ),
-    obs = c(7:8, 1)
+    obs = c(
+      7:8,
+      NA, NA, NA,
+      1)
   )
   output = data %>% get_local_rows(datetime,
                                    h_curr = 1,
