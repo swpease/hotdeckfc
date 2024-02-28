@@ -1,37 +1,4 @@
-test_that("hot deck fc real data", {
-  data = readr::read_csv(test_path("SUGG_target_temp_data.csv")) %>%
-    as_tsibble(index = datetime) %>%
-    fill_gaps()
-
-  set.seed(3)
-  output = data %>%
-    hot_deck_forecast(
-      .datetime = datetime,
-      .observation = observation,
-      times = 3,
-      h = 400,
-      window_back = 20,
-      window_fwd = 20,
-      n_closest = 10
-    )
-
-  set.seed(3)
-  expected = data %>%
-    slow_hot_deck_forecast(
-      .datetime = datetime,
-      .observation = observation,
-      times = 3,
-      h = 400,
-      window_back = 20,
-      window_fwd = 20,
-      n_closest = 10
-    )
-
-  expect_equal(output, expected)
-})
-
-
-test_that("hot deck fc basic test", {
+test_that("slowhot deck fc basic test", {
   data = tibble(
     datetime = c(
       as.Date("2021-01-01") + 0:3,
@@ -48,7 +15,7 @@ test_that("hot deck fc basic test", {
     fill_gaps()
 
   output = data %>%
-    hot_deck_forecast(
+    slow_hot_deck_forecast(
       .datetime = datetime,
       .observation = obs,
       times = 2,
@@ -69,7 +36,7 @@ test_that("hot deck fc basic test", {
 })
 
 
-test_that("hot deck fc partial validators", {
+test_that("slowhot deck fc partial validators", {
   data_not_tsib = tibble(
     datetime = c(
       as.Date("2021-01-01") + 0:3,
@@ -113,18 +80,18 @@ test_that("hot deck fc partial validators", {
     as_tsibble(index = datetime, key = k)
 
   expect_error(data_not_tsib %>%
-    hot_deck_forecast(
-      .datetime = datetime,
-      .observation = obs,
-      times = 2,
-      h = 2,
-      window_back = 2,
-      window_fwd = 2,
-      n_closest = 1
-    ),
-    regexp = "needs to be a")
+                 slow_hot_deck_forecast(
+                   .datetime = datetime,
+                   .observation = obs,
+                   times = 2,
+                   h = 2,
+                   window_back = 2,
+                   window_fwd = 2,
+                   n_closest = 1
+                 ),
+               regexp = "needs to be a")
   expect_error(data_w_gaps %>%
-                 hot_deck_forecast(
+                 slow_hot_deck_forecast(
                    .datetime = datetime,
                    .observation = obs,
                    times = 2,
@@ -135,7 +102,7 @@ test_that("hot deck fc partial validators", {
                  ),
                regexp = "gap")
   expect_error(data_w_keys %>%
-                 hot_deck_forecast(
+                 slow_hot_deck_forecast(
                    .datetime = datetime,
                    .observation = obs,
                    times = 2,
@@ -159,7 +126,7 @@ test_that("hot deck fc partial validators", {
 # "now":                                   x
 # near_rows:   _______                 _____
 #            1 3 1 2     1 1 1 1     1 2 3
-test_that("simulate sample path basic test", {
+test_that("slowsimulate sample path basic test", {
   data = tibble(
     datetime = c(
       as.Date("2021-01-01") + 0:3,
@@ -176,7 +143,7 @@ test_that("simulate sample path basic test", {
     fill_gaps()
 
   output = data %>%
-    simulate_sample_path(
+    slow_simulate_sample_path(
       .datetime = datetime,
       .observation = obs,
       h = 2,
@@ -192,7 +159,7 @@ test_that("simulate sample path basic test", {
   expect_equal(output, expected)
 })
 
-test_that("simulate sample path error if latest obs is NA", {
+test_that("slowsimulate sample path error if latest obs is NA", {
   data = tibble(
     datetime = c(
       as.Date("2022-03-01") + 0:1
@@ -201,11 +168,11 @@ test_that("simulate sample path error if latest obs is NA", {
   ) %>%
     as_tsibble(index = datetime)
 
-  expect_error(data %>% simulate_sample_path(datetime, obs, 1, 1, 1, 1))
+  expect_error(data %>% slow_simulate_sample_path(datetime, obs, 1, 1, 1, 1))
 })
 
 
-test_that("get_local_rows", {
+test_that("slowget_local_rows", {
   # so we start on Feb 29, 2024
   # we get it plus the prior day (per window back)
   # prior year has nothing in Feb 27 - Mar 1 (leap yr shift; window)
@@ -224,42 +191,18 @@ test_that("get_local_rows", {
   # goes backwards in time by year
   expected = tibble(
     datetime = c(
-      as.Date("2024-02-28") + 0:1,  # +- a day around 2/29, but 3/1 dne
+      as.Date("2024-02-28") + 0:1,
       as.Date("2023-02-27") + 0:2,  # +- a day around 2/28
       as.Date("2022-03-01")   # +- a day around 2/28, but 2/27 dne
     ),
     obs = c(
-      7:8,
+      7, 8,
       NA, NA, NA,
       1)
   )
-  output = data %>% get_local_rows(datetime,
+  output = data %>% slow_get_local_rows(datetime,
                                    h_curr = 1,
                                    window_back = 1,
                                    window_fwd = 1)
-  expect_equal(output, expected)
-})
-
-test_that("trim leading NAs", {
-  data = tibble(
-    datetime = c(
-      as.Date("2022-03-01"),
-      as.Date("2023-04-01") + 0:4,
-      as.Date("2024-02-28") + 0:1  # leap year
-    ),
-    obs = c(NA, 2, NA, NA, 5, NA, NA, NA)
-  ) %>%
-    as_tsibble(index = datetime)
-
-  output = data %>% trim_leading_nas(obs)
-  expected = tibble(
-    datetime = c(
-      as.Date("2022-03-01"),
-      as.Date("2023-04-01") + 0:3
-    ),
-    obs = c(NA, 2, NA, NA, 5)
-  ) %>%
-    as_tsibble(index = datetime)
-
   expect_equal(output, expected)
 })

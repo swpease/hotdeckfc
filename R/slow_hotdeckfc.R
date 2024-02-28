@@ -1,3 +1,10 @@
+# THIS FILE CONTAINS THE OLD IMPLEMENTATION OF `get_local_rows`.
+# It uses date-based methods, while the current implementation uses indexes,
+# which is way harder to read but runs in half the time.
+# I want to retain this to use with the SUGG dataset as a test against the
+# newer, index-based implementation.
+
+
 #' Produce a hot deck forecast.
 #'
 #' Produces multiple h-step forecast simulated sample paths.
@@ -33,9 +40,7 @@
 #'     - h: the forecast horizon
 #'     - forecast: the forecasted value
 #'     - simulation_num: the simulated sample path number
-#'
-#' @export
-hot_deck_forecast <- function(.data,
+slow_hot_deck_forecast <- function(.data,
                               .datetime,
                               .observation,
                               times,
@@ -49,7 +54,7 @@ hot_deck_forecast <- function(.data,
   n_time = 1
   while (n_time <= times) {
     fc = .data %>%
-      simulate_sample_path({{ .datetime }},
+      slow_simulate_sample_path({{ .datetime }},
                            {{ .observation }},
                            h = h,
                            window_back = window_back,
@@ -95,7 +100,7 @@ hot_deck_forecast <- function(.data,
 #'     - datetime: the date for the forecast
 #'     - h:        the forecast horizon
 #'     - forecast: the forecasted value
-simulate_sample_path <- function(.data,
+slow_simulate_sample_path <- function(.data,
                                  .datetime,
                                  .observation,
                                  h,
@@ -122,7 +127,7 @@ simulate_sample_path <- function(.data,
   while (h_curr <= h) {
     # a tibble
     local_rows = .data %>%
-      get_local_rows({{ .datetime }}, h_curr, window_back, window_fwd)
+      slow_get_local_rows({{ .datetime }}, h_curr, window_back, window_fwd)
     local_rows = local_rows %>%
       dplyr::mutate(distance = abs(current_obs - {{ .observation }}))
     # remove cases where next obs is missing
@@ -162,7 +167,7 @@ simulate_sample_path <- function(.data,
 #' a given season.
 #' @param window_fwd How many days forward to include in the window for
 #' a given season.
-get_local_rows <- function(.data,
+slow_get_local_rows <- function(.data,
                            .datetime,
                            h_curr,
                            window_back,
@@ -170,108 +175,42 @@ get_local_rows <- function(.data,
   # hedge against neg nums
   window_back = abs(window_back)
   window_fwd = abs(window_fwd)
-
-  # working by indexes
-  .data = .data %>%
-    tibble::as_tibble() %>%
-    dplyr::ungroup() %>%
-    dplyr::arrange({{ .datetime }}) %>%  # Probably unnecessary.
-    dplyr::mutate(idx = dplyr::row_number())
-
-  idx_max = nrow(.data)
+  # min and max dates in data.
+  T_date = .data %>%
+    dplyr::slice_max(order_by = {{ .datetime }}) %>%
+    dplyr::pull({{ .datetime }})
+  t0_date = .data %>%
+    dplyr::slice_min(order_by = {{ .datetime }}) %>%
+    dplyr::pull({{ .datetime }})
   # `- 1` b/c we want to center around "now", which is the day before
   # whichever day we're forecasting (that is, the day before `h_curr`'s
   # date).
-  ref_idx = idx_max + (h_curr - 1)
-
+  ref_date = T_date + (h_curr - 1)
   local_rows = NULL
   while (TRUE) {
-    # Need this `max` for case where window extends partially prior
-    # to our earliest obs; we still want to capture that part that
-    # *does* overlap, though, and `slice` doesn't handle neg nums.
-    # window:    ______
-    # obs:          1 2 3 4
-    window_start = max((ref_idx - window_back), 1)
-    window_end = ref_idx + window_fwd
-    # If the window is entirely before our earliest data, we're done.
-    if (window_end < 1) {
+    # @@@
+    # dodge Feb 29th
+    # if ((lubridate::month(ref_date) == 2) && (lubridate::day(ref_date) == 29)) {
+    #   lubridate::day(ref_date) = 28
+    # }
+    # @@@
+    window_start = as.character(ref_date - window_back)
+    window_end = as.character(ref_date + window_fwd)
+    local_rows_part = .data %>%
+      tsibble::filter_index(window_start ~ window_end) %>%
+      tibble::as_tibble() %>%
+      dplyr::ungroup()
+    # If we're before our earliest obs and have nothing in our slice.
+    if ((ref_date < t0_date) && (nrow(local_rows_part) == 0)) {
       break
     }
-    local_rows_part = .data %>%
-      dplyr::slice(window_start:window_end)
-
     local_rows = dplyr::bind_rows(local_rows, local_rows_part)
-
-    # Shift ref_idx back.
-
-    # Need to account for leap years, so I need a date, but ref_idx could be < 1...
-    # ...so if it is, then I can just subtract 365 w/o worrying:
-    if (ref_idx < 1) {
-      ref_idx = ref_idx - 365
-    } else {
-      # Otherwise, we need to get a date and handle a possible leap year:
-      # What's our ref_idx's respective date?
-      # ref_idx could be beyond your data's max index...
-      if (ref_idx > idx_max) {
-        ref_date = .data %>%
-          dplyr::slice_tail(n = 1) %>%
-          dplyr::pull({{ .datetime }})
-        # So we add the difference.
-        # This way can handle multi-year-ahead forecasts.
-        ref_date = ref_date + (ref_idx - idx_max)
-      } else {
-      ref_date = .data %>%
-        dplyr::filter(idx == ref_idx) %>%
-        dplyr::pull({{ .datetime }})
-      }
-      ref_idx = if (lubridate::leap_year(ref_date)) (ref_idx - 366) else (ref_idx - 365)
-    }
+    # @@@
+    # Have to modify this to align w/ current impl.
+    # lubridate::year(ref_date) = lubridate::year(ref_date) - 1
+    ref_date = subtract_year(ref_date)
+    # @@@
   }
 
-  local_rows %>% dplyr::select(-idx)
-}
-
-#' Remove leading rows with NA observations.
-#'
-#' Use this function before passing your data to `hot_deck_forecast`,
-#' which requires that the most recent observation exists (is not NA).
-#'
-#' @param .data The data. Passed via pipe.
-#' @param .observation The observation column of .data. Passed via pipe.
-#'
-#' @export
-trim_leading_nas <- function(.data, .observation) {
-  .data %>%
-    dplyr::slice(
-      1:purrr::detect_index(
-        {{ .observation }},
-        \(x) !is.na(x),
-        .dir = "backward"
-      )
-    )
-}
-
-
-#' Some validators for hot deck forecast input.
-#'
-#' Does not check if final obs is NA; put that in the code itself
-#' b/c it logically goes w/ `current_obs`. Subject to change.
-#'
-#' @param data The input `.data` to `hot_deck_forecast`.
-partially_validate_hotdeckfc_input <- function(data) {
-  if (isFALSE(tsibble::is_tsibble(data))) {
-    stop("Your data needs to be a `tsibble`.", call. = FALSE)
-  }
-  # keyless tsibbles have n_keys == 1
-  if (tsibble::n_keys(data) > 1) {
-    stop(paste("`hot_deck_forecast` cannot handle multi-key tsibbles.\n",
-               "Multiple keys means multiple time series.",
-               "Examine your keys with `tsibble::key`,",
-               "and filter to one key's data."))
-  }
-  if (isTRUE(tsibble::has_gaps(data) %>% pull())) {
-    stop(paste("Your tsibble contains gaps.\n",
-               "Try using `tsibble::fill_gaps`."),
-         call. = FALSE)
-  }
+  local_rows
 }
