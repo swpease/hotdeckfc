@@ -183,10 +183,6 @@ get_local_rows <- function(.data,
   ref_date = T_date + (h_curr - 1)
   local_rows = NULL
   while (TRUE) {
-    # dodge Feb 29th
-    if ((lubridate::month(ref_date) == 2) && (lubridate::day(ref_date) == 29)) {
-      lubridate::day(ref_date) = 28
-    }
     window_start = as.character(ref_date - window_back)
     window_end = as.character(ref_date + window_fwd)
     local_rows_part = .data %>%
@@ -198,7 +194,7 @@ get_local_rows <- function(.data,
       break
     }
     local_rows = dplyr::bind_rows(local_rows, local_rows_part)
-    lubridate::year(ref_date) = lubridate::year(ref_date) - 1
+    ref_date = subtract_year(ref_date)
   }
 
   local_rows
