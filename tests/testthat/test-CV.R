@@ -11,7 +11,7 @@ test_that("grid search basic tests", {
     as_tsibble(index = datetime)
 
   ## basic test
-  grid = list(a = 3, b = 4)
+  grid = list(a = 3, b = "hi")
   out = data %>%
     grid_search_hot_deck_cv(
       datetime,

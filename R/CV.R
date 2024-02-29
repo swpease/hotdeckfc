@@ -39,9 +39,15 @@ grid_search_hot_deck_cv <- function(.data,
   # ref: https://stackoverflow.com/a/58541328/6074637
   for (arg_vec in asplit(grid, 1)) {
     arg_list = as.list(arg_vec)
+    # `asplit` uses a matrix, which will coerce everything to a string if
+    # a string is present, so need to convert integers back.
+    # This code emits warnings when trying to convert a string to int, which
+    # I'm suppressing.
+    arg_list = suppressWarnings(arg_list %>%
+      purrr::map(\(x) if (is.na(purrr::possibly(as.integer)(x))) x else as.integer(x)))
     cv_out = rlang::inject(.data %>% cv_hot_deck_forecast({{ .datetime }},
                                                           {{ .observation }},
-                                                          !!!arg_vec))
+                                                          !!!arg_list))
     output = list(
       arg_list = arg_list,
       cv_out = cv_out
