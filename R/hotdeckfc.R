@@ -2,7 +2,7 @@
 #'
 #' Produces multiple h-step forecast simulated sample paths.
 #'
-#' For `times` times, it produces a simulated sample paths. For each
+#' For `times` times, it produces a simulated sample path. For each
 #' simulation, the process proceeds as follows:
 #' This method is iterative. At the most recent observation, it:
 #'   - Takes all historical observations from a window around
@@ -14,6 +14,12 @@
 #'   - Repeats, using this new forecasted value and its respective date as
 #'   the new "most recent observation", up to h forecasts.
 #'
+#' `window_back`, `window_fwd`, and `n_closest` can either each be a scalar
+#' (i.e. length 1), or a vector of length h. If a scalar, the same value is
+#' used for every horizon. If a vector, then for horizon h_i, the ith value
+#' is used. This may be useful as the borders of periodically missing data,
+#' where something like `window_fwd = c(1:10, rep(10,20))`, and maybe the same
+#' for `window_back` could be used to ensure symmetric windows near the border.
 #'
 #' @param .data tsibble. The data. Passed via pipe.
 #' @param .datetime The datetime column of .data. Passed via pipe.
@@ -21,11 +27,14 @@
 #' @param times The number of simulated sample paths to produce.
 #' @param h How many days to forecast.
 #' @param window_back How many days back to include in the window for
-#' a given season.
+#' a given season. Either scalar (length == 1) or vector
+#' of length == h.
 #' @param window_fwd How many days forward to include in the window for
-#' a given season.
+#' a given season. Either scalar (length == 1) or vector
+#' of length == h.
 #' @param n_closest The number of closest observations to pick from
-#' per hot deck random sampling.
+#' per hot deck random sampling. Either scalar (length == 1) or vector
+#' of length == h.
 #' @returns tibble of forecasts:
 #'   - nrow = h * times,
 #'   - columns:
@@ -43,8 +52,13 @@ hot_deck_forecast <- function(.data,
                               window_back,
                               window_fwd,
                               n_closest) {
-  partially_validate_hotdeckfc_input(.data)  # Put here or in simulate_s_p?
+  # Validate
+  partially_validate_hotdeckfc_input(.data)
+  window_back = ensure_vector(window_back, h)
+  window_fwd = ensure_vector(window_fwd, h)
+  n_closest = ensure_vector(n_closest, h)
 
+  # Forecast
   forecasts = NULL
   n_time = 1
   while (n_time <= times) {
@@ -68,27 +82,27 @@ hot_deck_forecast <- function(.data,
 #'
 #' Produces a single possible sample path of an h-step forecast.
 #'
-#' This method is iterative. At the most recent observation, it:
-#'   - Takes all historical observations from a window around
+#' This method is iterative. For iteration i, at the most recent observation, it:
+#'   - Takes all historical observations from a window,
+#'   [`window_back[[i]]`, `window_fwd[[i]]`] (inclusive) around
 #'   the same portion of the season.
 #'     - e.g., Jun 30 +- 5 days across all years.
-#'   - Takes the `n_closest` closest observations from these.
-#'   - Randomly selects one of these `n_closest` observations.
+#'   - Takes the `n_closest[[i]]` closest observations from these.
+#'   - Randomly selects one of these closest observations.
 #'   - Uses the observation of the day after that one as the forecasted value.
 #'   - Repeats, using this new forecasted value and its respective date as
 #'   the new "most recent observation", up to h forecasts.
-#'
 #'
 #' @param .data tsibble. The data. Passed via pipe.
 #' @param .datetime The datetime column of .data. Passed via pipe.
 #' @param .observation The observation column of .data. Passed via pipe.
 #' @param h How many days to forecast.
 #' @param window_back How many days back to include in the window for
-#' a given season.
+#' a given season. Vector of length == h.
 #' @param window_fwd How many days forward to include in the window for
-#' a given season.
+#' a given season. Vector of length == h.
 #' @param n_closest The number of closest observations to pick from
-#' per hot deck random sampling.
+#' per hot deck random sampling. Vector of length == h.
 #' @returns tibble of forecasts:
 #'   - nrow = h,
 #'   - columns:
@@ -122,14 +136,14 @@ simulate_sample_path <- function(.data,
   while (h_curr <= h) {
     # a tibble
     local_rows = .data %>%
-      get_local_rows({{ .datetime }}, h_curr, window_back, window_fwd)
+      get_local_rows({{ .datetime }}, h_curr, window_back[[h_curr]], window_fwd[[h_curr]])
     local_rows = local_rows %>%
       dplyr::mutate(distance = abs(current_obs - {{ .observation }}))
     # remove cases where next obs is missing
     local_rows = local_rows %>%
       dplyr::filter(!is.na(next_obs))
     closest_rows = local_rows %>%
-      dplyr::slice_min(order_by = distance, n = n_closest)
+      dplyr::slice_min(order_by = distance, n = n_closest[[h_curr]])
     rand_row = closest_rows %>%
       dplyr::slice_sample(n = 1)
     # What was tomorrow's obs for our randomly selected row that had
@@ -274,4 +288,27 @@ partially_validate_hotdeckfc_input <- function(data) {
                "Try using `tsibble::fill_gaps`."),
          call. = FALSE)
   }
+}
+
+
+#' Converts scalar to vector of length h, and raises an error if
+#' vector is not of length h.
+#'
+#' @param hotdeck_arg Argument passed to `hot_deck_forecast` required to end as
+#' a vector of length h.
+#' @param h Forecast horizon, per `hot_deck_forecast`.
+#' @returns hotdeck_arg vector of length h.
+ensure_vector <- function(hotdeck_arg, h) {
+  if (length(hotdeck_arg) == 1) {
+    hotdeck_arg = rep(hotdeck_arg, h)
+  }
+  if (length(hotdeck_arg) != h) {
+    stop(paste(deparse(substitute(hotdeck_arg)),
+               "is length", length(hotdeck_arg), ".\n",
+               "It needs to be either length 1 (e.g. `x = 3L`)",
+               "or length h,", h),
+         call. = FALSE)
+  }
+
+  hotdeck_arg
 }

@@ -24,13 +24,13 @@ simulate_sample_path(
 \item{h}{How many days to forecast.}
 
 \item{window_back}{How many days back to include in the window for
-a given season.}
+a given season. Vector of length == h.}
 
 \item{window_fwd}{How many days forward to include in the window for
-a given season.}
+a given season. Vector of length == h.}
 
 \item{n_closest}{The number of closest observations to pick from
-per hot deck random sampling.}
+per hot deck random sampling. Vector of length == h.}
 }
 \value{
 tibble of forecasts:
@@ -48,15 +48,16 @@ tibble of forecasts:
 Produces a single possible sample path of an h-step forecast.
 }
 \details{
-This method is iterative. At the most recent observation, it:
+This method is iterative. For iteration i, at the most recent observation, it:
 \itemize{
-\item Takes all historical observations from a window around
+\item Takes all historical observations from a window,
+[\code{window_back[[i]]}, \code{window_fwd[[i]]}] (inclusive) around
 the same portion of the season.
 \itemize{
 \item e.g., Jun 30 +- 5 days across all years.
 }
-\item Takes the \code{n_closest} closest observations from these.
-\item Randomly selects one of these \code{n_closest} observations.
+\item Takes the \code{n_closest[[i]]} closest observations from these.
+\item Randomly selects one of these closest observations.
 \item Uses the observation of the day after that one as the forecasted value.
 \item Repeats, using this new forecasted value and its respective date as
 the new "most recent observation", up to h forecasts.

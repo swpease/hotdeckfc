@@ -27,13 +27,16 @@ hot_deck_forecast(
 \item{h}{How many days to forecast.}
 
 \item{window_back}{How many days back to include in the window for
-a given season.}
+a given season. Either scalar (length == 1) or vector
+of length == h.}
 
 \item{window_fwd}{How many days forward to include in the window for
-a given season.}
+a given season. Either scalar (length == 1) or vector
+of length == h.}
 
 \item{n_closest}{The number of closest observations to pick from
-per hot deck random sampling.}
+per hot deck random sampling. Either scalar (length == 1) or vector
+of length == h.}
 }
 \value{
 tibble of forecasts:
@@ -52,7 +55,7 @@ tibble of forecasts:
 Produces multiple h-step forecast simulated sample paths.
 }
 \details{
-For \code{times} times, it produces a simulated sample paths. For each
+For \code{times} times, it produces a simulated sample path. For each
 simulation, the process proceeds as follows:
 This method is iterative. At the most recent observation, it:
 \itemize{
@@ -67,4 +70,11 @@ the same portion of the season.
 \item Repeats, using this new forecasted value and its respective date as
 the new "most recent observation", up to h forecasts.
 }
+
+\code{window_back}, \code{window_fwd}, and \code{n_closest} can either each be a scalar
+(i.e. length 1), or a vector of length h. If a scalar, the same value is
+used for every horizon. If a vector, then for horizon h_i, the ith value
+is used. This may be useful as the borders of periodically missing data,
+where something like \code{window_fwd = c(1:10, rep(10,20))}, and maybe the same
+for \code{window_back} could be used to ensure symmetric windows near the border.
 }

@@ -68,6 +68,62 @@ test_that("hot deck fc basic test", {
   expect_equal(output, expected)
 })
 
+# h = 1
+# window = +- 2
+# n_closest = 1
+# current val = 3
+# "now":         *                               x
+# near_rows: _________                       _____
+# obs:       1 3 1 2 / / 1 4     1 1 1 1     1 2 3
+# next_obs:  3 1 2 / / 1 4 /     1 1 1 /     2 3 /
+# yields: 1
+#
+# h = 2
+# window = (back = 2, fwd = 3)
+# n_closest = 2
+# current val = 1
+# "now":           *                             x
+# near_rows:   ___________                   _____
+#            1 3 1 2 / / 1 4   1 1 1 1     1 2 3
+# yields: 2 or 4
+test_that("hot deck fc vector test", {
+  data = tibble(
+    datetime = c(
+      as.Date("2021-01-01") + 0:7,
+      as.Date("2022-04-01") + 0:3,
+      as.Date("2023-01-01") + 0:2
+    ),
+    obs = c(
+      1, 3, 1, 2, NA, NA, 1, 4,
+      1, 1, 1, 1,
+      1, 2, 3
+    )
+  ) %>%
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
+
+  set.seed(3)
+  output = data %>%
+    hot_deck_forecast(
+      .datetime = datetime,
+      .observation = obs,
+      times = 2,
+      h = 2,
+      window_back = 2,
+      window_fwd = c(2,3),
+      n_closest = c(1,2)
+    )
+  expected = tibble(
+    datetime = c(as.Date("2023-01-04") + 0:1,
+                 as.Date("2023-01-04") + 0:1),
+    h = c(1, 2, 1, 2),
+    forecast = c(1, 4, 1, 2),
+    simulation_num = c(1, 1, 2, 2)
+  )
+
+  expect_equal(output, expected)
+})
+
 
 test_that("hot deck fc partial validators", {
   data_not_tsib = tibble(
@@ -147,6 +203,49 @@ test_that("hot deck fc partial validators", {
                regexp = "key")
 })
 
+test_that("hot deck fc vector errors", {
+  data = tibble(
+    datetime = c(as.Date("2023-01-01") + 0:2),
+    obs = c(1, 3, 1)
+  ) %>%
+    as_tsibble(index = datetime)
+
+  expect_error(data %>%
+                 hot_deck_forecast(
+                   .datetime = datetime,
+                   .observation = obs,
+                   times = 2,
+                   h = 5,
+                   window_back = c(2,3),
+                   window_fwd = 2,
+                   n_closest = 1
+              ),
+              regexp = "window_back.*is length 2.*h, 5")
+  expect_error(data %>%
+                 hot_deck_forecast(
+                   .datetime = datetime,
+                   .observation = obs,
+                   times = 2,
+                   h = 5,
+                   window_back = 2,
+                   window_fwd = c(2,3),
+                   n_closest = 1
+                 ),
+               regexp = "window_fwd.*is length 2.*h, 5")
+  expect_error(data %>%
+                 hot_deck_forecast(
+                   .datetime = datetime,
+                   .observation = obs,
+                   times = 2,
+                   h = 5,
+                   window_back = 2,
+                   window_fwd = 2,
+                   n_closest = c(2,3)
+                 ),
+               regexp = "n_closest.*is length 2.*h, 5")
+})
+
+
 
 # window = +- 2
 # h = 1
@@ -180,9 +279,9 @@ test_that("simulate sample path basic test", {
       .datetime = datetime,
       .observation = obs,
       h = 2,
-      window_back = 2,
-      window_fwd = 2,
-      n_closest = 1  # only get closest obs; tsibble designed to yield unique closest obs
+      window_back = rep(2,2),
+      window_fwd = rep(2,2),
+      n_closest = rep(1,2)  # only get closest obs; tsibble designed to yield unique closest obs
     )
   expected = tibble(
     datetime = as.Date("2023-01-04") + 0:1,
