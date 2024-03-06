@@ -93,6 +93,8 @@ hot_deck_forecast <- function(.data,
 #'   - Repeats, using this new forecasted value and its respective date as
 #'   the new "most recent observation", up to h forecasts.
 #'
+#' Raises an error if a window has no viable values to use as a forecast.
+#'
 #' @param .data tsibble. The data. Passed via pipe.
 #' @param .datetime The datetime column of .data. Passed via pipe.
 #' @param .observation The observation column of .data. Passed via pipe.
@@ -142,6 +144,13 @@ simulate_sample_path <- function(.data,
     # remove cases where next obs is missing
     local_rows = local_rows %>%
       dplyr::filter(!is.na(next_obs))
+    if (nrow(local_rows) == 0) {
+      stop(paste("No values to draw from for:\n",
+                 "h =", h_curr, "\n",
+                 "window_back =", window_back[[h_curr]], "\n",
+                 "window_fwd =", window_fwd[[h_curr]], "\n"),
+           call. = FALSE)
+    }
     closest_rows = local_rows %>%
       dplyr::slice_min(order_by = distance, n = n_closest[[h_curr]])
     rand_row = closest_rows %>%

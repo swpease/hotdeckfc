@@ -62,4 +62,6 @@ the same portion of the season.
 \item Repeats, using this new forecasted value and its respective date as
 the new "most recent observation", up to h forecasts.
 }
+
+Raises an error if a window has no viable values to use as a forecast.
 }

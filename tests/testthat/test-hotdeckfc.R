@@ -246,6 +246,32 @@ test_that("hot deck fc vector errors", {
 })
 
 
+test_that("hot deck fc error empty window", {
+  data = tibble(
+    datetime = c(
+      as.Date("2021-01-01") + 0:3,
+      as.Date("2023-01-01") + 0:2
+    ),
+    obs = c(
+      1, 3, 1, 2,
+      1, 2, 3
+    )
+  ) %>%
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
+
+  expect_error(data %>%
+    hot_deck_forecast(
+      .datetime = datetime,
+      .observation = obs,
+      times = 2,
+      h = 20,
+      window_back = 2,
+      window_fwd = 2,
+      n_closest = 1
+  ))
+})
+
 
 # window = +- 2
 # h = 1
