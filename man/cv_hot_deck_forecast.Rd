@@ -29,13 +29,14 @@ cv_hot_deck_forecast(
 \item{h}{How many days to forecast.}
 
 \item{window_back}{How many days back to include in the window for
-a given season.}
+a given season. Either scalar (length == 1) or vector of length == h.}
 
 \item{window_fwd}{How many days forward to include in the window for
-a given season.}
+a given season. Either scalar (length == 1) or vector of length == h.}
 
 \item{n_closest}{The number of closest observations to pick from
-per hot deck random sampling.}
+per hot deck random sampling. Either scalar (length == 1) or vector
+of length == h.}
 
 \item{offset}{integer. Offset (in +- days) from the most recent row of .data
 to use as the starting point.}
@@ -75,10 +76,10 @@ The current implementation has two train-test data splitting methods.
 The default is "conservative", which goes as follows:
 The testing set is any data in the forecast horizon (\code{h}) for
 the current season in question. The training data is any data before
-that or after the \code{window_fwd} from the largest \code{h}. This is aimed at
+that or after the \code{max(window_fwd)} from the largest \code{h}. This is aimed at
 eliminating data leakage. While the data after the largest \code{h} but within
-the \code{window_fwd} should be minimally leaky, it seemed off for larger \code{h}'s
-to have increasing pools of data to draw from.
+the \code{max(window_fwd)} should be minimally leaky, it seemed off for
+larger \code{h}'s to have increasing pools of data to draw from.
 
 The alternative splitting method, "leaky", uses all of the data
 in the training set. While this leaks data, it might be a better option

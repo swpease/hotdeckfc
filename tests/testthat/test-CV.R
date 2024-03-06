@@ -414,6 +414,64 @@ test_that("train-test split mobile part day before first obs in ante", {
 })
 
 
+test_that("train-test split vector window", {
+  data = tibble(
+    datetime = c(
+      as.Date("2021-04-02"),
+      as.Date("2022-03-31") + 0:7,
+      as.Date("2023-04-01") + 0:6,
+      as.Date("2024-04-03")
+    ),
+    obs = c(
+      10,
+      1, 3, 1, 2, 5, 5, 5, 10,
+      1, 2, 3, NA, 8, 8, 10,
+      10
+    )
+  ) %>%
+    as_tsibble(index = datetime)
+  min_date = data %>%
+    dplyr::pull(datetime) %>%
+    min()
+  ref_date = as.Date("2022-04-03")
+
+  output = data %>%
+    train_test_split(datetime,
+                     ref_date = ref_date,
+                     h = 2,
+                     window_fwd = c(1,2),
+                     min_date = min_date,
+                     split_type = "conservative")
+
+  expected_test = tibble(
+    datetime = as.Date("2022-04-04") + 0:1,
+    obs = c(5,5),
+    h = c(1,2)
+  ) %>%
+    as_tsibble(index = datetime)
+  # If I use the `- 1` adjustment, then I'd need to tack on a 10 in 2018.
+  expected_train = tibble(
+    datetime = c(
+      as.Date("2019-04-01") + 0:6,
+      as.Date("2020-04-03"),
+      as.Date("2021-04-02"),
+      as.Date("2022-03-31") + 0:3
+    ),
+    obs = c(
+      1, 2, 3, NA, 8, 8, 10,
+      10,
+      10,
+      1, 3, 1, 2
+    )
+  ) %>%
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
+
+  expect_equal(output$train_data, expected_train)
+  expect_equal(output$test_data, expected_test)
+})
+
+
 test_that("cv_crps", {
   data = tibble(
     datetime = c(

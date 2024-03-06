@@ -28,6 +28,7 @@ grid_search_hot_deck_cv <- function(.data,
   # list -> tibble of all combos
   grid = tidyr::expand_grid(!!!grid)
   # Not sure this is how I want to do this... put in a default arg in hdcv?
+  # TODO: dedupe grid?
   if (isTRUE(sym_window)) {
     grid = grid %>%
       dplyr::rename(window_back = window) %>%
@@ -77,10 +78,10 @@ grid_search_hot_deck_cv <- function(.data,
 #' The default is "conservative", which goes as follows:
 #' The testing set is any data in the forecast horizon (`h`) for
 #' the current season in question. The training data is any data before
-#' that or after the `window_fwd` from the largest `h`. This is aimed at
+#' that or after the `max(window_fwd)` from the largest `h`. This is aimed at
 #' eliminating data leakage. While the data after the largest `h` but within
-#' the `window_fwd` should be minimally leaky, it seemed off for larger `h`'s
-#' to have increasing pools of data to draw from.
+#' the `max(window_fwd)` should be minimally leaky, it seemed off for
+#' larger `h`'s to have increasing pools of data to draw from.
 #'
 #' The alternative splitting method, "leaky", uses all of the data
 #' in the training set. While this leaks data, it might be a better option
@@ -95,11 +96,12 @@ grid_search_hot_deck_cv <- function(.data,
 #' @param times The number of simulated sample paths to produce per hot deck forecast.
 #' @param h How many days to forecast.
 #' @param window_back How many days back to include in the window for
-#' a given season.
+#' a given season. Either scalar (length == 1) or vector of length == h.
 #' @param window_fwd How many days forward to include in the window for
-#' a given season.
+#' a given season. Either scalar (length == 1) or vector of length == h.
 #' @param n_closest The number of closest observations to pick from
-#' per hot deck random sampling.
+#' per hot deck random sampling. Either scalar (length == 1) or vector
+#' of length == h.
 #' @param offset integer. Offset (in +- days) from the most recent row of .data
 #' to use as the starting point.
 #' @param train_test_split_type default = "conservative". See help for details.
@@ -208,7 +210,8 @@ subtract_year <- function(date) {
 #'
 #' re `split_type`:
 #' "conservataive" excludes the test data, plus the data in the window_fwd
-#' region beyond the final date to forecast, from the training data.
+#' region beyond the final date to forecast, from the training data. If
+#' `window_fwd` is a vector, it uses the max.
 #'
 #' "leaky" uses all the data as training data.
 #'
@@ -217,7 +220,7 @@ subtract_year <- function(date) {
 #' @param ref_date The current "now" per the CV.
 #' @param h How many days to forecast.
 #' @param window_fwd How many days forward to include in the window for
-#' a given season.
+#' a given season. Scalar or vector (see `hot_deck_forecast`).
 #' @param min_date The earliest date in `.data`.
 #' @param split_type c("conservative", "leaky"). See `cv_hot_deck_forecast`
 #' help for details.
@@ -251,7 +254,7 @@ train_test_split <- function(.data,
     dplyr::mutate(h = row_number())
   if (split_type == "conservative") {
     mobile_data = post_split %>%
-      dplyr::filter(idx > (h + window_fwd)) %>%
+      dplyr::filter(idx > (h + max(window_fwd))) %>%
       dplyr::select(-idx)
   } else {
     mobile_data = post_split %>% dplyr::select(-idx)

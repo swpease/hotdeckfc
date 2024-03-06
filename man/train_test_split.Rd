@@ -24,7 +24,7 @@ train_test_split(
 \item{h}{How many days to forecast.}
 
 \item{window_fwd}{How many days forward to include in the window for
-a given season.}
+a given season. Scalar or vector (see \code{hot_deck_forecast}).}
 
 \item{min_date}{The earliest date in \code{.data}.}
 
@@ -41,7 +41,8 @@ h = forecast horizon
 \description{
 re \code{split_type}:
 "conservataive" excludes the test data, plus the data in the window_fwd
-region beyond the final date to forecast, from the training data.
+region beyond the final date to forecast, from the training data. If
+\code{window_fwd} is a vector, it uses the max.
 }
 \details{
 "leaky" uses all the data as training data.
