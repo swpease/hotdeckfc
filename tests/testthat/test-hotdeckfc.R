@@ -126,7 +126,7 @@ test_that("hot deck fc vector test", {
 })
 
 
-test_that("hot deck fc partial validators", {
+test_that("hot deck fc data validators", {
   data_not_tsib = tibble(
     datetime = c(
       as.Date("2021-01-01") + 0:3,
@@ -169,6 +169,14 @@ test_that("hot deck fc partial validators", {
   ) %>%
     as_tsibble(index = datetime, key = k)
 
+  data_missing_last_obs = tibble(
+    datetime = c(
+      as.Date("2022-03-01") + 0:1
+    ),
+    obs = c(1, NA)
+  ) %>%
+    as_tsibble(index = datetime)
+
   expect_error(data_not_tsib %>%
     hot_deck_forecast(
       .datetime = datetime,
@@ -202,6 +210,17 @@ test_that("hot deck fc partial validators", {
                    n_closest = 1
                  ),
                regexp = "key")
+  expect_error(data_missing_last_obs %>%
+                 hot_deck_forecast(
+                   .datetime = datetime,
+                   .observation = obs,
+                   times = 1,
+                   h = 1,
+                   window_back = 1,
+                   window_fwd = 1,
+                   n_closest = 1
+                 ),
+               regexp = "Latest obs")
 })
 
 
@@ -317,19 +336,6 @@ test_that("simulate sample path basic test", {
     forecast = c(1, 2)
   )
   expect_equal(output, expected)
-})
-
-
-test_that("simulate sample path error if latest obs is NA", {
-  data = tibble(
-    datetime = c(
-      as.Date("2022-03-01") + 0:1
-    ),
-    obs = c(1, NA)
-  ) %>%
-    as_tsibble(index = datetime)
-
-  expect_error(data %>% simulate_sample_path(datetime, obs, 1, 1, 1, 1))
 })
 
 

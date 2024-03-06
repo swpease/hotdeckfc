@@ -48,7 +48,7 @@ slow_hot_deck_forecast <- function(.data,
                               window_back,
                               window_fwd,
                               n_closest) {
-  partially_validate_hotdeckfc_input(.data)  # Put here or in simulate_s_p?
+  .data %>% validate_data({{ .datetime }}, {{ .observation }})
 
   forecasts = NULL
   n_time = 1

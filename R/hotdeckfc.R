@@ -53,7 +53,7 @@ hot_deck_forecast <- function(.data,
                               window_fwd,
                               n_closest) {
   # Validate
-  partially_validate_hotdeckfc_input(.data)
+  .data %>% validate_data({{ .datetime }}, {{ .observation }})
   window_back = ensure_vector(window_back, h)
   window_fwd = ensure_vector(window_fwd, h)
   n_closest = ensure_vector(n_closest, h)
@@ -93,8 +93,6 @@ hot_deck_forecast <- function(.data,
 #'   - Repeats, using this new forecasted value and its respective date as
 #'   the new "most recent observation", up to h forecasts.
 #'
-#' Raises an error if a window has no viable values to use as a forecast.
-#'
 #' @param .data tsibble. The data. Passed via pipe.
 #' @param .datetime The datetime column of .data. Passed via pipe.
 #' @param .observation The observation column of .data. Passed via pipe.
@@ -126,12 +124,6 @@ simulate_sample_path <- function(.data,
   current_obs = .data %>%
     dplyr::slice_max(order_by = {{ .datetime }}) %>%
     dplyr::pull({{ .observation }})
-  if (is.na(current_obs)) {
-    stop(paste("Latest observation in data is NA.\n",
-               "Trim your data to the latest non-NA observation.\n",
-               "Observation date: ", T_date),
-         call. = FALSE)
-  }
 
   forecast = vector(mode = "numeric", length = h)  # inits to 0's
   h_curr = 1
@@ -275,16 +267,24 @@ trim_leading_nas <- function(.data, .observation) {
 }
 
 
-#' Some validators for hot deck forecast input.
+#' Validators for hot deck forecast input.
 #'
-#' Does not check if final obs is NA; put that in the code itself
-#' b/c it logically goes w/ `current_obs`. Subject to change.
+#' Checks that:
+#'   1. The data is a `tsibble`.
+#'   2. The tsibble is not multi-keyed (i.e. multiple time serieses).
+#'   3. The data has no gaps (i.e. missing rows; NA observations okay).
+#'   4. The final observation is not NA.
 #'
 #' @param data The input `.data` to `hot_deck_forecast`.
-partially_validate_hotdeckfc_input <- function(data) {
+#' @param .datetime The datetime column of .data. Passed via pipe.
+#' @param .observation The observation column of .data. Passed via pipe.
+validate_data <- function(data,
+                          .datetime,
+                          .observation) {
   if (isFALSE(tsibble::is_tsibble(data))) {
     stop("Your data needs to be a `tsibble`.", call. = FALSE)
   }
+
   # keyless tsibbles have n_keys == 1
   if (tsibble::n_keys(data) > 1) {
     stop(paste("`hot_deck_forecast` cannot handle multi-key tsibbles.\n",
@@ -292,9 +292,20 @@ partially_validate_hotdeckfc_input <- function(data) {
                "Examine your keys with `tsibble::key`,",
                "and filter to one key's data."))
   }
+
   if (isTRUE(tsibble::has_gaps(data) %>% pull())) {
     stop(paste("Your tsibble contains gaps.\n",
                "Try using `tsibble::fill_gaps`."),
+         call. = FALSE)
+  }
+
+  latest_row = data %>% dplyr::slice_max(order_by = {{ .datetime }})
+  T_date = latest_row %>% dplyr::pull({{ .datetime }})
+  current_obs = latest_row %>% dplyr::pull({{ .observation }})
+  if (is.na(current_obs)) {
+    stop(paste("Latest observation in data is NA.\n",
+               "Trim your data to the latest non-NA observation.\n",
+               "Observation date: ", T_date),
          call. = FALSE)
   }
 }
