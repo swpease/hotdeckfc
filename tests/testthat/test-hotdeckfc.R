@@ -68,6 +68,7 @@ test_that("hot deck fc basic test", {
   expect_equal(output, expected)
 })
 
+
 # h = 1
 # window = +- 2
 # n_closest = 1
@@ -203,6 +204,7 @@ test_that("hot deck fc partial validators", {
                regexp = "key")
 })
 
+
 test_that("hot deck fc vector errors", {
   data = tibble(
     datetime = c(as.Date("2023-01-01") + 0:2),
@@ -317,6 +319,7 @@ test_that("simulate sample path basic test", {
   expect_equal(output, expected)
 })
 
+
 test_that("simulate sample path error if latest obs is NA", {
   data = tibble(
     datetime = c(
@@ -364,6 +367,7 @@ test_that("get_local_rows", {
                                    window_fwd = 1)
   expect_equal(output, expected)
 })
+
 
 test_that("trim leading NAs", {
   data = tibble(

@@ -175,14 +175,23 @@ cv_hot_deck_forecast <- function(.data,
     test_data_sets = dplyr::bind_rows(test_data_sets, test_data)
 
     # Forecasting
-    fc = train_data %>%
-      hot_deck_forecast({{ .datetime }},
-                        {{ .observation }},
-                        times = times,
-                        h = h,
-                        window_back = window_back,
-                        window_fwd = window_fwd,
-                        n_closest = n_closest)
+    fc = tryCatch(
+      expr = train_data %>%
+        hot_deck_forecast({{ .datetime }},
+                          {{ .observation }},
+                          times = times,
+                          h = h,
+                          window_back = window_back,
+                          window_fwd = window_fwd,
+                          n_closest = n_closest),
+      error = function(e) {
+        stop(paste("\nHotdeck Error Msg:\n", conditionMessage(e),
+                   "\nCV values that generated this error:\n",
+                   "k =", k, "\n",
+                   "'now' date (`ref_date`):", ref_date),
+             call. = FALSE)
+      }
+    )
     fc = fc %>% dplyr::mutate(k = k)
     forecasts = dplyr::bind_rows(forecasts, fc)
 
