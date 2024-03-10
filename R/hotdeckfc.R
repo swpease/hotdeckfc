@@ -179,6 +179,10 @@ simulate_sample_path <- function(.data,
 #' simplicity, it collects the rows within a window of March 3 across
 #' all years of your data.
 #'
+#' Augments the data with a new column, `offset`, which gives the position
+#' of the observation row relative to the "now". e.g. if "now" is 2020-02-02,
+#' 2020-02-01 has an offset == -1, 2020-02-02 == 0, 2020-02-03 == 1.
+#'
 #' @param .data tsibble. The data. Passed via pipe.
 #' @param .datetime The datetime column of .data. Passed via pipe.
 #' @param h_curr Current forecast horizon position.
@@ -186,6 +190,8 @@ simulate_sample_path <- function(.data,
 #' a given season.
 #' @param window_fwd How many days forward to include in the window for
 #' a given season.
+#' @returns tibble (NO "s") of local rows. Same columns as .data, plus one new:
+#' "offset".
 get_local_rows <- function(.data,
                            .datetime,
                            h_curr,
@@ -223,6 +229,27 @@ get_local_rows <- function(.data,
     }
     local_rows_part = .data %>%
       dplyr::slice(window_start:window_end)
+
+    # nrow could == 0 if h is larger than window_back, such as for the
+    # tail (recent-est) end of a long forecast horizon
+    if (nrow(local_rows_part) > 0) {
+      # For binning in samplers.
+      # edge case example:
+      # window:  _________________
+      # idx:           1 2 3 4 5
+      # ref_idx:         *
+      # offset:       -1 0 1 2 3
+      offset_start = window_start - ref_idx
+      # (continuing example)
+      # Since window_end > max(idx) [while w_s is limited to 1, so
+      # don't need to worry about; window_end I left unlimited b/c
+      # slicing doesn't care if the end is past the last index],
+      # need to keep the offset_start:offset_end sequence correct length.
+      local_idx_max = local_rows_part %>% pull(idx) %>% max()
+      offset_end = min(window_end, local_idx_max) - ref_idx
+      local_rows_part = local_rows_part %>%
+        mutate(offset = offset_start:offset_end)
+    }
 
     local_rows = dplyr::bind_rows(local_rows, local_rows_part)
 

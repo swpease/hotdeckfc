@@ -13,7 +13,7 @@ internal_basic_hot_deck_sampler(
 )
 }
 \arguments{
-\item{local_rows}{The \code{local_rows} in \code{simulate_sample_path}.}
+\item{local_rows}{tibble (NOT tsibble) The \code{local_rows} in \code{simulate_sample_path}.}
 
 \item{.observation}{The observation column.}
 

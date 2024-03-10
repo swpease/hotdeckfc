@@ -24,7 +24,7 @@ basic_hot_deck_sampler <- function(next_obs_col_name) {
 
 #' Wrapped method for `basic_hot_deck_sampler`.
 #'
-#' @param local_rows The `local_rows` in `simulate_sample_path`.
+#' @param local_rows tibble (NOT tsibble) The `local_rows` in `simulate_sample_path`.
 #' @param .observation The observation column.
 #' @param current_obs The `current_obs` in `simulate_sample_path`.
 #' @param n_closest Scalar.

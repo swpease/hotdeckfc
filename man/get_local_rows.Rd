@@ -19,9 +19,18 @@ a given season.}
 \item{window_fwd}{How many days forward to include in the window for
 a given season.}
 }
+\value{
+tibble (NO "s") of local rows. Same columns as .data, plus one new:
+"offset".
+}
 \description{
 The reference date is the max date of the data, offset by \code{h_curr}.
 So, if your latest data is for 2023-03-03, and ignoring the offset for
 simplicity, it collects the rows within a window of March 3 across
 all years of your data.
+}
+\details{
+Augments the data with a new column, \code{offset}, which gives the position
+of the observation row relative to the "now". e.g. if "now" is 2020-02-02,
+2020-02-01 has an offset == -1, 2020-02-02 == 0, 2020-02-03 == 1.
 }
