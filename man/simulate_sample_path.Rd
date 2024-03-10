@@ -11,7 +11,8 @@ simulate_sample_path(
   h,
   window_back,
   window_fwd,
-  n_closest
+  n_closest,
+  sampler
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ a given season. Vector of length == h.}
 
 \item{n_closest}{The number of closest observations to pick from
 per hot deck random sampling. Vector of length == h.}
+
+\item{sampler}{Sampler function to generate forecasted values.}
 }
 \value{
 tibble of forecasts:

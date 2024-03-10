@@ -57,6 +57,44 @@ test_that("grid search window arg", {
 })
 
 
+test_that("grid search sampler args", {
+  # This just returns the args passed to the fn.
+  local_mocked_bindings(
+    cv_hot_deck_forecast = function(...) {rlang::list2(...)}
+  )
+
+  data = tibble(
+    datetime = as.Date("2021-04-02"),
+    obs = 10
+  ) %>%
+    as_tsibble(index = datetime)
+
+  ## basic test
+  grid = list(a = 3, b = 4,
+              grid_search_build_sampler_args("a",
+                                             basic_hot_deck_sampler("hi"),
+                                             lead_mutator))
+  out = data %>%
+    grid_search_hot_deck_cv(
+      datetime,
+      obs,
+      grid = grid,
+      echo = FALSE
+    )
+  expected_arg_list = list(a = 3,
+                           b = 4,
+                           sm_name = "a",
+                           sampler = basic_hot_deck_sampler("hi"),
+                           mutator = lead_mutator)
+  expected_passed_arg_list = list(a = 3,
+                                  b = 4,
+                                  sampler = basic_hot_deck_sampler("hi"),
+                                  mutator = lead_mutator)
+  expect_equal(out[[1]]$arg_list, expected_arg_list)
+  expect_equal(out[[1]]$cv_out[4:7], expected_passed_arg_list)
+  expect_equal(out[[1]]$cv_out[[1]], data)
+})
+
 test_that("grid search gridding", {
   # This just returns the args passed to the fn.
   local_mocked_bindings(
@@ -560,4 +598,21 @@ test_that("subtract a year", {
   expect_equal(lubridate::is.Date(d1), TRUE)
   expect_equal(lubridate::is.Date(d2), TRUE)
   expect_equal(lubridate::is.Date(d3), TRUE)
+})
+
+
+test_that("grid search sampler_arg fn", {
+  expected = list(
+    list(
+      sm_name = "a",
+      sampler = basic_hot_deck_sampler("hi"),
+      mutator = lead_mutator
+    )
+  )
+  expect_equal(
+    grid_search_build_sampler_args("a",
+                                  basic_hot_deck_sampler("hi"),
+                                  lead_mutator),
+    expected
+  )
 })

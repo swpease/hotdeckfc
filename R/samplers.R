@@ -21,6 +21,7 @@ basic_hot_deck_sampler <- function(next_obs_col_name) {
   purrr::partial(internal_basic_hot_deck_sampler, ... =, next_obs_col_name)
 }
 
+
 #' Wrapped method for `basic_hot_deck_sampler`.
 #'
 #' @param local_rows The `local_rows` in `simulate_sample_path`.

@@ -27,9 +27,12 @@ Supply a list of values you want to try with \code{hot_deck_forecast}, and
 they will be combined via \code{tidyr::expand_grid}.
 }
 \details{
-NB: If you only want symmetric windows, then supply an element of the grid
+If you only want symmetric windows, then supply an element of the grid
 arg named "window", and it will set "window_back" and "window_fwd" to that
 value / those values.
+
+If you want to pass samplers and mutators, you should use the helper
+function \code{grid_search_build_sampler_args}.
 
 \code{echo} prints progress like "Finished CV 3 of 8.".
 }

@@ -3,6 +3,9 @@ test_that("hot deck fc real data", {
     as_tsibble(index = datetime) %>%
     fill_gaps()
 
+  data = data %>%
+    mutate(next_observation = dplyr::lead(observation))
+
   set.seed(3)
   output = data %>%
     hot_deck_forecast(
@@ -12,7 +15,8 @@ test_that("hot deck fc real data", {
       h = 400,
       window_back = 20,
       window_fwd = 20,
-      n_closest = 10
+      n_closest = 10,
+      sampler = basic_hot_deck_sampler("next_observation")
     )
 
   set.seed(3)
@@ -47,6 +51,9 @@ test_that("hot deck fc basic test", {
     as_tsibble(index = datetime) %>%
     fill_gaps()
 
+  data = data %>%
+    mutate(next_obs = dplyr::lead(obs))
+
   output = data %>%
     hot_deck_forecast(
       .datetime = datetime,
@@ -55,7 +62,8 @@ test_that("hot deck fc basic test", {
       h = 2,
       window_back = 2,
       window_fwd = 2,
-      n_closest = 1  # only get closest obs; tsibble designed to yield unique closest obs
+      n_closest = 1,  # only get closest obs; tsibble designed to yield unique closest obs
+      sampler = basic_hot_deck_sampler("next_obs")
     )
   expected = tibble(
     datetime = c(as.Date("2023-01-04") + 0:1,
@@ -102,6 +110,9 @@ test_that("hot deck fc vector test", {
   ) %>%
     as_tsibble(index = datetime) %>%
     fill_gaps()
+
+  data = data %>%
+    mutate(next_obs = dplyr::lead(obs))
 
   set.seed(3)
   output = data %>%
@@ -281,6 +292,9 @@ test_that("hot deck fc error empty window", {
     as_tsibble(index = datetime) %>%
     fill_gaps()
 
+  data = data %>%
+    mutate(next_obs = dplyr::lead(obs))
+
   expect_error(data %>%
     hot_deck_forecast(
       .datetime = datetime,
@@ -290,7 +304,8 @@ test_that("hot deck fc error empty window", {
       window_back = 2,
       window_fwd = 2,
       n_closest = 1
-  ))
+  ),
+  regexp = "No local values")
 })
 
 
@@ -321,6 +336,9 @@ test_that("simulate sample path basic test", {
     as_tsibble(index = datetime) %>%
     fill_gaps()
 
+  data = data %>%
+    mutate(next_obs = dplyr::lead(obs))
+
   output = data %>%
     simulate_sample_path(
       .datetime = datetime,
@@ -328,7 +346,8 @@ test_that("simulate sample path basic test", {
       h = 2,
       window_back = rep(2,2),
       window_fwd = rep(2,2),
-      n_closest = rep(1,2)  # only get closest obs; tsibble designed to yield unique closest obs
+      n_closest = rep(1,2),  # only get closest obs; tsibble designed to yield unique closest obs
+      sampler = basic_hot_deck_sampler("next_obs")
     )
   expected = tibble(
     datetime = as.Date("2023-01-04") + 0:1,

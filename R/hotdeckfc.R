@@ -21,6 +21,12 @@
 #' where something like `window_fwd = c(1:10, rep(10,20))`, and maybe the same
 #' for `window_back` could be used to ensure symmetric windows near the border.
 #'
+#' The `sampler` function is what produces the actual forecasted values. It
+#' takes the local rows and current value (plus some other params), and returns
+#' a new current value and a forecasted value, which may or may not be the same.
+#'
+#' This design allows for custom sampler functions to be supplied.
+#'
 #' @param .data tsibble. The data. Passed via pipe.
 #' @param .datetime The datetime column of .data. Passed via pipe.
 #' @param .observation The observation column of .data. Passed via pipe.
@@ -35,6 +41,7 @@
 #' @param n_closest The number of closest observations to pick from
 #' per hot deck random sampling. Either scalar (length == 1) or vector
 #' of length == h.
+#' @param sampler Sampler function to generate forecasted values.
 #' @returns tibble of forecasts:
 #'   - nrow = h * times,
 #'   - columns:
@@ -51,7 +58,8 @@ hot_deck_forecast <- function(.data,
                               h,
                               window_back,
                               window_fwd,
-                              n_closest) {
+                              n_closest,
+                              sampler = basic_hot_deck_sampler("next_obs")) {
   # Validate
   .data %>% validate_data({{ .datetime }}, {{ .observation }})
   window_back = ensure_vector(window_back, h)
@@ -68,7 +76,8 @@ hot_deck_forecast <- function(.data,
                            h = h,
                            window_back = window_back,
                            window_fwd = window_fwd,
-                           n_closest = n_closest)
+                           n_closest = n_closest,
+                           sampler = sampler)
     fc = fc %>%
       dplyr::mutate(simulation_num = n_time)
     forecasts = dplyr::bind_rows(forecasts, fc)
@@ -103,6 +112,7 @@ hot_deck_forecast <- function(.data,
 #' a given season. Vector of length == h.
 #' @param n_closest The number of closest observations to pick from
 #' per hot deck random sampling. Vector of length == h.
+#' @param sampler Sampler function to generate forecasted values.
 #' @returns tibble of forecasts:
 #'   - nrow = h,
 #'   - columns:
@@ -115,9 +125,10 @@ simulate_sample_path <- function(.data,
                                  h,
                                  window_back,
                                  window_fwd,
-                                 n_closest) {
-  .data = .data %>%
-    dplyr::mutate(next_obs = dplyr::lead({{ .observation }}))
+                                 n_closest,
+                                 sampler) {
+  # .data = .data %>%
+    # dplyr::mutate(next_obs = dplyr::lead({{ .observation }}))
   T_date = .data %>%
     dplyr::slice_max(order_by = {{ .datetime }}) %>%
     dplyr::pull({{ .datetime }})
@@ -131,27 +142,25 @@ simulate_sample_path <- function(.data,
     # a tibble
     local_rows = .data %>%
       get_local_rows({{ .datetime }}, h_curr, window_back[[h_curr]], window_fwd[[h_curr]])
-    local_rows = local_rows %>%
-      dplyr::mutate(distance = abs(current_obs - {{ .observation }}))
-    # remove cases where next obs is missing
-    local_rows = local_rows %>%
-      dplyr::filter(!is.na(next_obs))
-    if (nrow(local_rows) == 0) {
-      stop(paste("No values to draw from for:\n",
-                 "h =", h_curr, "\n",
-                 "window_back =", window_back[[h_curr]], "\n",
-                 "window_fwd =", window_fwd[[h_curr]], "\n"),
-           call. = FALSE)
-    }
-    closest_rows = local_rows %>%
-      dplyr::slice_min(order_by = distance, n = n_closest[[h_curr]])
-    rand_row = closest_rows %>%
-      dplyr::slice_sample(n = 1)
-    # What was tomorrow's obs for our randomly selected row that had
-    # a similar obs to our current obs?
-    # That's our new current obs.
-    current_obs = rand_row %>% dplyr::pull(next_obs)
-    forecast[[h_curr]] = current_obs
+    sampler_out = tryCatch(
+      expr = local_rows %>% sampler({{ .observation }},
+                                    current_obs = current_obs,
+                                    n_closest = n_closest[[h_curr]]),
+      error = function(e) {
+        # TODO: handle "unused arguments" sampler error.
+        stop(paste("\n`sampler` Error Msg:\n", conditionMessage(e),
+                   "\nHot deck values that generated this error:\n",
+                   "h =", h_curr, "\n",
+                   "window_back =", window_back[[h_curr]], "\n",
+                   "window_fwd =", window_fwd[[h_curr]], "\n",
+                   "current_obs =", current_obs,
+                   "n_closest =", n_closest[[h_curr]]),
+             call. = FALSE)
+      }
+    )
+
+    current_obs = sampler_out[["new_current_obs"]]
+    forecast[[h_curr]] = sampler_out[["forecast"]]
     h_curr = h_curr + 1
   }
 

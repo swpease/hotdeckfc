@@ -3,9 +3,12 @@
 #' Supply a list of values you want to try with `hot_deck_forecast`, and
 #' they will be combined via `tidyr::expand_grid`.
 #'
-#' NB: If you only want symmetric windows, then supply an element of the grid
+#' If you only want symmetric windows, then supply an element of the grid
 #' arg named "window", and it will set "window_back" and "window_fwd" to that
 #' value / those values.
+#'
+#' If you want to pass samplers and mutators, you should use the helper
+#' function `grid_search_build_sampler_args`.
 #'
 #' `echo` prints progress like "Finished CV 3 of 8.".
 #'
@@ -24,6 +27,7 @@ grid_search_hot_deck_cv <- function(.data,
                                     .observation,
                                     grid,
                                     echo = TRUE) {
+  # TODO: extract grid building
   sym_window = purrr::pluck_exists(grid, "window")
   # list -> tibble of all combos
   grid = tidyr::expand_grid(!!!grid)
@@ -40,9 +44,16 @@ grid_search_hot_deck_cv <- function(.data,
   # ref: https://stackoverflow.com/q/63075767/6074637
   arg_lists = grid %>% purrr::pmap(\(...) list(...))
   for (arg_list in arg_lists) {
+    # Need to un-list (unwrap from protection against `expand_grid`) the
+    # sampler args.
+    arg_list = arg_list %>%
+      purrr::list_flatten(name_spec = "{inner}")
+    # Don't want the sm_name passed; would error as unused arg.
+    passed_arg_list = arg_list %>%
+      purrr::list_assign(sm_name = rlang::zap())
     cv_out = rlang::inject(.data %>% cv_hot_deck_forecast({{ .datetime }},
                                                           {{ .observation }},
-                                                          !!!arg_list))
+                                                          !!!passed_arg_list))
     output = list(
       arg_list = arg_list,
       cv_out = cv_out
@@ -59,6 +70,31 @@ grid_search_hot_deck_cv <- function(.data,
 }
 
 
+#' Build grid search sampler argument.
+#'
+#' This is a convenience function for if you want to pass
+#' sampler-mutator combinations to `grid_search_hot_deck_cv`.
+#'
+#' The `sm_name` argument is for downstream usage in performance
+#' assessments as a... name.
+#'
+#' @param sm_name The name of your sampler-mutator pair.
+#' @param sampler The sampler.
+#' @param mutator The mutator.
+#' @returns list(list(sm_name = sm_name, sampler = sampler, mutator = mutator))
+#' @export
+grid_search_build_sampler_args <- function(sm_name, sampler, mutator) {
+  # Yes, you need both lists.
+  list(
+    list(
+      sm_name = sm_name,
+      sampler = sampler,
+      mutator = mutator
+    )
+  )
+}
+
+
 #' Generate a num-seasons-fold(-ish) hot deck forecast.
 #'
 #' Produces a set of hot deck forecasts, one per season if possible.
@@ -72,7 +108,22 @@ grid_search_hot_deck_cv <- function(.data,
 #' If `offset` is non-zero, then the starting point will be the latest
 #' datetime + the offset.
 #'
-#' The parameters `times` through `n_closest`, are passed to `hot_deck_forecast`.
+#' The parameters `times` through `n_closest`, plus `sampler`,
+#' are passed to `hot_deck_forecast`.
+#'
+#' The `mutator` function is for cases where the `sampler` uses subsequent
+#' observations (e.g. a `lead`). While you can simply add your (e.g. `lead`)
+#' column to your data before passing it to `hot_deck_forecast`, you need
+#' to pass your desired mutation function as an argument to CV. It will
+#' be applied after the train-test split to avoid data leakage. For instance,
+#' the `lead` of the final training observation before your test data should
+#' be NA, not the first test data observation.
+#'
+#' If you do not want any mutation, use `non_mutator` as the argument.
+#'
+#' The `mutator` looks like: fn(.data, .obs) -> .data
+#'
+#' For details on `sampler`, see `hot_deck_forecast`.
 #'
 #' The current implementation has two train-test data splitting methods.
 #' The default is "conservative", which goes as follows:
@@ -104,6 +155,8 @@ grid_search_hot_deck_cv <- function(.data,
 #' of length == h.
 #' @param offset integer. Offset (in +- days) from the most recent row of .data
 #' to use as the starting point.
+#' @param sampler Sampler function to generate forecasted values.
+#' @param mutator Mutator function to be applied to training data.
 #' @param train_test_split_type default = "conservative". See help for details.
 #' @returns list containing:
 #'   forecasts: a `tibble` of hot deck forecasts:
@@ -127,7 +180,10 @@ cv_hot_deck_forecast <- function(.data,
                                  window_fwd,
                                  n_closest,
                                  offset = 0,  # non-hdfc arg
+                                 sampler = basic_hot_deck_sampler("next_obs"),
+                                 mutator = lead_mutator,
                                  train_test_split_type = c("conservative", "leaky")) {
+  # TODO: validate data
   train_test_split_type = match.arg(train_test_split_type)
 
   max_date = .data %>%
@@ -167,7 +223,9 @@ cv_hot_deck_forecast <- function(.data,
                                     window_fwd = window_fwd,
                                     min_date = min_date,
                                     split_type = train_test_split_type)
-    train_data = train_test_data$train_data
+    # Apply the mutator to training data after split to avoid data leak.
+    train_data = train_test_data$train_data %>%
+      mutator({{ .observation }})
     # TODO: test_data is a tsibble right now. Do I want it and forecasts
     # to be both tibbles or both tsibbles?
     test_data = train_test_data$test_data %>%
@@ -183,7 +241,8 @@ cv_hot_deck_forecast <- function(.data,
                           h = h,
                           window_back = window_back,
                           window_fwd = window_fwd,
-                          n_closest = n_closest),
+                          n_closest = n_closest,
+                          sampler = sampler),
       error = function(e) {
         stop(paste("\nHotdeck Error Msg:\n", conditionMessage(e),
                    "\nCV values that generated this error:\n",

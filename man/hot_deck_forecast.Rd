@@ -12,7 +12,8 @@ hot_deck_forecast(
   h,
   window_back,
   window_fwd,
-  n_closest
+  n_closest,
+  sampler = basic_hot_deck_sampler("next_obs")
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ of length == h.}
 \item{n_closest}{The number of closest observations to pick from
 per hot deck random sampling. Either scalar (length == 1) or vector
 of length == h.}
+
+\item{sampler}{Sampler function to generate forecasted values.}
 }
 \value{
 tibble of forecasts:
@@ -77,4 +80,10 @@ used for every horizon. If a vector, then for horizon h_i, the ith value
 is used. This may be useful as the borders of periodically missing data,
 where something like \code{window_fwd = c(1:10, rep(10,20))}, and maybe the same
 for \code{window_back} could be used to ensure symmetric windows near the border.
+
+The \code{sampler} function is what produces the actual forecasted values. It
+takes the local rows and current value (plus some other params), and returns
+a new current value and a forecasted value, which may or may not be the same.
+
+This design allows for custom sampler functions to be supplied.
 }
