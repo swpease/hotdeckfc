@@ -39,25 +39,27 @@ internal_basic_hot_deck_sampler <- function(local_rows,
                                             current_obs,
                                             n_closest,
                                             next_obs_col_name) {
-    local_rows = local_rows %>%
-      dplyr::mutate(distance = abs(current_obs - {{ .observation }}))
-    # remove cases where next obs is missing
-    local_rows = local_rows %>%
-      dplyr::filter(!is.na(.data[[next_obs_col_name]]))
-    if (nrow(local_rows) == 0) {
-      stop("No local values to draw from for:\n", call. = FALSE)
-    }
-    closest_rows = local_rows %>%
-      dplyr::slice_min(order_by = distance, n = n_closest)
-    rand_row = closest_rows %>%
-      dplyr::slice_sample(n = 1)
-    # What was tomorrow's obs for our randomly selected row that had
-    # a similar obs to our current obs?
-    # That's our new current obs, as well as our forecast.
-    new_current_obs = rand_row %>% dplyr::pull(.data[[next_obs_col_name]])
+  # Do we have something to work with?
+  if (all(is.na(local_rows[[next_obs_col_name]]))) {
+    stop("No local values to draw from for:\n", call. = FALSE)
+  }
 
-    list(
-      new_current_obs = new_current_obs,
-      forecast = new_current_obs
-    )
+  local_rows = local_rows %>%
+    dplyr::mutate(distance = abs(current_obs - {{ .observation }}))
+  # remove cases where next obs is missing
+  local_rows = local_rows %>%
+    dplyr::filter(!is.na(.data[[next_obs_col_name]]))
+  closest_rows = local_rows %>%
+    dplyr::slice_min(order_by = distance, n = n_closest)
+  rand_row = closest_rows %>%
+    dplyr::slice_sample(n = 1)
+  # What was tomorrow's obs for our randomly selected row that had
+  # a similar obs to our current obs?
+  # That's our new current obs, as well as our forecast.
+  new_current_obs = rand_row %>% dplyr::pull(.data[[next_obs_col_name]])
+
+  list(
+    new_current_obs = new_current_obs,
+    forecast = new_current_obs
+  )
 }
