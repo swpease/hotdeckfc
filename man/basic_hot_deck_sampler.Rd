@@ -4,11 +4,13 @@
 \alias{basic_hot_deck_sampler}
 \title{Generate a basic hot deck forecast value.}
 \usage{
-basic_hot_deck_sampler(next_obs_col_name)
+basic_hot_deck_sampler(next_obs_col_name, n_bins = 1)
 }
 \arguments{
 \item{next_obs_col_name}{Name of the column in your data containing the next
 observation (from, e.g. \code{dplyr::lead}).}
+
+\item{n_bins}{Number of bins to use. See details for... details.}
 }
 \value{
 list(new_current_obs, forecast), where
@@ -28,4 +30,12 @@ the next \code{current_obs} and the \code{forecast}.
 }
 \details{
 For \code{n_closest}, \code{dplyr::slice_min} is used, and tie values are included.
+
+\code{n_bins} works as follows:
+\itemize{
+\item if == 0, operate on entirety of \code{local_rows}
+\item if >= 1, one half of the local_rows (either the non-neg or non-pos offsets)
+is selected and split evenly into \code{n_bins}. Any remainder r adds 1 to
+the r nearest-to-0 bins' range.
+}
 }

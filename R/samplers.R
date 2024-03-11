@@ -9,16 +9,23 @@
 #'
 #' For `n_closest`, `dplyr::slice_min` is used, and tie values are included.
 #'
+#' `n_bins` works as follows:
+#'   - if == 0, operate on entirety of `local_rows`
+#'   - if >= 1, one half of the local_rows (either the non-neg or non-pos offsets)
+#'   is selected and split evenly into `n_bins`. Any remainder r adds 1 to
+#'   the r nearest-to-0 bins' range.
+#'
 #' @param next_obs_col_name Name of the column in your data containing the next
 #' observation (from, e.g. `dplyr::lead`).
+#' @param n_bins Number of bins to use. See details for... details.
 #' @returns list(new_current_obs, forecast), where
 #' new_current_obs = The value to use for `current_obs` in the next iteration,
 #'                   i.e. the next forecast.
 #' forecast = The forecasted value.
 #'
 #' @export
-basic_hot_deck_sampler <- function(next_obs_col_name) {
-  purrr::partial(internal_basic_hot_deck_sampler, ... =, next_obs_col_name)
+basic_hot_deck_sampler <- function(next_obs_col_name, n_bins = 1) {
+  purrr::partial(internal_basic_hot_deck_sampler, ... =, next_obs_col_name, n_bins)
 }
 
 
@@ -30,6 +37,7 @@ basic_hot_deck_sampler <- function(next_obs_col_name) {
 #' @param n_closest Scalar.
 #' @param next_obs_col_name Name of the column in your data containing the next
 #' observation (from, e.g. `dplyr::lead`).
+#' @param n_bins Number of bins to use. See details for... details.
 #' @returns list(new_current_obs, forecast), where
 #' new_current_obs = The value to use for `current_obs` in the next iteration,
 #'                   i.e. the next forecast.
@@ -38,12 +46,13 @@ internal_basic_hot_deck_sampler <- function(local_rows,
                                             .observation,
                                             current_obs,
                                             n_closest,
-                                            next_obs_col_name) {
+                                            next_obs_col_name,
+                                            n_bins) {
   rand_row = local_rows %>% sample_local_rows({{ .observation }},
                                               current_obs = current_obs,
                                               n_closest = n_closest,
                                               derived_col_name = next_obs_col_name,
-                                              n_bins = 0)
+                                              n_bins = n_bins)
   # What was tomorrow's obs for our randomly selected row that had
   # a similar obs to our current obs?
   # That's our new current obs, as well as our forecast.

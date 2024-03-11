@@ -72,7 +72,7 @@ test_that("grid search sampler args", {
   ## basic test
   grid = list(a = 3, b = 4,
               grid_search_build_sampler_args("a",
-                                             basic_hot_deck_sampler("hi"),
+                                             basic_hot_deck_sampler("hi", n_bins = 4),
                                              lead_mutator))
   out = data %>%
     grid_search_hot_deck_cv(
@@ -84,11 +84,11 @@ test_that("grid search sampler args", {
   expected_arg_list = list(a = 3,
                            b = 4,
                            sm_name = "a",
-                           sampler = basic_hot_deck_sampler("hi"),
+                           sampler = basic_hot_deck_sampler("hi", n_bins = 4),
                            mutator = lead_mutator)
   expected_passed_arg_list = list(a = 3,
                                   b = 4,
-                                  sampler = basic_hot_deck_sampler("hi"),
+                                  sampler = basic_hot_deck_sampler("hi", n_bins = 4),
                                   mutator = lead_mutator)
   expect_equal(out[[1]]$arg_list, expected_arg_list)
   expect_equal(out[[1]]$cv_out[4:7], expected_passed_arg_list)
@@ -182,7 +182,8 @@ test_that("cv works", {
       h = 2,
       window_back = 2,
       window_fwd = 2,
-      n_closest = 1
+      n_closest = 1,
+      sampler = basic_hot_deck_sampler("next_obs", n_bins = 0)
     )
 
   expect_equal(out$forecasts, expected_fcs)
@@ -582,7 +583,8 @@ test_that("cv_crps", {
       h = 2,
       window_back = 2,
       window_fwd = 2,
-      n_closest = 1
+      n_closest = 1,
+      sampler = basic_hot_deck_sampler("next_obs", n_bins = 0)
     )
   crps_out = cv_crps(out, "obs")
 
@@ -608,13 +610,13 @@ test_that("grid search sampler_arg fn", {
   expected = list(
     list(
       sm_name = "a",
-      sampler = basic_hot_deck_sampler("hi"),
+      sampler = basic_hot_deck_sampler("hi", n_bins = 2),
       mutator = lead_mutator
     )
   )
   expect_equal(
     grid_search_build_sampler_args("a",
-                                  basic_hot_deck_sampler("hi"),
+                                  basic_hot_deck_sampler("hi", n_bins = 2),
                                   lead_mutator),
     expected
   )

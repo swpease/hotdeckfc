@@ -9,7 +9,8 @@ internal_basic_hot_deck_sampler(
   .observation,
   current_obs,
   n_closest,
-  next_obs_col_name
+  next_obs_col_name,
+  n_bins
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ internal_basic_hot_deck_sampler(
 
 \item{next_obs_col_name}{Name of the column in your data containing the next
 observation (from, e.g. \code{dplyr::lead}).}
+
+\item{n_bins}{Number of bins to use. See details for... details.}
 }
 \value{
 list(new_current_obs, forecast), where

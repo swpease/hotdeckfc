@@ -7,7 +7,7 @@ test_that("basic_hot_deck_sampler basic test", {
   current_obs = 4
   n_closest = 2
 
-  wrapped = basic_hot_deck_sampler("next_obs")
+  wrapped = basic_hot_deck_sampler("next_obs", n_bins = 0)
   expected_1 = list(
     new_current_obs = 5,
     forecast = 5
@@ -41,7 +41,7 @@ test_that("basic_hot_deck_sampler no local values", {
   current_obs = 4
   n_closest = 2
 
-  wrapped = basic_hot_deck_sampler("next_obs")
+  wrapped = basic_hot_deck_sampler("next_obs", n_bins = 0)
 
   expect_error(local_rows %>% wrapped(obs, current_obs, n_closest),
                regexp = "No local values.*for")

@@ -16,7 +16,7 @@ test_that("hot deck fc real data", {
       window_back = 20,
       window_fwd = 20,
       n_closest = 10,
-      sampler = basic_hot_deck_sampler("next_observation")
+      sampler = basic_hot_deck_sampler("next_observation", n_bins = 0)
     )
 
   set.seed(3)
@@ -63,7 +63,7 @@ test_that("hot deck fc basic test", {
       window_back = 2,
       window_fwd = 2,
       n_closest = 1,  # only get closest obs; tsibble designed to yield unique closest obs
-      sampler = basic_hot_deck_sampler("next_obs")
+      sampler = basic_hot_deck_sampler("next_obs", n_bins = 0)
     )
   expected = tibble(
     datetime = c(as.Date("2023-01-04") + 0:1,
@@ -123,7 +123,8 @@ test_that("hot deck fc vector test", {
       h = 2,
       window_back = 2,
       window_fwd = c(2,3),
-      n_closest = c(1,2)
+      n_closest = c(1,2),
+      sampler = basic_hot_deck_sampler("next_obs", n_bins = 0)
     )
   expected = tibble(
     datetime = c(as.Date("2023-01-04") + 0:1,
@@ -352,7 +353,7 @@ test_that("simulate sample path basic test", {
       window_back = rep(2,2),
       window_fwd = rep(2,2),
       n_closest = rep(1,2),  # only get closest obs; tsibble designed to yield unique closest obs
-      sampler = basic_hot_deck_sampler("next_obs")
+      sampler = basic_hot_deck_sampler("next_obs", n_bins = 0)
     )
   expected = tibble(
     datetime = as.Date("2023-01-04") + 0:1,
