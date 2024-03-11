@@ -208,17 +208,20 @@ test_that("cv empty window err", {
     as_tsibble(index = datetime) %>%
     fill_gaps()
 
-  expect_error(data %>%
-    cv_hot_deck_forecast(
-      datetime,
-      obs,
-      offset = 0,
-      times = 2,
-      h = 20,
-      window_back = 2,
-      window_fwd = 2,
-      n_closest = 1
-   ),
+  # c.f. "test-hotdeckfc.R: hot deck fc warning then error"
+  expect_error(
+    expect_warning(data %>%
+      cv_hot_deck_forecast(
+        datetime,
+        obs,
+        offset = 0,
+        times = 2,
+        h = 20,
+        window_back = 2,
+        window_fwd = 2,
+        n_closest = 1
+     ),
+     regexp = "Sampling from entire bin"),
    regexp = "k =")
 })
 

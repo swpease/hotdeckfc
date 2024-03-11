@@ -278,7 +278,7 @@ test_that("hot deck fc vector errors", {
 })
 
 
-test_that("hot deck fc error empty window", {
+test_that("hot deck fc warning then error in h incrementing up to empty window", {
   data = tibble(
     datetime = c(
       as.Date("2021-01-01") + 0:3,
@@ -295,17 +295,22 @@ test_that("hot deck fc error empty window", {
   data = data %>%
     mutate(next_obs = dplyr::lead(obs))
 
-  expect_error(data %>%
-    hot_deck_forecast(
-      .datetime = datetime,
-      .observation = obs,
-      times = 2,
-      h = 20,
-      window_back = 2,
-      window_fwd = 2,
-      n_closest = 1
-  ),
-  regexp = "No local values")
+  # first, there's a warning as h = 3 yields a single
+  # non-NA next_obs to draw from.
+  # then, at h = 4, there's no non-NA next_obs'es, so error.
+  expect_error(
+    expect_warning(data %>%
+      hot_deck_forecast(
+        .datetime = datetime,
+        .observation = obs,
+        times = 2,
+        h = 20,
+        window_back = 2,
+        window_fwd = 2,
+        n_closest = 1
+      ),
+      regexp = "Sampling from entire bin"),
+    regexp = "No local values")
 })
 
 
