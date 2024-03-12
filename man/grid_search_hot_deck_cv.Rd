@@ -13,7 +13,7 @@ grid_search_hot_deck_cv(.data, .datetime, .observation, grid, echo = TRUE)
 
 \item{.observation}{The observation column of .data. Passed via pipe.}
 
-\item{grid}{list. names correspond to \code{hot_deck_forecast} args.}
+\item{grid}{tibble. Created using \code{build_grid}.}
 
 \item{echo}{Print progress?}
 }
@@ -23,16 +23,8 @@ args: The arguments that the particular CV was called with.
 cv_out: The output of \code{cv_hot_deck_forecast} for those args.
 }
 \description{
-Supply a list of values you want to try with \code{hot_deck_forecast}, and
-they will be combined via \code{tidyr::expand_grid}.
+Use \code{build_grid} to build the tibble to pass to the \code{grid} argument.
 }
 \details{
-If you only want symmetric windows, then supply an element of the grid
-arg named "window", and it will set "window_back" and "window_fwd" to that
-value / those values.
-
-If you want to pass samplers and mutators, you should use the helper
-function \code{grid_search_build_sampler_args}.
-
 \code{echo} prints progress like "Finished CV 3 of 8.".
 }
