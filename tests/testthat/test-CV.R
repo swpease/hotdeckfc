@@ -53,7 +53,7 @@ test_that("cv works", {
       window_back = 2,
       window_fwd = 2,
       n_closest = 1,
-      sampler = basic_hot_deck_sampler("next_obs", n_bins = 0)
+      sampler = hot_deck_lead_sampler("next_obs", n_bins = 0)
     )
 
   expect_equal(out$forecasts, expected_fcs)
@@ -454,7 +454,7 @@ test_that("cv_crps", {
       window_back = 2,
       window_fwd = 2,
       n_closest = 1,
-      sampler = basic_hot_deck_sampler("next_obs", n_bins = 0)
+      sampler = hot_deck_lead_sampler("next_obs", n_bins = 0)
     )
   crps_out = cv_crps(out, "obs")
 

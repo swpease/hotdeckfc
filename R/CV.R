@@ -83,7 +83,7 @@ cv_hot_deck_forecast <- function(.data,
                                  window_fwd,
                                  n_closest,
                                  offset = 0,  # non-hdfc arg
-                                 sampler = basic_hot_deck_sampler("next_obs"),
+                                 sampler = hot_deck_lead_sampler("next_obs"),
                                  mutator = lead_mutator,
                                  train_test_split_type = c("conservative", "leaky")) {
   # TODO: validate data

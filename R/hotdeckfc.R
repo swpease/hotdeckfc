@@ -59,7 +59,7 @@ hot_deck_forecast <- function(.data,
                               window_back,
                               window_fwd,
                               n_closest,
-                              sampler = basic_hot_deck_sampler("next_obs")) {
+                              sampler = hot_deck_lead_sampler("next_obs")) {
   # Validate
   .data %>% validate_data({{ .datetime }}, {{ .observation }})
   window_back = ensure_vector(window_back, h)

@@ -1,4 +1,4 @@
-test_that("basic_hot_deck_sampler basic test", {
+test_that("hot_deck_lead_sampler basic test", {
   local_rows = tibble(
     obs = 1:10,
     next_obs = dplyr::lead(obs),
@@ -7,7 +7,7 @@ test_that("basic_hot_deck_sampler basic test", {
   current_obs = 4
   n_closest = 2
 
-  wrapped = basic_hot_deck_sampler("next_obs", n_bins = 0)
+  wrapped = hot_deck_lead_sampler("next_obs", n_bins = 0)
   expected_1 = list(
     new_current_obs = 5,
     forecast = 5
@@ -32,7 +32,7 @@ test_that("basic_hot_deck_sampler basic test", {
   expect_equal(out3, expected_3)
 })
 
-test_that("basic_hot_deck_sampler no local values", {
+test_that("hot_deck_lead_sampler no local values", {
   local_rows = tibble(
     obs = 1:10,
     next_obs = rep(NA, 10),
@@ -41,7 +41,7 @@ test_that("basic_hot_deck_sampler no local values", {
   current_obs = 4
   n_closest = 2
 
-  wrapped = basic_hot_deck_sampler("next_obs", n_bins = 0)
+  wrapped = hot_deck_lead_sampler("next_obs", n_bins = 0)
 
   expect_error(local_rows %>% wrapped(obs, current_obs, n_closest),
                regexp = "No local values.*for")

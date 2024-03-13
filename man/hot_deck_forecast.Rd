@@ -13,7 +13,7 @@ hot_deck_forecast(
   window_back,
   window_fwd,
   n_closest,
-  sampler = basic_hot_deck_sampler("next_obs")
+  sampler = hot_deck_lead_sampler("next_obs")
 )
 }
 \arguments{

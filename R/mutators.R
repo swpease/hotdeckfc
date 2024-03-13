@@ -1,6 +1,6 @@
 #' Add a column of leads to data.
 #'
-#' This mutator should be paired with `basic_hot_deck_sampler` for use in CV.
+#' This mutator should be paired with `hot_deck_lead_sampler` for use in CV.
 #' It is applied to the training data after the train-test split,
 #' to avoid data leakage.
 #'

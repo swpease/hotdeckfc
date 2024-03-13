@@ -24,12 +24,12 @@
 #' forecast = The forecasted value.
 #'
 #' @export
-basic_hot_deck_sampler <- function(next_obs_col_name, n_bins = 1) {
-  purrr::partial(internal_basic_hot_deck_sampler, ... =, next_obs_col_name, n_bins)
+hot_deck_lead_sampler <- function(next_obs_col_name, n_bins = 0) {
+  purrr::partial(internal_hot_deck_lead_sampler, ... =, next_obs_col_name, n_bins)
 }
 
 
-#' Wrapped method for `basic_hot_deck_sampler`.
+#' Wrapped method for `hot_deck_lead_sampler`.
 #'
 #' @param local_rows tibble (NOT tsibble) The `local_rows` in `simulate_sample_path`.
 #' @param .observation The observation column.
@@ -42,7 +42,7 @@ basic_hot_deck_sampler <- function(next_obs_col_name, n_bins = 1) {
 #' new_current_obs = The value to use for `current_obs` in the next iteration,
 #'                   i.e. the next forecast.
 #' forecast = The forecasted value.
-internal_basic_hot_deck_sampler <- function(local_rows,
+internal_hot_deck_lead_sampler <- function(local_rows,
                                             .observation,
                                             current_obs,
                                             n_closest,

@@ -15,7 +15,7 @@ lead_mutator(.data, .observation)
 .data, augmented with a column, named \code{next_obs}, of leads.
 }
 \description{
-This mutator should be paired with \code{basic_hot_deck_sampler} for use in CV.
+This mutator should be paired with \code{hot_deck_lead_sampler} for use in CV.
 It is applied to the training data after the train-test split,
 to avoid data leakage.
 }
