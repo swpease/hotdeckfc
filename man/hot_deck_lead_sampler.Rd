@@ -4,7 +4,7 @@
 \alias{hot_deck_lead_sampler}
 \title{Generate a hot deck forecast value using \code{lead}s.}
 \usage{
-hot_deck_lead_sampler(next_obs_col_name, n_bins = 0)
+hot_deck_lead_sampler(next_obs_col_name = "next_obs", n_bins = 0)
 }
 \arguments{
 \item{next_obs_col_name}{Name of the column in your data containing the next

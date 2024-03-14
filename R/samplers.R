@@ -23,7 +23,7 @@
 #' forecast = The forecasted value.
 #'
 #' @export
-hot_deck_lead_sampler <- function(next_obs_col_name, n_bins = 0) {
+hot_deck_lead_sampler <- function(next_obs_col_name = "next_obs", n_bins = 0) {
   purrr::partial(internal_hot_deck_lead_sampler, ... =, next_obs_col_name, n_bins)
 }
 

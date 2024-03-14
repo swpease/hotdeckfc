@@ -19,3 +19,6 @@ This mutator should be paired with \code{hot_deck_lead_sampler} for use in CV.
 It is applied to the training data after the train-test split,
 to avoid data leakage.
 }
+\details{
+The new column is named "next_obs".
+}

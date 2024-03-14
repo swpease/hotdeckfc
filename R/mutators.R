@@ -4,6 +4,8 @@
 #' It is applied to the training data after the train-test split,
 #' to avoid data leakage.
 #'
+#' The new column is named "next_obs".
+#'
 #' @param .data The data. A tsibble.
 #' @param .observation The observation column. Passed via pipe.
 #' @returns .data, augmented with a column, named `next_obs`, of leads.
@@ -19,6 +21,8 @@ lead_mutator <- function(.data, .observation) {
 #' This mutator should be paired with `NAME` for use in CV.
 #' It is applied to the training data after the train-test split,
 #' to avoid data leakage.
+#'
+#' The new column is named "diff_to_next_obs".
 #'
 #' @param .data The data. A tsibble.
 #' @param .observation The observation column. Passed via pipe.
