@@ -1,4 +1,4 @@
-#' Generate a basic hot deck forecast value.
+#' Generate a hot deck forecast value using `lead`s.
 #'
 #' Given a `local_rows` and `current_obs`, it:
 #'   - Finds those rows in `local_rows` with observations closest to `current_obs`.
@@ -19,8 +19,7 @@
 #' observation (from, e.g. `dplyr::lead`).
 #' @param n_bins Number of bins to use. See details for... details.
 #' @returns list(new_current_obs, forecast), where
-#' new_current_obs = The value to use for `current_obs` in the next iteration,
-#'                   i.e. the next forecast.
+#' new_current_obs = The value to use for `current_obs` in the next iteration.
 #' forecast = The forecasted value.
 #'
 #' @export
@@ -57,6 +56,73 @@ internal_hot_deck_lead_sampler <- function(local_rows,
   # a similar obs to our current obs?
   # That's our new current obs, as well as our forecast.
   new_current_obs = rand_row %>% dplyr::pull(.data[[next_obs_col_name]])
+
+  list(
+    new_current_obs = new_current_obs,
+    forecast = new_current_obs
+  )
+}
+
+
+#' Generate a hot deck forecast value using `lead`s of `difference`s.
+#'
+#' Given a `local_rows` and `current_obs`, it:
+#'   - Finds those rows in `local_rows` with observations closest to `current_obs`.
+#'   - Takes the `n_closest` of those.
+#'   - Randomly samples one of those.
+#'   - Adds that sample's difference-to-its-tomorrow to the current observation.
+#'   - Returns this value as both the next `current_obs` and the `forecast`.
+#'
+#' For `n_closest`, `dplyr::slice_min` is used, and tie values are included.
+#'
+#' `n_bins` works as follows:
+#'   - if == 0, operate on entirety of `local_rows`
+#'   - if >= 1, one half of the local_rows (either the non-neg or non-pos offsets)
+#'   is selected and split evenly into `n_bins`. Any remainder r adds 1 to
+#'   the r nearest-to-0 bins' range.
+#'
+#' @param diff_to_next_obs_col_name Name of the column in your data containing the next
+#' observation (from, e.g. `diff_mutator`).
+#' @param n_bins Number of bins to use. See details for... details.
+#' @returns list(new_current_obs, forecast), where
+#' new_current_obs = The value to use for `current_obs` in the next iteration.
+#' forecast = The forecasted value.
+#'
+#' @export
+hot_deck_diff_sampler <- function(diff_to_next_obs_col_name = "diff_to_next_obs", n_bins = 0) {
+  purrr::partial(internal_hot_deck_diff_sampler, ... =, diff_to_next_obs_col_name, n_bins)
+}
+
+
+#' Wrapped method for `hot_deck_diff_sampler`.
+#'
+#' @param local_rows tibble (NOT tsibble) The `local_rows` in `simulate_sample_path`.
+#' @param .observation The observation column.
+#' @param current_obs The `current_obs` in `simulate_sample_path`.
+#' @param n_closest Scalar.
+#' @param diff_to_next_obs_col_name Name of the column in your data containing
+#' the diff to the next observation (from, e.g. `diff_mutator`).
+#' @param n_bins Number of bins to use. See details for... details.
+#' @returns list(new_current_obs, forecast), where
+#' new_current_obs = The value to use for `current_obs` in the next iteration.
+#' forecast = The forecasted value.
+internal_hot_deck_diff_sampler <- function(local_rows,
+                                           .observation,
+                                           current_obs,
+                                           n_closest,
+                                           diff_to_next_obs_col_name,
+                                           n_bins) {
+  rand_row = local_rows %>% sample_local_rows({{ .observation }},
+                                              current_obs = current_obs,
+                                              n_closest = n_closest,
+                                              derived_col_name = diff_to_next_obs_col_name,
+                                              n_bins = n_bins)
+  # What was the difference to tomorrow's obs for our randomly selected
+  # row that had a similar obs to our current obs?
+  # We add that to our current obs to get our new current obs,
+  # which is also our forecast for tomorrow.
+  diff_to_tomorrow = rand_row %>% dplyr::pull(.data[[diff_to_next_obs_col_name]])
+  new_current_obs = current_obs + diff_to_tomorrow
 
   list(
     new_current_obs = new_current_obs,

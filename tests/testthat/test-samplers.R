@@ -1,3 +1,32 @@
+test_that("hot_deck_diff_sampler basic test", {
+  local_rows = tibble(
+    obs = c(1,8,20),
+    diff_to_next_obs = dplyr::lead(tsibble::difference(obs)),
+    offset = 1:3
+  )
+  n_closest = 1
+  current_obs_1 = 4
+  current_obs_2 = 20
+
+  wrapped = hot_deck_diff_sampler("diff_to_next_obs", n_bins = 0)
+  expected_1 = list(
+    new_current_obs = 11,
+    forecast = 11
+  )
+  expected_2 = list(
+    new_current_obs = 32,
+    forecast = 32
+  )
+
+
+  out1 = local_rows %>% wrapped(obs, current_obs_1, n_closest)
+  expect_equal(out1, expected_1)
+
+  out2 = local_rows %>% wrapped(obs, current_obs_2, n_closest)
+  expect_equal(out2, expected_2)
+})
+
+
 test_that("hot_deck_lead_sampler basic test", {
   local_rows = tibble(
     obs = 1:10,
@@ -31,6 +60,7 @@ test_that("hot_deck_lead_sampler basic test", {
   out3 = local_rows %>% wrapped(obs, current_obs, n_closest)
   expect_equal(out3, expected_3)
 })
+
 
 test_that("hot_deck_lead_sampler no local values", {
   local_rows = tibble(
