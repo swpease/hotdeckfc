@@ -64,6 +64,78 @@ internal_hot_deck_lead_sampler <- function(local_rows,
 }
 
 
+#' Generate a hot deck forecast value using a covariate's `lead`s.
+#'
+#' Given a `local_rows` and `current_obs`, it:
+#'   - Finds those rows in `local_rows` with a covariate's
+#'   observations closest to `current_obs`.
+#'   - Takes the `n_closest` of those.
+#'   - Randomly samples one of those.
+#'   - Returns:
+#'     - That sample's "tomorrow"s covariate's observation as the next `current_obs`
+#'     - That sample's tomorrow's target variable's observation and the `forecast`.
+#'
+#' For `n_closest`, `dplyr::slice_min` is used, and tie values are included.
+#'
+#' `n_bins` works as follows:
+#'   - if == 0, operate on entirety of `local_rows`
+#'   - if >= 1, one half of the local_rows (either the non-neg or non-pos offsets)
+#'   is selected and split evenly into `n_bins`. Any remainder r adds 1 to
+#'   the r nearest-to-0 bins' range.
+#'
+#' @param next_obs_col_names len-2 vec. Names of the columns in your data
+#' containing the next covariate observation and its corresponding
+#' target observation (from, e.g. ``).
+#' @param n_bins Number of bins to use. See details for... details.
+#' @returns list(new_current_obs, forecast), where
+#' new_current_obs = The value to use for `current_obs` in the next iteration.
+#' forecast = The forecasted value.
+#'
+#' @export
+hot_deck_covariate_lead_sampler <- function(next_obs_col_names = c("next_cov_obs", "next_target_obs"), n_bins = 0) {
+  purrr::partial(internal_hot_deck_covariate_lead_sampler, ... =, next_obs_col_names, n_bins)
+}
+
+
+#' Wrapped method for `hot_deck_covariate_lead_sampler`.
+#'
+#' @param local_rows tibble (NOT tsibble) The `local_rows` in `simulate_sample_path`.
+#' @param .observation The covariate's observation column.
+#' @param current_obs The `current_obs` in `simulate_sample_path`.
+#' @param n_closest Scalar.
+#' @param next_obs_col_names len-2 vec. Names of the columns in your data
+#' containing the next covariate observation and its corresponding
+#' target observation (from, e.g. ``).
+#' @param n_bins Number of bins to use. See details for... details.
+#' @returns list(new_current_obs, forecast), where
+#' new_current_obs = The value to use for `current_obs` in the next iteration,
+#'                   i.e. the next forecast.
+#' forecast = The forecasted value.
+internal_hot_deck_covariate_lead_sampler <- function(local_rows,
+                                                     .observation,
+                                                     current_obs,
+                                                     n_closest,
+                                                     next_obs_col_names,
+                                                     n_bins) {
+  rand_row = local_rows %>% sample_local_rows({{ .observation }},
+                                              current_obs = current_obs,
+                                              n_closest = n_closest,
+                                              derived_col_name = next_obs_col_names[[1]],
+                                              n_bins = n_bins)
+  # What was tomorrow's covariate's obs for our randomly selected row that had
+  # a similar obs to our current covariate obs?
+  # That's our new current obs.
+  new_current_obs = rand_row %>% dplyr::pull(.data[[next_obs_col_names[[1]]]])
+  # And our forecast is its observation of the target variable
+  forecast = rand_row %>% dplyr::pull(.data[[next_obs_col_names[[2]]]])
+
+  list(
+    new_current_obs = new_current_obs,
+    forecast = forecast
+  )
+}
+
+
 #' Generate a hot deck forecast value using `lead`s of `difference`s.
 #'
 #' Given a `local_rows` and `current_obs`, it:

@@ -16,6 +16,27 @@ lead_mutator <- function(.data, .observation) {
 }
 
 
+#' Add a column of covariate and target leads to data.
+#'
+#' This mutator should be paired with `hot_deck_covariate_lead_sampler` for use in CV.
+#' It is applied to the training data after the train-test split,
+#' to avoid data leakage.
+#'
+#' The new columns are named "next_cov_obs" and "next_target_obs".
+#'
+#' @param .data The data. A tsibble.
+#' @param .cov_observation The covariate observation column. Passed via pipe.
+#' @returns .data, augmented with a column, named `next_obs`, of leads.
+#'
+#' @export
+lead_cov_mutator <- function(.data, .cov_observation) {
+  .data %>% mutate(
+    next_cov_obs = dplyr::lead({{ .cov_observation }}),
+    next_target_obs = dplyr::lead(observation))
+}
+
+
+
 #' Add a column of differences to the next observation.
 #'
 #' This mutator should be paired with `NAME` for use in CV.

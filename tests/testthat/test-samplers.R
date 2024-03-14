@@ -1,3 +1,25 @@
+test_that("hot_deck_covariate_lead_sampler basic test", {
+  local_rows = tibble(
+    observation = c(1,8,20),
+    cov_obs = c(2, 3, 4)
+  )
+  n_closest = 1
+  current_obs = 4
+
+  local_rows = local_rows %>% lead_cov_mutator(cov_obs)
+
+  wrapped = hot_deck_covariate_lead_sampler(n_bins = 0)
+  expected = list(
+    new_current_obs = 4,
+    forecast = 20
+  )
+
+
+  out = local_rows %>% wrapped(cov_obs, current_obs, n_closest)
+  expect_equal(out, expected)
+})
+
+
 test_that("hot_deck_diff_sampler basic test", {
   local_rows = tibble(
     obs = c(1,8,20),
