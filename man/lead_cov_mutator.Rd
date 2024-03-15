@@ -15,10 +15,14 @@ lead_cov_mutator(.data, .cov_observation)
 .data, augmented with a column, named \code{next_obs}, of leads.
 }
 \description{
+Adds two new columns, named "next_cov_obs" and "next_target_obs",
+of the next (i.e. lead) covariate and target observations.
+}
+\details{
+The corresponding selector, \code{hot_deck_covariate_lead_sampler}, defaults to
+these names for the lead columns, so it makes things slightly easier in that regard.
+
 This mutator should be paired with \code{hot_deck_covariate_lead_sampler} for use in CV.
 It is applied to the training data after the train-test split,
 to avoid data leakage.
-}
-\details{
-The new columns are named "next_cov_obs" and "next_target_obs".
 }

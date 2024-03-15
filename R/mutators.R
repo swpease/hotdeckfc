@@ -1,10 +1,13 @@
 #' Add a column of leads to data.
 #'
+#' Adds a new column, named "next_obs", of the next (i.e. lead) observations.
+#'
+#' The corresponding selector, `hot_deck_lead_sampler`, defaults to this
+#' name for the lead column, so it makes things slightly easier in that regard.
+#'
 #' This mutator should be paired with `hot_deck_lead_sampler` for use in CV.
 #' It is applied to the training data after the train-test split,
 #' to avoid data leakage.
-#'
-#' The new column is named "next_obs".
 #'
 #' @param .data The data. A tsibble.
 #' @param .observation The observation column. Passed via pipe.
@@ -18,11 +21,15 @@ lead_mutator <- function(.data, .observation) {
 
 #' Add a column of covariate and target leads to data.
 #'
+#' Adds two new columns, named "next_cov_obs" and "next_target_obs",
+#' of the next (i.e. lead) covariate and target observations.
+#'
+#' The corresponding selector, `hot_deck_covariate_lead_sampler`, defaults to
+#' these names for the lead columns, so it makes things slightly easier in that regard.
+#'
 #' This mutator should be paired with `hot_deck_covariate_lead_sampler` for use in CV.
 #' It is applied to the training data after the train-test split,
 #' to avoid data leakage.
-#'
-#' The new columns are named "next_cov_obs" and "next_target_obs".
 #'
 #' @param .data The data. A tsibble.
 #' @param .cov_observation The covariate observation column. Passed via pipe.
@@ -39,11 +46,15 @@ lead_cov_mutator <- function(.data, .cov_observation) {
 
 #' Add a column of differences to the next observation.
 #'
-#' This mutator should be paired with `NAME` for use in CV.
+#' Adds a new column, named "diff_to_next_obs", of the differences to the
+#' next (i.e. lead) observations.
+#'
+#' The corresponding selector, `hot_deck_diff_sampler`, defaults to this name
+#' for the diff column, so it makes things slightly easier in that regard.
+#'
+#' This mutator should be paired with `hot_deck_diff_sampler` for use in CV.
 #' It is applied to the training data after the train-test split,
 #' to avoid data leakage.
-#'
-#' The new column is named "diff_to_next_obs".
 #'
 #' @param .data The data. A tsibble.
 #' @param .observation The observation column. Passed via pipe.

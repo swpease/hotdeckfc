@@ -15,10 +15,13 @@ lead_mutator(.data, .observation)
 .data, augmented with a column, named \code{next_obs}, of leads.
 }
 \description{
+Adds a new column, named "next_obs", of the next (i.e. lead) observations.
+}
+\details{
+The corresponding selector, \code{hot_deck_lead_sampler}, defaults to this
+name for the lead column, so it makes things slightly easier in that regard.
+
 This mutator should be paired with \code{hot_deck_lead_sampler} for use in CV.
 It is applied to the training data after the train-test split,
 to avoid data leakage.
-}
-\details{
-The new column is named "next_obs".
 }
