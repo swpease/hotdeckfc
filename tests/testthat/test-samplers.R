@@ -8,7 +8,9 @@ test_that("hot_deck_covariate_lead_sampler basic test", {
 
   local_rows = local_rows %>% lead_cov_mutator(cov_obs)
 
-  wrapped = hot_deck_covariate_lead_sampler(n_bins = 0)
+  wrapped = hot_deck_covariate_lead_sampler(next_cov_obs_col_name = "next_cov_obs",
+                                            next_target_obs_col_name = "next_target_obs",
+                                            n_bins = 0)
   expected = list(
     new_current_obs = 4,
     forecast = 20

@@ -5,14 +5,17 @@
 \title{Generate a hot deck forecast value using a covariate's \code{lead}s.}
 \usage{
 hot_deck_covariate_lead_sampler(
-  next_obs_col_names = c("next_cov_obs", "next_target_obs"),
+  next_cov_obs_col_name = "next_cov_obs",
+  next_target_obs_col_name = "next_target_obs",
   n_bins = 0
 )
 }
 \arguments{
-\item{next_obs_col_names}{len-2 vec. Names of the columns in your data
-containing the next covariate observation and its corresponding
-target observation (from, e.g. ``).}
+\item{next_cov_obs_col_name}{Name of the column in your data
+containing the next covariate observation (from, e.g. \code{lead_cov_mutator}).}
+
+\item{next_target_obs_col_name}{The corresponding target observation
+(from, e.g. \code{lead_cov_mutator}).}
 
 \item{n_bins}{Number of bins to use. See details for... details.}
 }

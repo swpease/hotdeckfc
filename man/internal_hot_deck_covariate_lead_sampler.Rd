@@ -9,7 +9,8 @@ internal_hot_deck_covariate_lead_sampler(
   .observation,
   current_obs,
   n_closest,
-  next_obs_col_names,
+  next_cov_obs_col_name,
+  next_target_obs_col_name,
   n_bins
 )
 }
@@ -22,9 +23,11 @@ internal_hot_deck_covariate_lead_sampler(
 
 \item{n_closest}{Scalar.}
 
-\item{next_obs_col_names}{len-2 vec. Names of the columns in your data
-containing the next covariate observation and its corresponding
-target observation (from, e.g. ``).}
+\item{next_cov_obs_col_name}{Name of the column in your data
+containing the next covariate observation (from, e.g. \code{lead_cov_mutator}).}
+
+\item{next_target_obs_col_name}{The corresponding target observation
+(from, e.g. \code{lead_cov_mutator}).}
 
 \item{n_bins}{Number of bins to use. See details for... details.}
 }

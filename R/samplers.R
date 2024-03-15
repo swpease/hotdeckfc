@@ -83,17 +83,24 @@ internal_hot_deck_lead_sampler <- function(local_rows,
 #'   is selected and split evenly into `n_bins`. Any remainder r adds 1 to
 #'   the r nearest-to-0 bins' range.
 #'
-#' @param next_obs_col_names len-2 vec. Names of the columns in your data
-#' containing the next covariate observation and its corresponding
-#' target observation (from, e.g. ``).
+#' @param next_cov_obs_col_name Name of the column in your data
+#' containing the next covariate observation (from, e.g. `lead_cov_mutator`).
+#' @param next_target_obs_col_name The corresponding target observation
+#' (from, e.g. `lead_cov_mutator`).
 #' @param n_bins Number of bins to use. See details for... details.
 #' @returns list(new_current_obs, forecast), where
 #' new_current_obs = The value to use for `current_obs` in the next iteration.
 #' forecast = The forecasted value.
 #'
 #' @export
-hot_deck_covariate_lead_sampler <- function(next_obs_col_names = c("next_cov_obs", "next_target_obs"), n_bins = 0) {
-  purrr::partial(internal_hot_deck_covariate_lead_sampler, ... =, next_obs_col_names, n_bins)
+hot_deck_covariate_lead_sampler <- function(next_cov_obs_col_name = "next_cov_obs",
+                                            next_target_obs_col_name = "next_target_obs",
+                                            n_bins = 0) {
+  purrr::partial(internal_hot_deck_covariate_lead_sampler,
+                 ... =,
+                 next_cov_obs_col_name,
+                 next_target_obs_col_name,
+                 n_bins)
 }
 
 
@@ -103,9 +110,10 @@ hot_deck_covariate_lead_sampler <- function(next_obs_col_names = c("next_cov_obs
 #' @param .observation The covariate's observation column.
 #' @param current_obs The `current_obs` in `simulate_sample_path`.
 #' @param n_closest Scalar.
-#' @param next_obs_col_names len-2 vec. Names of the columns in your data
-#' containing the next covariate observation and its corresponding
-#' target observation (from, e.g. ``).
+#' @param next_cov_obs_col_name Name of the column in your data
+#' containing the next covariate observation (from, e.g. `lead_cov_mutator`).
+#' @param next_target_obs_col_name The corresponding target observation
+#' (from, e.g. `lead_cov_mutator`).
 #' @param n_bins Number of bins to use. See details for... details.
 #' @returns list(new_current_obs, forecast), where
 #' new_current_obs = The value to use for `current_obs` in the next iteration,
@@ -115,19 +123,20 @@ internal_hot_deck_covariate_lead_sampler <- function(local_rows,
                                                      .observation,
                                                      current_obs,
                                                      n_closest,
-                                                     next_obs_col_names,
+                                                     next_cov_obs_col_name,
+                                                     next_target_obs_col_name,
                                                      n_bins) {
   rand_row = local_rows %>% sample_local_rows({{ .observation }},
                                               current_obs = current_obs,
                                               n_closest = n_closest,
-                                              derived_col_name = next_obs_col_names[[1]],
+                                              derived_col_name = next_cov_obs_col_name,
                                               n_bins = n_bins)
   # What was tomorrow's covariate's obs for our randomly selected row that had
   # a similar obs to our current covariate obs?
   # That's our new current obs.
-  new_current_obs = rand_row %>% dplyr::pull(.data[[next_obs_col_names[[1]]]])
+  new_current_obs = rand_row %>% dplyr::pull(.data[[next_cov_obs_col_name]])
   # And our forecast is its observation of the target variable
-  forecast = rand_row %>% dplyr::pull(.data[[next_obs_col_names[[2]]]])
+  forecast = rand_row %>% dplyr::pull(.data[[next_target_obs_col_name]])
 
   list(
     new_current_obs = new_current_obs,
