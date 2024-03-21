@@ -10,8 +10,7 @@ internal_hot_deck_covariate_lead_sampler(
   current_obs,
   n_closest,
   next_cov_obs_col_name,
-  next_target_obs_col_name,
-  n_bins
+  next_target_obs_col_name
 )
 }
 \arguments{
@@ -28,8 +27,6 @@ containing the next covariate observation (from, e.g. \code{lead_cov_mutator}).}
 
 \item{next_target_obs_col_name}{The corresponding target observation
 (from, e.g. \code{lead_cov_mutator}).}
-
-\item{n_bins}{Number of bins to use. See details for... details.}
 }
 \value{
 list(new_current_obs, forecast), where

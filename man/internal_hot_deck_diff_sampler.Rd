@@ -9,8 +9,7 @@ internal_hot_deck_diff_sampler(
   .observation,
   current_obs,
   n_closest,
-  diff_to_next_obs_col_name,
-  n_bins
+  diff_to_next_obs_col_name
 )
 }
 \arguments{
@@ -24,8 +23,6 @@ internal_hot_deck_diff_sampler(
 
 \item{diff_to_next_obs_col_name}{Name of the column in your data containing
 the diff to the next observation (from, e.g. \code{diff_mutator}).}
-
-\item{n_bins}{Number of bins to use. See details for... details.}
 }
 \value{
 list(new_current_obs, forecast), where

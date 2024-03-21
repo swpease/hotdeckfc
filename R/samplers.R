@@ -9,22 +9,15 @@
 #'
 #' For `n_closest`, `dplyr::slice_min` is used, and tie values are included.
 #'
-#' `n_bins` works as follows:
-#'   - if == 0, operate on entirety of `local_rows`
-#'   - if >= 1, one half of the local_rows (either the non-neg or non-pos offsets)
-#'   is selected and split evenly into `n_bins`. Any remainder r adds 1 to
-#'   the r nearest-to-0 bins' range.
-#'
 #' @param next_obs_col_name Name of the column in your data containing the next
 #' observation (from, e.g. `dplyr::lead`).
-#' @param n_bins Number of bins to use. See details for... details.
 #' @returns list(new_current_obs, forecast), where
 #' new_current_obs = The value to use for `current_obs` in the next iteration.
 #' forecast = The forecasted value.
 #'
 #' @export
-hot_deck_lead_sampler <- function(next_obs_col_name = "next_obs", n_bins = 0) {
-  purrr::partial(internal_hot_deck_lead_sampler, ... =, next_obs_col_name, n_bins)
+hot_deck_lead_sampler <- function(next_obs_col_name = "next_obs") {
+  purrr::partial(internal_hot_deck_lead_sampler, ... =, next_obs_col_name)
 }
 
 
@@ -36,7 +29,6 @@ hot_deck_lead_sampler <- function(next_obs_col_name = "next_obs", n_bins = 0) {
 #' @param n_closest Scalar.
 #' @param next_obs_col_name Name of the column in your data containing the next
 #' observation (from, e.g. `dplyr::lead`).
-#' @param n_bins Number of bins to use. See details for... details.
 #' @returns list(new_current_obs, forecast), where
 #' new_current_obs = The value to use for `current_obs` in the next iteration,
 #'                   i.e. the next forecast.
@@ -45,13 +37,11 @@ internal_hot_deck_lead_sampler <- function(local_rows,
                                             .observation,
                                             current_obs,
                                             n_closest,
-                                            next_obs_col_name,
-                                            n_bins) {
+                                            next_obs_col_name) {
   rand_row = local_rows %>% sample_local_rows({{ .observation }},
                                               current_obs = current_obs,
                                               n_closest = n_closest,
-                                              derived_col_name = next_obs_col_name,
-                                              n_bins = n_bins)
+                                              derived_col_name = next_obs_col_name)
   # What was tomorrow's obs for our randomly selected row that had
   # a similar obs to our current obs?
   # That's our new current obs, as well as our forecast.
@@ -77,30 +67,21 @@ internal_hot_deck_lead_sampler <- function(local_rows,
 #'
 #' For `n_closest`, `dplyr::slice_min` is used, and tie values are included.
 #'
-#' `n_bins` works as follows:
-#'   - if == 0, operate on entirety of `local_rows`
-#'   - if >= 1, one half of the local_rows (either the non-neg or non-pos offsets)
-#'   is selected and split evenly into `n_bins`. Any remainder r adds 1 to
-#'   the r nearest-to-0 bins' range.
-#'
 #' @param next_cov_obs_col_name Name of the column in your data
 #' containing the next covariate observation (from, e.g. `lead_cov_mutator`).
 #' @param next_target_obs_col_name The corresponding target observation
 #' (from, e.g. `lead_cov_mutator`).
-#' @param n_bins Number of bins to use. See details for... details.
 #' @returns list(new_current_obs, forecast), where
 #' new_current_obs = The value to use for `current_obs` in the next iteration.
 #' forecast = The forecasted value.
 #'
 #' @export
 hot_deck_covariate_lead_sampler <- function(next_cov_obs_col_name = "next_cov_obs",
-                                            next_target_obs_col_name = "next_target_obs",
-                                            n_bins = 0) {
+                                            next_target_obs_col_name = "next_target_obs") {
   purrr::partial(internal_hot_deck_covariate_lead_sampler,
                  ... =,
                  next_cov_obs_col_name,
-                 next_target_obs_col_name,
-                 n_bins)
+                 next_target_obs_col_name)
 }
 
 
@@ -114,7 +95,6 @@ hot_deck_covariate_lead_sampler <- function(next_cov_obs_col_name = "next_cov_ob
 #' containing the next covariate observation (from, e.g. `lead_cov_mutator`).
 #' @param next_target_obs_col_name The corresponding target observation
 #' (from, e.g. `lead_cov_mutator`).
-#' @param n_bins Number of bins to use. See details for... details.
 #' @returns list(new_current_obs, forecast), where
 #' new_current_obs = The value to use for `current_obs` in the next iteration,
 #'                   i.e. the next forecast.
@@ -124,13 +104,11 @@ internal_hot_deck_covariate_lead_sampler <- function(local_rows,
                                                      current_obs,
                                                      n_closest,
                                                      next_cov_obs_col_name,
-                                                     next_target_obs_col_name,
-                                                     n_bins) {
+                                                     next_target_obs_col_name) {
   rand_row = local_rows %>% sample_local_rows({{ .observation }},
                                               current_obs = current_obs,
                                               n_closest = n_closest,
-                                              derived_col_name = next_cov_obs_col_name,
-                                              n_bins = n_bins)
+                                              derived_col_name = next_cov_obs_col_name)
   # What was tomorrow's covariate's obs for our randomly selected row that had
   # a similar obs to our current covariate obs?
   # That's our new current obs.
@@ -156,22 +134,15 @@ internal_hot_deck_covariate_lead_sampler <- function(local_rows,
 #'
 #' For `n_closest`, `dplyr::slice_min` is used, and tie values are included.
 #'
-#' `n_bins` works as follows:
-#'   - if == 0, operate on entirety of `local_rows`
-#'   - if >= 1, one half of the local_rows (either the non-neg or non-pos offsets)
-#'   is selected and split evenly into `n_bins`. Any remainder r adds 1 to
-#'   the r nearest-to-0 bins' range.
-#'
 #' @param diff_to_next_obs_col_name Name of the column in your data containing the next
 #' observation (from, e.g. `diff_mutator`).
-#' @param n_bins Number of bins to use. See details for... details.
 #' @returns list(new_current_obs, forecast), where
 #' new_current_obs = The value to use for `current_obs` in the next iteration.
 #' forecast = The forecasted value.
 #'
 #' @export
-hot_deck_diff_sampler <- function(diff_to_next_obs_col_name = "diff_to_next_obs", n_bins = 0) {
-  purrr::partial(internal_hot_deck_diff_sampler, ... =, diff_to_next_obs_col_name, n_bins)
+hot_deck_diff_sampler <- function(diff_to_next_obs_col_name = "diff_to_next_obs") {
+  purrr::partial(internal_hot_deck_diff_sampler, ... =, diff_to_next_obs_col_name)
 }
 
 
@@ -183,7 +154,6 @@ hot_deck_diff_sampler <- function(diff_to_next_obs_col_name = "diff_to_next_obs"
 #' @param n_closest Scalar.
 #' @param diff_to_next_obs_col_name Name of the column in your data containing
 #' the diff to the next observation (from, e.g. `diff_mutator`).
-#' @param n_bins Number of bins to use. See details for... details.
 #' @returns list(new_current_obs, forecast), where
 #' new_current_obs = The value to use for `current_obs` in the next iteration.
 #' forecast = The forecasted value.
@@ -191,13 +161,11 @@ internal_hot_deck_diff_sampler <- function(local_rows,
                                            .observation,
                                            current_obs,
                                            n_closest,
-                                           diff_to_next_obs_col_name,
-                                           n_bins) {
+                                           diff_to_next_obs_col_name) {
   rand_row = local_rows %>% sample_local_rows({{ .observation }},
                                               current_obs = current_obs,
                                               n_closest = n_closest,
-                                              derived_col_name = diff_to_next_obs_col_name,
-                                              n_bins = n_bins)
+                                              derived_col_name = diff_to_next_obs_col_name)
   # What was the difference to tomorrow's obs for our randomly selected
   # row that had a similar obs to our current obs?
   # We add that to our current obs to get our new current obs,
@@ -215,8 +183,7 @@ internal_hot_deck_diff_sampler <- function(local_rows,
 #' Sample a random row from local rows.
 #'
 #' Procedure outline:
-#'   - Bin the local rows by offset from `current_obs`
-#'   - Sample one non-empty bin (i.e. not all NAs in derived_col) at random
+#'   - Filter rows with NAs in derived_col
 #'   - Take the `n_closest` closest rows
 #'   - Randomly sample one of these.
 #'
@@ -224,12 +191,6 @@ internal_hot_deck_diff_sampler <- function(local_rows,
 #' differences, or it could be the observation column itself.
 #'
 #' TODO: make `derived_col_name` optional?
-#'
-#' `n_bins` works as follows:
-#'   - if == 0, operate on entirety of `local_rows`
-#'   - if >= 1, one half of the local_rows (either the non-neg or non-pos offsets)
-#'   is selected and split evenly into `n_bins`. Any remainder r adds 1 to
-#'   the r nearest-to-0 bins' range.
 #'
 #' The returned row has its `offset` column removed. This is just easier for
 #' this function; it would not be difficult to include, but I don't see a reason
@@ -241,14 +202,12 @@ internal_hot_deck_diff_sampler <- function(local_rows,
 #' @param n_closest Scalar.
 #' @param derived_col_name string. The name of the column that you want to
 #' filter any NAs from.
-#' @param n_bins Number of bins to use. See details for... details.
 #' @returns A row from `local_rows`, without the `offset` column anymore.
 sample_local_rows <- function(local_rows,
                               .observation,
                               current_obs,
                               n_closest,
-                              derived_col_name,
-                              n_bins) {
+                              derived_col_name) {
   # Do we have something to work with?
   if (all(is.na(local_rows[[derived_col_name]]))) {
     stop("No local values to draw from for:\n", call. = FALSE)

@@ -4,16 +4,11 @@
 \alias{hot_deck_diff_sampler}
 \title{Generate a hot deck forecast value using \code{lead}s of \code{difference}s.}
 \usage{
-hot_deck_diff_sampler(
-  diff_to_next_obs_col_name = "diff_to_next_obs",
-  n_bins = 0
-)
+hot_deck_diff_sampler(diff_to_next_obs_col_name = "diff_to_next_obs")
 }
 \arguments{
 \item{diff_to_next_obs_col_name}{Name of the column in your data containing the next
 observation (from, e.g. \code{diff_mutator}).}
-
-\item{n_bins}{Number of bins to use. See details for... details.}
 }
 \value{
 list(new_current_obs, forecast), where
@@ -32,12 +27,4 @@ Given a \code{local_rows} and \code{current_obs}, it:
 }
 \details{
 For \code{n_closest}, \code{dplyr::slice_min} is used, and tie values are included.
-
-\code{n_bins} works as follows:
-\itemize{
-\item if == 0, operate on entirety of \code{local_rows}
-\item if >= 1, one half of the local_rows (either the non-neg or non-pos offsets)
-is selected and split evenly into \code{n_bins}. Any remainder r adds 1 to
-the r nearest-to-0 bins' range.
-}
 }

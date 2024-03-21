@@ -9,8 +9,7 @@ sample_local_rows(
   .observation,
   current_obs,
   n_closest,
-  derived_col_name,
-  n_bins
+  derived_col_name
 )
 }
 \arguments{
@@ -24,8 +23,6 @@ sample_local_rows(
 
 \item{derived_col_name}{string. The name of the column that you want to
 filter any NAs from.}
-
-\item{n_bins}{Number of bins to use. See details for... details.}
 }
 \value{
 A row from \code{local_rows}, without the \code{offset} column anymore.
@@ -33,8 +30,7 @@ A row from \code{local_rows}, without the \code{offset} column anymore.
 \description{
 Procedure outline:
 \itemize{
-\item Bin the local rows by offset from \code{current_obs}
-\item Sample one non-empty bin (i.e. not all NAs in derived_col) at random
+\item Filter rows with NAs in derived_col
 \item Take the \code{n_closest} closest rows
 \item Randomly sample one of these.
 }
@@ -44,14 +40,6 @@ The \code{derived_col_name} may be something like the column of leads or
 differences, or it could be the observation column itself.
 
 TODO: make \code{derived_col_name} optional?
-
-\code{n_bins} works as follows:
-\itemize{
-\item if == 0, operate on entirety of \code{local_rows}
-\item if >= 1, one half of the local_rows (either the non-neg or non-pos offsets)
-is selected and split evenly into \code{n_bins}. Any remainder r adds 1 to
-the r nearest-to-0 bins' range.
-}
 
 The returned row has its \code{offset} column removed. This is just easier for
 this function; it would not be difficult to include, but I don't see a reason

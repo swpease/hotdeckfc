@@ -9,8 +9,7 @@ test_that("hot_deck_covariate_lead_sampler basic test", {
   local_rows = local_rows %>% lead_cov_mutator(cov_obs)
 
   wrapped = hot_deck_covariate_lead_sampler(next_cov_obs_col_name = "next_cov_obs",
-                                            next_target_obs_col_name = "next_target_obs",
-                                            n_bins = 0)
+                                            next_target_obs_col_name = "next_target_obs")
   expected = list(
     new_current_obs = 4,
     forecast = 20
@@ -32,7 +31,7 @@ test_that("hot_deck_diff_sampler basic test", {
   current_obs_1 = 4
   current_obs_2 = 20
 
-  wrapped = hot_deck_diff_sampler("diff_to_next_obs", n_bins = 0)
+  wrapped = hot_deck_diff_sampler("diff_to_next_obs")
   expected_1 = list(
     new_current_obs = 11,
     forecast = 11
@@ -60,7 +59,7 @@ test_that("hot_deck_lead_sampler basic test", {
   current_obs = 4
   n_closest = 2
 
-  wrapped = hot_deck_lead_sampler("next_obs", n_bins = 0)
+  wrapped = hot_deck_lead_sampler("next_obs")
   expected_1 = list(
     new_current_obs = 5,
     forecast = 5
@@ -95,7 +94,7 @@ test_that("hot_deck_lead_sampler no local values", {
   current_obs = 4
   n_closest = 2
 
-  wrapped = hot_deck_lead_sampler("next_obs", n_bins = 0)
+  wrapped = hot_deck_lead_sampler("next_obs")
 
   expect_error(local_rows %>% wrapped(obs, current_obs, n_closest),
                regexp = "No local values.*for")
@@ -113,8 +112,7 @@ test_that("sample_local_rows no local der vals error", {
                  sample_local_rows(obs,
                                    current_obs = 2,
                                    n_closest = 2,
-                                   derived_col_name = "der",
-                                   n_bins = 0),
+                                   derived_col_name = "der"),
                regexp = "No local values.*for")
 })
 
@@ -130,7 +128,6 @@ test_that("sample_local_rows warning entire contents", {
                  sample_local_rows(obs,
                                    current_obs = 2,
                                    n_closest = 20,
-                                   derived_col_name = "der",
-                                   n_bins = 0),
+                                   derived_col_name = "der"),
                regexp = "Sampling from entire contents")
 })

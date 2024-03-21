@@ -19,7 +19,7 @@ test_that("grid search gridding", {
     ),
     sampler_args = list(build_sampler_args(
       sm_name = "name",
-      sampler = hot_deck_lead_sampler("next_obs", n_bins = 8),
+      sampler = hot_deck_lead_sampler("next_obs"),
       mutator = lead_mutator
     ))
   )
@@ -39,7 +39,7 @@ test_that("grid search gridding", {
     window_back = 1:5,
     window_fwd = 1:5,
     sm_name = "name",
-    sampler = hot_deck_lead_sampler("next_obs", n_bins = 8),
+    sampler = hot_deck_lead_sampler("next_obs"),
     mutator = lead_mutator
   )
   expected_passed_args_list_1 = list(
@@ -48,7 +48,7 @@ test_that("grid search gridding", {
     n_closest = 20,
     window_back = 1:5,
     window_fwd = 1:5,
-    sampler = hot_deck_lead_sampler("next_obs", n_bins = 8),
+    sampler = hot_deck_lead_sampler("next_obs"),
     mutator = lead_mutator
   )
 
@@ -59,7 +59,7 @@ test_that("grid search gridding", {
     window_back = 1,
     window_fwd = 2,
     sm_name = "name",
-    sampler = hot_deck_lead_sampler("next_obs", n_bins = 8),
+    sampler = hot_deck_lead_sampler("next_obs"),
     mutator = lead_mutator
   )
   expected_passed_args_list_2 = list(
@@ -68,7 +68,7 @@ test_that("grid search gridding", {
     n_closest = 20,
     window_back = 1,
     window_fwd = 2,
-    sampler = hot_deck_lead_sampler("next_obs", n_bins = 8),
+    sampler = hot_deck_lead_sampler("next_obs"),
     mutator = lead_mutator
   )
 
@@ -89,13 +89,13 @@ test_that("grid search gridding", {
 #   expected = list(
 #     list(
 #       sm_name = "a",
-#       sampler = hot_deck_lead_sampler("hi", n_bins = 2),
+#       sampler = hot_deck_lead_sampler("hi"),
 #       mutator = lead_mutator
 #     )
 #   )
 #   expect_equal(
 #     build_sampler_args("a",
-#                        hot_deck_lead_sampler("hi", n_bins = 2),
+#                        hot_deck_lead_sampler("hi"),
 #                        lead_mutator),
 #     expected
 #   )
