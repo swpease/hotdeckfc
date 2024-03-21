@@ -41,7 +41,7 @@ internal_hot_deck_lead_sampler <- function(local_rows,
   rand_row = local_rows %>% sample_local_rows({{ .observation }},
                                               current_obs = current_obs,
                                               n_closest = n_closest,
-                                              derived_col_name = next_obs_col_name)
+                                              filter_na_col_names = next_obs_col_name)
   # What was tomorrow's obs for our randomly selected row that had
   # a similar obs to our current obs?
   # That's our new current obs, as well as our forecast.
@@ -108,7 +108,7 @@ internal_hot_deck_covariate_lead_sampler <- function(local_rows,
   rand_row = local_rows %>% sample_local_rows({{ .observation }},
                                               current_obs = current_obs,
                                               n_closest = n_closest,
-                                              derived_col_name = next_cov_obs_col_name)
+                                              filter_na_col_names = next_cov_obs_col_name)
   # What was tomorrow's covariate's obs for our randomly selected row that had
   # a similar obs to our current covariate obs?
   # That's our new current obs.
@@ -165,7 +165,7 @@ internal_hot_deck_diff_sampler <- function(local_rows,
   rand_row = local_rows %>% sample_local_rows({{ .observation }},
                                               current_obs = current_obs,
                                               n_closest = n_closest,
-                                              derived_col_name = diff_to_next_obs_col_name)
+                                              filter_na_col_names = diff_to_next_obs_col_name)
   # What was the difference to tomorrow's obs for our randomly selected
   # row that had a similar obs to our current obs?
   # We add that to our current obs to get our new current obs,
@@ -187,10 +187,20 @@ internal_hot_deck_diff_sampler <- function(local_rows,
 #'   - Take the `n_closest` closest rows
 #'   - Randomly sample one of these.
 #'
-#' The `derived_col_name` may be something like the column of leads or
-#' differences, or it could be the observation column itself.
+#' The `filter_na_col_names` may be something like the column of leads or
+#' differences, or it could be the observation column itself, or it could be
+#' nothing. In some cases a value is required. For instance, NAs are removed
+#' from the leads column for the `hot_deck_lead_sampler` because these values
+#' are used for subsequent horizons as the "current value".
 #'
-#' TODO: make `derived_col_name` optional?
+#' If you leave NAs in your observation column, then they will only be
+#' possibly sampled if your `n_closest` exceeds the number of non-NA observations.
+#' That is, they are a last resort.
+#'
+#' If you leave NAs in the column that yields your forecasts (and doing so is a
+#' permissible option), then you will wind up with NAs in your forecasts, which
+#' may be desirable from the perspective of yielding weaker confidence in those
+#' regions with less data to draw from.
 #'
 #' The returned row has its `offset` column removed. This is just easier for
 #' this function; it would not be difficult to include, but I don't see a reason
@@ -200,19 +210,14 @@ internal_hot_deck_diff_sampler <- function(local_rows,
 #' @param .observation The observation column.
 #' @param current_obs The `current_obs` in `simulate_sample_path`.
 #' @param n_closest Scalar.
-#' @param derived_col_name string. The name of the column that you want to
+#' @param filter_na_col_names char vec. The names of any columns that you want to
 #' filter any NAs from.
 #' @returns A row from `local_rows`, without the `offset` column anymore.
 sample_local_rows <- function(local_rows,
                               .observation,
                               current_obs,
                               n_closest,
-                              derived_col_name) {
-  # Do we have something to work with?
-  if (all(is.na(local_rows[[derived_col_name]]))) {
-    stop("No local values to draw from for:\n", call. = FALSE)
-  }
-
+                              filter_na_col_names = vector(mode = "character")) {
   # Currently, I do not filter out cases where obs is missing but
   # derived_col is not. dplyr's sorting puts NA's at the bottom, so if they
   # are selected, they're the last resorts, which seems reasonable to me.
@@ -220,8 +225,16 @@ sample_local_rows <- function(local_rows,
     dplyr::mutate(obs_distance = abs(current_obs - {{ .observation }}))
 
   # removing NAs
-  filtered_local_rows = local_rows %>%
-    dplyr::filter(!is.na(.data[[derived_col_name]]))
+  filtered_local_rows = local_rows
+  for (col_name in filter_na_col_names) {
+    filtered_local_rows = filtered_local_rows %>%
+      dplyr::filter(!is.na(.data[[col_name]]))
+  }
+
+  # Do we have something to work with?
+  if (nrow(filtered_local_rows) == 0) {
+    stop("No local values to draw from for:\n", call. = FALSE)
+  }
 
   # Getting a random row
   # TODO: if using prop, add check here.

@@ -9,7 +9,7 @@ sample_local_rows(
   .observation,
   current_obs,
   n_closest,
-  derived_col_name
+  filter_na_col_names = vector(mode = "character")
 )
 }
 \arguments{
@@ -21,7 +21,7 @@ sample_local_rows(
 
 \item{n_closest}{Scalar.}
 
-\item{derived_col_name}{string. The name of the column that you want to
+\item{filter_na_col_names}{char vec. The names of any columns that you want to
 filter any NAs from.}
 }
 \value{
@@ -36,10 +36,20 @@ Procedure outline:
 }
 }
 \details{
-The \code{derived_col_name} may be something like the column of leads or
-differences, or it could be the observation column itself.
+The \code{filter_na_col_names} may be something like the column of leads or
+differences, or it could be the observation column itself, or it could be
+nothing. In some cases a value is required. For instance, NAs are removed
+from the leads column for the \code{hot_deck_lead_sampler} because these values
+are used for subsequent horizons as the "current value".
 
-TODO: make \code{derived_col_name} optional?
+If you leave NAs in your observation column, then they will only be
+possibly sampled if your \code{n_closest} exceeds the number of non-NA observations.
+That is, they are a last resort.
+
+If you leave NAs in the column that yields your forecasts (and doing so is a
+permissible option), then you will wind up with NAs in your forecasts, which
+may be desirable from the perspective of yielding weaker confidence in those
+regions with less data to draw from.
 
 The returned row has its \code{offset} column removed. This is just easier for
 this function; it would not be difficult to include, but I don't see a reason
