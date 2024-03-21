@@ -260,71 +260,24 @@ sample_local_rows <- function(local_rows,
   local_rows = local_rows %>%
     dplyr::mutate(obs_distance = abs(current_obs - {{ .observation }}))
 
-  if (n_bins > 0) {
-    # Getting a randomly selected half
-    non_neg = sample(c(TRUE, FALSE), 1)
-    if (non_neg) {
-      half = local_rows %>% dplyr::filter(offset >= 0)
-    } else {
-      half = local_rows %>%
-        dplyr::filter(offset <= 0) %>%  # yes, 0 in both cases
-        dplyr::mutate(offset = abs(offset))
-    }
-    # Do we have something to work with in this randomly selected half?
-    if (all(is.na(half[[derived_col_name]]))) {
-      half_name = if (non_neg) "non-negative" else "non-positive"
-      stop(paste("No local values to draw from in",
-                 half_name, "offset portion of local values.\n"),
-           call. = FALSE)
-    }
-
-    # Groups assg. setup
-    n = max(half$offset) + 1  # no NA filters yet, so == total # of offsets in half
-    # equal bin sizes to the extent possible
-    sizes = rep(floor(n / n_bins), n_bins)
-    rem = n %% n_bins
-    # extend the rem closest-to-central bins by 1 each
-    bumps = c(rep(1, rem), rep(0, (n_bins - rem)))
-    sizes = sizes + bumps
-    rle_rep = list(
-      lengths = sizes,
-      values = 1:n_bins
-    )
-    grps = inverse.rle(rle_rep)
-
-    # Assigning groups
-    half = half %>%
-      dplyr::rowwise() %>%
-      dplyr::mutate(grp = grps[[offset + 1]]) %>%  # 1-based indexing
-      dplyr::ungroup()
-    # *now* we filter out NAs; this precludes selecting an all-NA group.
-    half = half %>% dplyr::filter(!is.na(.data[[derived_col_name]]))
-
-    # Getting a random group
-    rand_grp_num = half %>%
-      dplyr::distinct(grp) %>%
-      slice_sample(n = 1) %>%
-      pull()
-    rand_grp = half %>% dplyr::filter(grp == rand_grp_num)
-  } else {  # bins == 0, so we just take all the data (minus NAs)
-    rand_grp = local_rows %>%
-      dplyr::filter(!is.na(.data[[derived_col_name]]))
-  }
+  # removing NAs
+  filtered_local_rows = local_rows %>%
+    dplyr::filter(!is.na(.data[[derived_col_name]]))
 
   # Getting a random row
   # TODO: if using prop, add check here.
-  if (nrow(rand_grp) <= n_closest) {
-    warning(paste("Selected bin does not have more values than",
+  if (nrow(filtered_local_rows) <= n_closest) {
+    warning(paste("Local rows does not have more values than",
                   "the closeness cut-off specifies.",
-                  "\n(i.e. nrow(bin) <= n_closest)\n",
-                  "Sampling from entire bin."),
+                  "\n(i.e. nrow(local_rows) <= n_closest)\n",
+                  "Sampling from entire contents of local rows."),
             call. = FALSE)
   }
-  closest_rows = rand_grp %>%
+  closest_rows = filtered_local_rows %>%
     dplyr::slice_min(order_by = obs_distance, n = n_closest)
   rand_row = closest_rows %>%
     dplyr::slice_sample(n = 1) %>%
-    dplyr::select(-dplyr::any_of(c("offset", "obs_distance", "grp")))
+    dplyr::select(-dplyr::any_of(c("offset", "obs_distance")))
     # ^ removing internal cols, plus (TB settled on) "offset"
 
   rand_row

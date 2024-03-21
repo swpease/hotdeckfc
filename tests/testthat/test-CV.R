@@ -92,7 +92,7 @@ test_that("cv empty window err", {
         window_fwd = 2,
         n_closest = 1
      ),
-     regexp = "Sampling from entire bin"),
+     regexp = "Sampling from entire contents"),
    regexp = "k =")
 })
 

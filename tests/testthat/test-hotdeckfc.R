@@ -310,7 +310,7 @@ test_that("hot deck fc warning then error in h incrementing up to empty window",
         window_fwd = 2,
         n_closest = 1
       ),
-      regexp = "Sampling from entire bin"),
+      regexp = "Sampling from entire contents"),
     regexp = "No local values")
 })
 
