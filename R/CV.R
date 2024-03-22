@@ -296,9 +296,15 @@ cv_crps <- function(cv_out, obs_col_name) {
   # crps doesn't handle NAs so I have to check in that hideous looking if else
   test_data_sets = test_data_sets %>%
     rowwise() %>%
-    mutate(score = if (is.na(.data[[obs_col_name]])) NA else {
+    mutate(score = if (is.na(.data[[obs_col_name]])
+                       | all(is.na(forecasts %>% dplyr::pull(forecast)))) {
+      NA
+    } else {
       scoringRules::crps_sample(.data[[obs_col_name]],
-                                forecasts %>% select(forecast) %>% pull())
+                                forecasts %>%
+                                  select(forecast) %>%
+                                  filter(!is.na(forecast)) %>%
+                                  pull())
     }) %>%
     ungroup()
 

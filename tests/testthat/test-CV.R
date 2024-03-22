@@ -454,9 +454,184 @@ test_that("cv_crps", {
       window_back = 2,
       window_fwd = 2,
       n_closest = 1,
-      sampler = hot_deck_lead_sampler("next_obs")
+      sampler = hot_deck_lead_sampler("next_obs"),
+      mutator = lead_mutator
     )
   crps_out = cv_crps(out, "obs")
+
+  expect_equal(crps_out, expected_cv_crps_out)
+})
+
+
+
+
+test_that("cv_crps NAs", {
+  # basic
+  data = tibble(
+    datetime = c(
+      as.Date("2022-04-01") + 0:3,
+      as.Date("2023-04-01") + 0:2
+    ),
+    cov = c(
+      0, 0, 1, 0,
+      1, 1, 0
+    ),
+    observation = c(
+      0, 0, 0, 1,
+      1, 2, 0
+    )
+  ) %>%
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
+
+  expected_cv_crps_out = tibble(
+    datetime = as.Date("2022-04-04"),
+    cov = 0,
+    observation = 1,
+    h = 1,
+    k = 1,
+    score = 0.5
+  )
+
+  set.seed(3)  # gets 04-01 then 04-02
+  out = data %>%
+    cv_hot_deck_forecast(
+      datetime,
+      cov,
+      offset = 0,
+      times = 2,
+      h = 1,
+      window_back = 2,
+      window_fwd = 2,
+      n_closest = 1,
+      sampler = hot_deck_covariate_lead_sampler(),
+      mutator = lead_cov_mutator
+    )
+  crps_out = cv_crps(out, "observation")
+
+  expect_equal(crps_out, expected_cv_crps_out)
+
+
+  # test obs NA should yield CRPS NA
+  data = tibble(
+    datetime = c(
+      as.Date("2022-04-01") + 0:3,
+      as.Date("2023-04-01") + 0:2
+    ),
+    cov = c(
+      0, 0, 1, 0,
+      1, 1, 0
+    ),
+    observation = c(
+      0, 0, 0, NA,
+      1, 2, 0
+    )
+  ) %>%
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
+
+  expected_cv_crps_out = expected_cv_crps_out %>%
+    dplyr::mutate(score = NA,
+                  observation = as.double(NA))
+
+  set.seed(3)  # gets 04-01 then 04-02
+  out = data %>%
+    cv_hot_deck_forecast(
+      datetime,
+      cov,
+      offset = 0,
+      times = 2,
+      h = 1,
+      window_back = 2,
+      window_fwd = 2,
+      n_closest = 1,
+      sampler = hot_deck_covariate_lead_sampler(),
+      mutator = lead_cov_mutator
+    )
+  crps_out = cv_crps(out, "observation")
+
+  expect_equal(crps_out, expected_cv_crps_out)
+
+
+  # fc all NA should yield CRPS NA
+  data = tibble(
+    datetime = c(
+      as.Date("2022-04-01") + 0:3,
+      as.Date("2023-04-01") + 0:2
+    ),
+    cov = c(
+      0, 0, 1, 0,
+      1, 1, 0
+    ),
+    observation = c(
+      0, 0, 0, 1,
+      1, NA, NA
+    )
+  ) %>%
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
+
+  expected_cv_crps_out = expected_cv_crps_out %>%
+    dplyr::mutate(score = NA,
+                  observation = 1)
+
+  set.seed(3)  # gets 04-01 then 04-02
+  out = data %>%
+    cv_hot_deck_forecast(
+      datetime,
+      cov,
+      offset = 0,
+      times = 2,
+      h = 1,
+      window_back = 2,
+      window_fwd = 2,
+      n_closest = 1,
+      sampler = hot_deck_covariate_lead_sampler(),
+      mutator = lead_cov_mutator
+    )
+  crps_out = cv_crps(out, "observation")
+
+  expect_equal(crps_out, expected_cv_crps_out)
+
+
+  # fc some NA: does it filter forecasted NAs (scoring breaks w/ NAs)?
+  # should yield the CRPS of all non-NA forecasted values.
+  data = tibble(
+    datetime = c(
+      as.Date("2022-04-01") + 0:3,
+      as.Date("2023-04-01") + 0:2
+    ),
+    cov = c(
+      0, 0, 1, 0,
+      1, 1, 0
+    ),
+    observation = c(
+      0, 0, 0, 1,
+      1, 1, NA
+    )
+  ) %>%
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
+
+  expected_cv_crps_out = expected_cv_crps_out %>%
+    dplyr::mutate(score = 0,
+                  observation = 1)
+
+  set.seed(3)  # gets 04-01 then 04-02
+  out = data %>%
+    cv_hot_deck_forecast(
+      datetime,
+      cov,
+      offset = 0,
+      times = 2,
+      h = 1,
+      window_back = 2,
+      window_fwd = 2,
+      n_closest = 1,
+      sampler = hot_deck_covariate_lead_sampler(),
+      mutator = lead_cov_mutator
+    )
+  crps_out = cv_crps(out, "observation")
 
   expect_equal(crps_out, expected_cv_crps_out)
 })
