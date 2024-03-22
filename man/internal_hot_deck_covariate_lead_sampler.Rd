@@ -10,7 +10,8 @@ internal_hot_deck_covariate_lead_sampler(
   current_obs,
   n_closest,
   next_cov_obs_col_name,
-  next_target_obs_col_name
+  next_target_obs_col_name,
+  filter_na_col_names
 )
 }
 \arguments{
@@ -27,6 +28,9 @@ containing the next covariate observation (from, e.g. \code{lead_cov_mutator}).}
 
 \item{next_target_obs_col_name}{The corresponding target observation
 (from, e.g. \code{lead_cov_mutator}).}
+
+\item{filter_na_col_names}{char vec. The names of any columns that you want to
+filter any NAs from.}
 }
 \value{
 list(new_current_obs, forecast), where

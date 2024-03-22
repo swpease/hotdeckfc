@@ -6,7 +6,8 @@
 \usage{
 hot_deck_covariate_lead_sampler(
   next_cov_obs_col_name = "next_cov_obs",
-  next_target_obs_col_name = "next_target_obs"
+  next_target_obs_col_name = "next_target_obs",
+  filter_na_col_names = next_cov_obs_col_name
 )
 }
 \arguments{
@@ -15,6 +16,9 @@ containing the next covariate observation (from, e.g. \code{lead_cov_mutator}).}
 
 \item{next_target_obs_col_name}{The corresponding target observation
 (from, e.g. \code{lead_cov_mutator}).}
+
+\item{filter_na_col_names}{char vec. The names of any columns that you want to
+filter any NAs from.}
 }
 \value{
 list(new_current_obs, forecast), where
@@ -37,4 +41,7 @@ observations closest to \code{current_obs}.
 }
 \details{
 For \code{n_closest}, \code{dplyr::slice_min} is used, and tie values are included.
+
+For \code{filter_na_col_names}, you must include the \code{next_cov_obs_col_name},
+or the sampling will break.
 }

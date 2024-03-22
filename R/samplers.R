@@ -67,21 +67,28 @@ internal_hot_deck_lead_sampler <- function(local_rows,
 #'
 #' For `n_closest`, `dplyr::slice_min` is used, and tie values are included.
 #'
+#' For `filter_na_col_names`, you must include the `next_cov_obs_col_name`,
+#' or the sampling will break.
+#'
 #' @param next_cov_obs_col_name Name of the column in your data
 #' containing the next covariate observation (from, e.g. `lead_cov_mutator`).
 #' @param next_target_obs_col_name The corresponding target observation
 #' (from, e.g. `lead_cov_mutator`).
+#' @param filter_na_col_names char vec. The names of any columns that you want to
+#' filter any NAs from.
 #' @returns list(new_current_obs, forecast), where
 #' new_current_obs = The value to use for `current_obs` in the next iteration.
 #' forecast = The forecasted value.
 #'
 #' @export
 hot_deck_covariate_lead_sampler <- function(next_cov_obs_col_name = "next_cov_obs",
-                                            next_target_obs_col_name = "next_target_obs") {
+                                            next_target_obs_col_name = "next_target_obs",
+                                            filter_na_col_names = next_cov_obs_col_name) {
   purrr::partial(internal_hot_deck_covariate_lead_sampler,
                  ... =,
                  next_cov_obs_col_name,
-                 next_target_obs_col_name)
+                 next_target_obs_col_name,
+                 filter_na_col_names)
 }
 
 
@@ -95,6 +102,8 @@ hot_deck_covariate_lead_sampler <- function(next_cov_obs_col_name = "next_cov_ob
 #' containing the next covariate observation (from, e.g. `lead_cov_mutator`).
 #' @param next_target_obs_col_name The corresponding target observation
 #' (from, e.g. `lead_cov_mutator`).
+#' @param filter_na_col_names char vec. The names of any columns that you want to
+#' filter any NAs from.
 #' @returns list(new_current_obs, forecast), where
 #' new_current_obs = The value to use for `current_obs` in the next iteration,
 #'                   i.e. the next forecast.
@@ -104,11 +113,12 @@ internal_hot_deck_covariate_lead_sampler <- function(local_rows,
                                                      current_obs,
                                                      n_closest,
                                                      next_cov_obs_col_name,
-                                                     next_target_obs_col_name) {
+                                                     next_target_obs_col_name,
+                                                     filter_na_col_names) {
   rand_row = local_rows %>% sample_local_rows({{ .observation }},
                                               current_obs = current_obs,
                                               n_closest = n_closest,
-                                              filter_na_col_names = next_cov_obs_col_name)
+                                              filter_na_col_names = filter_na_col_names)
   # What was tomorrow's covariate's obs for our randomly selected row that had
   # a similar obs to our current covariate obs?
   # That's our new current obs.
