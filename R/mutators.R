@@ -24,24 +24,34 @@ lead_mutator <- function(.data, .observation) {
 #' Adds two new columns, named "next_cov_obs" and "next_target_obs",
 #' of the next (i.e. lead) covariate and target observations.
 #'
-#' The corresponding selector, `hot_deck_covariate_lead_sampler`, defaults to
-#' these names for the lead columns, so it makes things slightly easier in that regard.
+#' The corresponding, covariate-using selectors, `hot_deck_covariate_lead_sampler`
+#' and `hot_deck_forecasted_covariate_sampler` default to these name(s)
+#' for the lead column(s) (the latter doesn't actually use the covariate's lead),
+#' so it makes things slightly easier in that regard.
 #'
-#' This mutator should be paired with `hot_deck_covariate_lead_sampler` for use in CV.
+#' This mutator should be paired with samplers that rely on
+#' covariates, for use in CV. If your target observation column is not named
+#' "observation", you can use `purrr::partial` to pass the right name
+#' before passing that output to CV.
+#'
 #' It is applied to the training data after the train-test split,
 #' to avoid data leakage.
 #'
-#' @param .data The data. A tsibble.
+#' @param .data_ts The data. A tsibble.
 #' @param .cov_observation The covariate observation column. Passed via pipe.
-#' @returns .data, augmented with a column, named `next_obs`, of leads.
+#' @param target_obs_col_name The target observation column name.
+#' @returns .data_ts, augmented with two columns:
+#'   `next_cov_obs`, of covariate leads.
+#'   `next_target_obs`, of target leads.
 #'
 #' @export
-lead_cov_mutator <- function(.data, .cov_observation) {
-  .data %>% mutate(
+lead_cov_mutator <- function(.data_ts,
+                             .cov_observation,
+                             target_obs_col_name = "observation") {
+  .data_ts %>% mutate(
     next_cov_obs = dplyr::lead({{ .cov_observation }}),
-    next_target_obs = dplyr::lead(observation))
+    next_target_obs = dplyr::lead(.data[[target_obs_col_name]]))
 }
-
 
 
 #' Add a column of differences to the next observation.

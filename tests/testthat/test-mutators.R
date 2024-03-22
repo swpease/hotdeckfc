@@ -16,6 +16,27 @@ test_that("lead mutator", {
 })
 
 
+test_that("cov mutator", {
+  data = tibble(
+    datetime = as.Date("2022-03-31") + 0:9,
+    obs = 1:10,
+    cov = 11:20
+  ) %>%
+    as_tsibble(index = datetime)
+
+  expected = tibble(
+    datetime = as.Date("2022-03-31") + 0:9,
+    obs = 1:10,
+    cov = 11:20,
+    next_cov_obs = c(12:20, NA),
+    next_target_obs = c(2:10, NA)
+  ) %>%
+    as_tsibble(index = datetime)
+
+  expect_equal(data %>% lead_cov_mutator(cov, target_obs_col_name = "obs"), expected)
+})
+
+
 test_that("diff mutator", {
   data = tibble(
     datetime = as.Date("2022-03-31") + 0:9,

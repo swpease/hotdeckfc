@@ -4,25 +4,39 @@
 \alias{lead_cov_mutator}
 \title{Add a column of covariate and target leads to data.}
 \usage{
-lead_cov_mutator(.data, .cov_observation)
+lead_cov_mutator(
+  .data_ts,
+  .cov_observation,
+  target_obs_col_name = "observation"
+)
 }
 \arguments{
-\item{.data}{The data. A tsibble.}
+\item{.data_ts}{The data. A tsibble.}
 
 \item{.cov_observation}{The covariate observation column. Passed via pipe.}
+
+\item{target_obs_col_name}{The target observation column name.}
 }
 \value{
-.data, augmented with a column, named \code{next_obs}, of leads.
+.data_ts, augmented with two columns:
+\code{next_cov_obs}, of covariate leads.
+\code{next_target_obs}, of target leads.
 }
 \description{
 Adds two new columns, named "next_cov_obs" and "next_target_obs",
 of the next (i.e. lead) covariate and target observations.
 }
 \details{
-The corresponding selector, \code{hot_deck_covariate_lead_sampler}, defaults to
-these names for the lead columns, so it makes things slightly easier in that regard.
+The corresponding, covariate-using selectors, \code{hot_deck_covariate_lead_sampler}
+and \code{hot_deck_forecasted_covariate_sampler} default to these name(s)
+for the lead column(s) (the latter doesn't actually use the covariate's lead),
+so it makes things slightly easier in that regard.
 
-This mutator should be paired with \code{hot_deck_covariate_lead_sampler} for use in CV.
+This mutator should be paired with samplers that rely on
+covariates, for use in CV. If your target observation column is not named
+"observation", you can use \code{purrr::partial} to pass the right name
+before passing that output to CV.
+
 It is applied to the training data after the train-test split,
 to avoid data leakage.
 }
