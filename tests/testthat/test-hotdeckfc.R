@@ -279,6 +279,82 @@ test_that("hot deck fc vector errors", {
 })
 
 
+test_that("hot deck fc covariate validators", {
+  data = tibble(
+    datetime = c(
+      as.Date("2021-01-01") + 0:3,
+      as.Date("2023-01-01") + 0:2
+    ),
+    obs = c(
+      1, 3, 1, 2,
+      1, 2, 3
+    )
+  ) %>%
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
+
+  cov_data_not_tsib = tibble(
+    datetime = c(as.Date("2023-01-04") + 0:3),
+    cov_obs = 1:4,
+    sim_num = c(1,1,2,2)
+  )
+
+  cov_data_multicol_key = tibble(
+    datetime = c(as.Date("2023-01-04") + 0:3),
+    cov_obs = 1:4,
+    sim_num = c(1,1,2,2),
+    key_b = c(1,1,2,2)
+  ) %>%
+    as_tsibble(key = c(sim_num, key_b), index = datetime)
+
+  cov_data_wrong_key_vals = tibble(
+    datetime = c(as.Date("2023-01-04") + 0:3),
+    cov_obs = 1:4,
+    sim_num = c(0,0,1,1)
+  ) %>%
+    as_tsibble(key = sim_num, index = datetime)
+
+  expect_error(data %>%
+                 hot_deck_forecast(
+                   .datetime = datetime,
+                   .observation = obs,
+                   times = 2,
+                   h = 2,
+                   window_back = 2,
+                   window_fwd = 2,
+                   n_closest = 1,
+                   covariate_forecasts = cov_data_not_tsib
+                 ),
+               regexp = "needs to be a")
+
+  expect_error(data %>%
+                 hot_deck_forecast(
+                   .datetime = datetime,
+                   .observation = obs,
+                   times = 2,
+                   h = 2,
+                   window_back = 2,
+                   window_fwd = 2,
+                   n_closest = 1,
+                   covariate_forecasts = cov_data_multicol_key
+                 ),
+               regexp = "more than one key column")
+
+  expect_error(data %>%
+                 hot_deck_forecast(
+                   .datetime = datetime,
+                   .observation = obs,
+                   times = 2,
+                   h = 2,
+                   window_back = 2,
+                   window_fwd = 2,
+                   n_closest = 1,
+                   covariate_forecasts = cov_data_wrong_key_vals
+                 ),
+               regexp = "values from 1 to")
+})
+
+
 test_that("hot deck fc warning then error in h incrementing up to empty window", {
   data = tibble(
     datetime = c(

@@ -81,6 +81,9 @@ hot_deck_forecast <- function(.data,
   window_back = ensure_vector(window_back, h)
   window_fwd = ensure_vector(window_fwd, h)
   n_closest = ensure_vector(n_closest, h)
+  if (!is.null(covariate_forecasts)) {
+    validate_cov_fcs(covariate_forecasts)
+  }
 
   # Forecast
   forecasts = NULL
@@ -426,4 +429,39 @@ ensure_vector <- function(hotdeck_arg, h) {
   }
 
   hotdeck_arg
+}
+
+
+#' Validators for covariate forecasts.
+#'
+#' Checks that:
+#'   1. The cov_fcs is a tsibble.
+#'   2. The "key" is one column.
+#'   3. The "key" is from 1:n, where n = # of simulations.
+#'
+#' @param covariate_forecasts tsibble. Simulated sample paths of covariates.
+validate_cov_fcs <- function(covariate_forecasts) {
+  if (isFALSE(tsibble::is_tsibble(covariate_forecasts))) {
+    stop("Your covariate forecasts needs to be a `tsibble`.", call. = FALSE)
+  }
+
+  # should have one key col, which contains values over 1:n_keys
+  k = tsibble::key(covariate_forecasts)  # list
+  if (length(k) > 1) {
+    stop("You `covariate_forecasts` has more than one key column.",
+         call. = FALSE)
+  }
+  k = k[[1]]
+  n = tsibble::n_keys(covariate_forecasts)
+  k_vals = covariate_forecasts %>%
+    dplyr::distinct({{ k }}) %>%
+    dplyr::arrange() %>%
+    dplyr::pull()
+  if (!identical(k_vals, 1:n)) {
+    stop(paste("Your `covariate_forecasts`'s \"key\" contains",
+               "the following keys:\n", k_vals, "\n",
+               "It should only contain values from 1 to", n
+               ),
+         call. = FALSE)
+  }
 }
