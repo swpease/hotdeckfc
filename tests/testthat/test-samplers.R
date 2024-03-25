@@ -1,3 +1,83 @@
+test_that("hot_deck_forecasted_covariate_sampler basic test", {
+  # Setup
+  cov_tsib = tibble(
+    datetime = as.Date("2022-02-02"),
+    sim_num = 1,
+    cov_pred = 2
+  ) %>%
+    as_tsibble(index = datetime, key = sim_num)
+
+  local_rows = tibble(
+    observation = c(1,8,20),
+    cov_obs = c(2, 3, 4),  # 4 gets filtered out b/c its lead is NA
+    offset = c(-2, -1, 0)
+  )
+  n_closest = 1
+  current_obs = 4
+
+  local_rows = local_rows %>% lead_cov_mutator(cov_obs)
+
+  wrapped = hot_deck_forecasted_covariate_sampler(next_target_obs_col_name = "next_target_obs",
+                                                  filter_na_col_names = "next_target_obs")
+  wrapped_w_covs = wrapped(cov_tsib)
+
+  # Do three iterations: (1) the latest obs, (2) the fc, (3) beyond the fc
+  # (1)
+  expected1 = list(
+    new_current_obs = list(2),
+    forecast = 20
+  )
+
+  out = local_rows %>% wrapped_w_covs(cov_obs, current_obs, n_closest)
+  expect_equal(out, expected1)
+
+  # (2)
+  expected2 = list(
+    new_current_obs = list(),
+    forecast = 8
+  )
+
+  out = local_rows %>% wrapped_w_covs(cov_obs, out$new_current_obs, n_closest)
+  expect_equal(out, expected2)
+
+  # (3)
+  expected3 = list(
+    new_current_obs = list(),
+    forecast = NA
+  )
+
+  out = local_rows %>% wrapped_w_covs(cov_obs, out$new_current_obs, n_closest)
+  expect_equal(out, expected3)
+})
+
+
+test_that("hot_deck_forecasted_covariate_sampler multi-covariates err", {
+  cov_tsib = tibble(
+    datetime = as.Date("2022-02-02"),
+    sim_num = 1,
+    cov_pred = 2,
+    cov2_pred = 89
+  ) %>%
+    as_tsibble(index = datetime, key = sim_num)
+
+  local_rows = tibble(
+    observation = c(1,8,20),
+    cov_obs = c(2, 3, 4),
+    offset = c(-2, -1, 0)
+  )
+  n_closest = 1
+  current_obs = 4
+
+  local_rows = local_rows %>% lead_cov_mutator(cov_obs)
+
+  wrapped = hot_deck_forecasted_covariate_sampler(next_target_obs_col_name = "next_target_obs",
+                                                  filter_na_col_names = "next_target_obs")
+
+  expect_error(wrapped(cov_tsib),
+               regexp = "Multiple forecasted covariates")
+})
+
+
 test_that("hot_deck_covariate_lead_sampler basic test", {
   local_rows = tibble(
     observation = c(1,8,20),
