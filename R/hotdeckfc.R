@@ -27,6 +27,19 @@
 #'
 #' This design allows for custom sampler functions to be supplied.
 #'
+#' `covariate_forecasts`, if provided, must adhere to the following:
+#'   - It must be a `tsibble`.
+#'   - The simulation number (sample path) must go from 1 to (# of simulations),
+#'   and must be made the "key" of the tsibble.
+#' So, your tsibble's "key" must be the covariate forecast's simulation number,
+#' its "index" must be the temporal column, and its "measures" (everything
+#' else) should be the covariates.
+#' All of the `covariate_forecasts` "measure"s (filtered by each simulation number)
+#' will be passed to the `sampler`, and that returned value (a partial application)
+#' will be used to simulate a sample path.
+#' The number of simulated sample paths generated per covariate simulation is
+#' the ceiling of (`times` / (# of covariate simulations))
+#'
 #' @param .data tsibble. The data. Passed via pipe.
 #' @param .datetime The datetime column of .data. Passed via pipe.
 #' @param .observation The observation column of .data. Passed via pipe.
@@ -42,6 +55,8 @@
 #' per hot deck random sampling. Either scalar (length == 1) or vector
 #' of length == h.
 #' @param sampler Sampler function to generate forecasted values.
+#' @param covariate_forecasts tsibble. Simulated sample paths of covariates.
+#' See details.
 #' @returns tibble of forecasts:
 #'   - nrow = h * times,
 #'   - columns:
@@ -59,7 +74,8 @@ hot_deck_forecast <- function(.data,
                               window_back,
                               window_fwd,
                               n_closest,
-                              sampler = hot_deck_lead_sampler("next_obs")) {
+                              sampler = hot_deck_lead_sampler("next_obs"),
+                              covariate_forecasts = NULL) {
   # Validate
   .data %>% validate_data({{ .datetime }}, {{ .observation }})
   window_back = ensure_vector(window_back, h)
@@ -67,6 +83,49 @@ hot_deck_forecast <- function(.data,
   n_closest = ensure_vector(n_closest, h)
 
   # Forecast
+  forecasts = NULL
+  if (is.null(covariate_forecasts)) {
+    forecasts = .data %>%
+      internal_hot_deck_forecast({{ .datetime }},
+                                 {{ .observation }},
+                                 times = times,
+                                 h = h,
+                                 window_back = window_back,
+                                 window_fwd = window_fwd,
+                                 n_closest = n_closest,
+                                 sampler = sampler)
+  }
+
+  forecasts
+}
+
+
+#' Internal method for hot deck forecasting.
+#'
+#' @param .data tsibble. The data. Passed via pipe.
+#' @param .datetime The datetime column of .data.
+#' @param .observation The observation column of .data.
+#' @param times The number of simulated sample paths to produce.
+#' @param h How many days to forecast.
+#' @param window_back How many days back to include in the window for
+#' a given season. Either scalar (length == 1) or vector
+#' of length == h.
+#' @param window_fwd How many days forward to include in the window for
+#' a given season. Either scalar (length == 1) or vector
+#' of length == h.
+#' @param n_closest The number of closest observations to pick from
+#' per hot deck random sampling. Either scalar (length == 1) or vector
+#' of length == h.
+#' @param sampler Sampler function to generate forecasted values.
+internal_hot_deck_forecast <- function(.data,
+                                       .datetime,
+                                       .observation,
+                                       times,
+                                       h,
+                                       window_back,
+                                       window_fwd,
+                                       n_closest,
+                                       sampler) {
   forecasts = NULL
   n_time = 1
   while (n_time <= times) {

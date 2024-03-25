@@ -13,7 +13,8 @@ hot_deck_forecast(
   window_back,
   window_fwd,
   n_closest,
-  sampler = hot_deck_lead_sampler("next_obs")
+  sampler = hot_deck_lead_sampler("next_obs"),
+  covariate_forecasts = NULL
 )
 }
 \arguments{
@@ -40,6 +41,9 @@ per hot deck random sampling. Either scalar (length == 1) or vector
 of length == h.}
 
 \item{sampler}{Sampler function to generate forecasted values.}
+
+\item{covariate_forecasts}{tsibble. Simulated sample paths of covariates.
+See details.}
 }
 \value{
 tibble of forecasts:
@@ -86,4 +90,19 @@ takes the local rows and current value (plus some other params), and returns
 a new current value and a forecasted value, which may or may not be the same.
 
 This design allows for custom sampler functions to be supplied.
+
+\code{covariate_forecasts}, if provided, must adhere to the following:
+\itemize{
+\item It must be a \code{tsibble}.
+\item The simulation number (sample path) must go from 1 to (# of simulations),
+and must be made the "key" of the tsibble.
+So, your tsibble's "key" must be the covariate forecast's simulation number,
+its "index" must be the temporal column, and its "measures" (everything
+else) should be the covariates.
+All of the \code{covariate_forecasts} "measure"s (filtered by each simulation number)
+will be passed to the \code{sampler}, and that returned value (a partial application)
+will be used to simulate a sample path.
+The number of simulated sample paths generated per covariate simulation is
+the ceiling of (\code{times} / (# of covariate simulations))
+}
 }
