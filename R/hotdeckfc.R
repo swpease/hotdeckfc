@@ -457,7 +457,7 @@ validate_cov_fcs <- function(covariate_forecasts) {
     dplyr::distinct({{ k }}) %>%
     dplyr::arrange() %>%
     dplyr::pull()
-  if (!identical(k_vals, 1:n)) {
+  if (!identical(as.integer(k_vals), 1:n)) {
     stop(paste("Your `covariate_forecasts`'s \"key\" contains",
                "the following keys:\n", k_vals, "\n",
                "It should only contain values from 1 to", n

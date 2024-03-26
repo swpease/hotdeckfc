@@ -314,6 +314,14 @@ test_that("hot deck fc covariate validators", {
   ) %>%
     as_tsibble(key = sim_num, index = datetime)
 
+  valid_cov_data = tibble(
+    datetime = c(as.Date("2023-01-04") + 0:3),
+    cov_obs = 1:4,
+    sim_num = c(1,1,2,2)
+  ) %>%
+    as_tsibble(key = sim_num, index = datetime)
+
+
   expect_error(data %>%
                  hot_deck_forecast(
                    .datetime = datetime,
@@ -352,6 +360,8 @@ test_that("hot deck fc covariate validators", {
                    covariate_forecasts = cov_data_wrong_key_vals
                  ),
                regexp = "values from 1 to")
+
+  expect_no_error(validate_cov_fcs(valid_cov_data))
 })
 
 
