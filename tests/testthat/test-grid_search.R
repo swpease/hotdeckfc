@@ -20,7 +20,8 @@ test_that("grid search gridding", {
     sampler_args = list(build_sampler_args(
       sm_name = "name",
       sampler = hot_deck_lead_sampler("next_obs"),
-      mutator = lead_mutator
+      mutator = lead_mutator,
+      cov_fc_getter = NULL
     ))
   )
 
@@ -40,7 +41,8 @@ test_that("grid search gridding", {
     window_fwd = 1:5,
     sm_name = "name",
     sampler = hot_deck_lead_sampler("next_obs"),
-    mutator = lead_mutator
+    mutator = lead_mutator,
+    cov_fc_getter = NULL
   )
   expected_passed_args_list_1 = list(
     times = 30,
@@ -49,7 +51,8 @@ test_that("grid search gridding", {
     window_back = 1:5,
     window_fwd = 1:5,
     sampler = hot_deck_lead_sampler("next_obs"),
-    mutator = lead_mutator
+    mutator = lead_mutator,
+    cov_fc_getter = NULL
   )
 
   expected_args_list_2 = list(
@@ -60,7 +63,8 @@ test_that("grid search gridding", {
     window_fwd = 2,
     sm_name = "name",
     sampler = hot_deck_lead_sampler("next_obs"),
-    mutator = lead_mutator
+    mutator = lead_mutator,
+    cov_fc_getter = NULL
   )
   expected_passed_args_list_2 = list(
     times = 30,
@@ -69,7 +73,8 @@ test_that("grid search gridding", {
     window_back = 1,
     window_fwd = 2,
     sampler = hot_deck_lead_sampler("next_obs"),
-    mutator = lead_mutator
+    mutator = lead_mutator,
+    cov_fc_getter = NULL
   )
 
   expect_equal(out[[1]]$arg_list, expected_args_list_1)
@@ -118,6 +123,8 @@ test_that("grid search gridding", {
 
 
 test_that("build grid", {
+  dummy_fn <- function(mdt) 3
+
   expected = tibble(
     times = c(30, 30),
     h = c(4, 4),
@@ -130,12 +137,14 @@ test_that("build grid", {
       list(
         sm_name = "sm_name",
         sampler = hot_deck_lead_sampler("as"),
-        mutator = lead_mutator
+        mutator = lead_mutator,
+        cov_fc_getter = dummy_fn
       ),
       list(
         sm_name = "sm_name",
         sampler = hot_deck_lead_sampler("as"),
-        mutator = lead_mutator
+        mutator = lead_mutator,
+        cov_fc_getter = dummy_fn
       )
     )
   )
@@ -148,7 +157,8 @@ test_that("build grid", {
     sampler_args = list(build_sampler_args(
       sm_name = "sm_name",
       sampler = hot_deck_lead_sampler("as"),
-      mutator = lead_mutator
+      mutator = lead_mutator,
+      cov_fc_getter = dummy_fn
     ))
   )
 

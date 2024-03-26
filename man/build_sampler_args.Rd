@@ -4,7 +4,7 @@
 \alias{build_sampler_args}
 \title{Build grid search sampler argument.}
 \usage{
-build_sampler_args(sm_name, sampler, mutator)
+build_sampler_args(sm_name, sampler, mutator, cov_fc_getter = NULL)
 }
 \arguments{
 \item{sm_name}{The name of your sampler-mutator pair.}
@@ -12,6 +12,8 @@ build_sampler_args(sm_name, sampler, mutator)
 \item{sampler}{The sampler.}
 
 \item{mutator}{The mutator.}
+
+\item{cov_fc_getter}{The cov_fc_getter.}
 }
 \value{
 list(sm_name = sm_name, sampler = sampler, mutator = mutator)

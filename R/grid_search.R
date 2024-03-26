@@ -133,14 +133,16 @@ build_window_args <- function(window_back, window_fwd = window_back) {
 #' @param sm_name The name of your sampler-mutator pair.
 #' @param sampler The sampler.
 #' @param mutator The mutator.
+#' @param cov_fc_getter The cov_fc_getter.
 #' @returns list(sm_name = sm_name, sampler = sampler, mutator = mutator)
 #'
 #' @export
-build_sampler_args <- function(sm_name, sampler, mutator) {
+build_sampler_args <- function(sm_name, sampler, mutator, cov_fc_getter = NULL) {
   list(
     sm_name = sm_name,
     sampler = sampler,
-    mutator = mutator
+    mutator = mutator,
+    cov_fc_getter = cov_fc_getter
   )
 }
 
