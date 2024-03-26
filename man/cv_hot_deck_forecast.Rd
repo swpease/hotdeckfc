@@ -16,6 +16,7 @@ cv_hot_deck_forecast(
   offset = 0,
   sampler = hot_deck_lead_sampler("next_obs"),
   mutator = lead_mutator,
+  cov_fc_getter = NULL,
   train_test_split_type = c("conservative", "leaky")
 )
 }
@@ -46,6 +47,10 @@ to use as the starting point.}
 \item{sampler}{Sampler function to generate forecasted values.}
 
 \item{mutator}{Mutator function to be applied to training data.}
+
+\item{cov_fc_getter}{fn(training_max_date) -> tsibble.
+Getter of any covariate data, taking the max date of the current training
+data.}
 
 \item{train_test_split_type}{default = "conservative". See help for details.}
 }
@@ -92,6 +97,11 @@ If you do not want any mutation, use \code{non_mutator} as the argument.
 The \code{mutator} looks like: fn(.data, .obs) -> .data
 
 For details on \code{sampler}, see \code{hot_deck_forecast}.
+
+The \code{cov_fc_getter} takes the max date of the current training data as its
+only argument. The returned value will be used as the \code{covariate_forecasts}
+argument for \code{hot_deck_forecast}. You should consider memoizing the
+function you use here.
 
 The current implementation has two train-test data splitting methods.
 The default is "conservative", which goes as follows:

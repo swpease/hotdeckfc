@@ -28,6 +28,11 @@
 #'
 #' For details on `sampler`, see `hot_deck_forecast`.
 #'
+#' The `cov_fc_getter` takes the max date of the current training data as its
+#' only argument. The returned value will be used as the `covariate_forecasts`
+#' argument for `hot_deck_forecast`. You should consider memoizing the
+#' function you use here.
+#'
 #' The current implementation has two train-test data splitting methods.
 #' The default is "conservative", which goes as follows:
 #' The testing set is any data in the forecast horizon (`h`) for
@@ -60,6 +65,9 @@
 #' to use as the starting point.
 #' @param sampler Sampler function to generate forecasted values.
 #' @param mutator Mutator function to be applied to training data.
+#' @param cov_fc_getter fn(training_max_date) -> tsibble.
+#' Getter of any covariate data, taking the max date of the current training
+#' data.
 #' @param train_test_split_type default = "conservative". See help for details.
 #' @returns list containing:
 #'   forecasts: a `tibble` of hot deck forecasts:
@@ -85,6 +93,7 @@ cv_hot_deck_forecast <- function(.data,
                                  offset = 0,  # non-hdfc arg
                                  sampler = hot_deck_lead_sampler("next_obs"),
                                  mutator = lead_mutator,
+                                 cov_fc_getter = NULL,
                                  train_test_split_type = c("conservative", "leaky")) {
   # TODO: validate data
   train_test_split_type = match.arg(train_test_split_type)
@@ -129,6 +138,15 @@ cv_hot_deck_forecast <- function(.data,
     # Apply the mutator to training data after split to avoid data leak.
     train_data = train_test_data$train_data %>%
       mutator({{ .observation }})
+    # Get any covariate forecasts
+    if (is.null(cov_fc_getter)) {
+      cov_fc = NULL
+    } else {
+      training_max_date = train_data %>%
+        dplyr::pull({{ .datetime }}) %>%
+        max()
+      cov_fc = cov_fc_getter(training_max_date)
+    }
     # TODO: test_data is a tsibble right now. Do I want it and forecasts
     # to be both tibbles or both tsibbles?
     test_data = train_test_data$test_data %>%
@@ -145,7 +163,8 @@ cv_hot_deck_forecast <- function(.data,
                           window_back = window_back,
                           window_fwd = window_fwd,
                           n_closest = n_closest,
-                          sampler = sampler),
+                          sampler = sampler,
+                          covariate_forecasts = cov_fc),
       error = function(e) {
         stop(paste("\nHotdeck Error Msg:\n", conditionMessage(e),
                    "\nCV values that generated this error:\n",

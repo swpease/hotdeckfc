@@ -61,6 +61,71 @@ test_that("cv works", {
 })
 
 
+test_that("cv w/ cov fc getter", {
+  cov_fc_dummy_getter <- function(training_max_date) {
+    tibble(
+      datetime = as.Date("2023-04-04"),  # doesn't matter
+      sim_num = 1,
+      cov_pred = 2
+    ) %>%
+      as_tsibble(index = datetime, key = sim_num)
+  }
+
+  data = tibble(
+    datetime = c(
+      as.Date("2023-04-01") + 0:4,
+      as.Date("2024-04-03")
+    ),
+    observation = c(
+      1,8,20,99,98,
+      10
+    ),
+    cov_obs = c(
+      2, 3, 4, 11, 12,
+      10
+    ),
+  ) %>%
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
+
+  expected_fcs = tibble(
+    datetime = c(as.Date("2023-04-04") + 0:1,
+                 as.Date("2023-04-04") + 0:1),
+    h = c(1, 2, 1, 2),
+    forecast = c(20, 8, 20, 8),
+    simulation_num = c(1, 1, 2, 2),
+    k = 1
+  )
+
+  expected_test_data_sets = tibble(
+    datetime = as.Date("2023-04-04") + 0:1,
+    observation = c(99, 98),
+    cov_obs = c(11, 12),
+    h = c(1,2),
+    k = 1
+  )
+
+  out = data %>%
+    cv_hot_deck_forecast(
+      datetime,
+      cov_obs,
+      offset = 0,
+      times = 2,
+      h = 2,
+      window_back = 5,
+      window_fwd = 2,
+      n_closest = 1,
+      sampler = hot_deck_forecasted_covariate_sampler(next_target_obs_col_name = "next_target_obs",
+                                                      filter_na_col_names = "next_target_obs"),
+      mutator = lead_cov_mutator,
+      cov_fc_getter = cov_fc_dummy_getter
+    )
+
+  expect_equal(out$forecasts, expected_fcs)
+  expect_equal(out$test_data_sets %>% as_tibble() %>% ungroup(), expected_test_data_sets)
+})
+
+
 test_that("cv empty window err", {
   data = tibble(
     datetime = c(
