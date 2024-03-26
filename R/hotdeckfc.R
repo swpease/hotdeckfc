@@ -97,6 +97,29 @@ hot_deck_forecast <- function(.data,
                                  window_fwd = window_fwd,
                                  n_closest = n_closest,
                                  sampler = sampler)
+  } else {
+    n_sims = tsibble::n_keys(covariate_forecasts)
+    k = tsibble::key(covariate_forecasts)[[1]]
+    times_per_key = ceiling(times / n_sims)
+    max_sim_num = 0
+    for (sim_num in 1:n_sims) {
+      cov_fc = covariate_forecasts %>%
+        dplyr::filter({{ k }} == .env[["sim_num"]])
+      sampler_w_covs = sampler(cov_fc)
+      fc = .data %>%
+        internal_hot_deck_forecast({{ .datetime }},
+                                   {{ .observation }},
+                                   times = times_per_key,
+                                   h = h,
+                                   window_back = window_back,
+                                   window_fwd = window_fwd,
+                                   n_closest = n_closest,
+                                   sampler = sampler_w_covs)
+      fc = fc %>%
+        dplyr::mutate(simulation_num = simulation_num + max_sim_num)
+      forecasts = dplyr::bind_rows(forecasts, fc)
+      max_sim_num = max_sim_num + times_per_key
+    }
   }
 
   forecasts

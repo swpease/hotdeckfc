@@ -138,6 +138,48 @@ test_that("hot deck fc vector test", {
 })
 
 
+test_that("hot deck fc covs", {
+  # Setup
+  cov_tsib = tibble(
+    datetime = as.Date("2022-02-04"),  # dt is irrelevant actually...
+    sim_num = c(1,2),
+    cov_pred = c(2,3)
+  ) %>%
+    as_tsibble(index = datetime, key = sim_num)
+  data = tibble(
+    datetime = as.Date("2022-02-01") + 0:2,
+    observation = c(1,8,20),
+    cov_obs = c(2, 3, 4)
+  ) %>%
+    as_tsibble(index = datetime)
+  data = data %>% lead_cov_mutator(cov_obs,
+                                   target_obs_col_name = "observation")
+  sampler = hot_deck_forecasted_covariate_sampler()
+
+  out = data %>% hot_deck_forecast(datetime,
+                                   cov_obs,
+                                   times = 1,
+                                   h = 2,
+                                   window_back = 5,
+                                   window_fwd = 5,
+                                   n_closest = 1,
+                                   sampler = sampler,
+                                   covariate_forecasts = cov_tsib)
+
+  # h = 1 uses latest cov obs, and target obs lead = NA,
+  # h = 2 uses cov fc
+  expected = tibble(
+    datetime = c(as.Date("2022-02-04") + 0:1,
+                 as.Date("2022-02-04") + 0:1),
+    h = c(1, 2, 1, 2),
+    forecast = c(NA, 8, NA, 20),  # No NA filters used
+    simulation_num = c(1, 1, 2, 2)
+  )
+
+  expect_equal(out, expected)
+})
+
+
 test_that("hot deck fc data validators", {
   data_not_tsib = tibble(
     datetime = c(
