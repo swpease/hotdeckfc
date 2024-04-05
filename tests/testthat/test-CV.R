@@ -11,7 +11,12 @@ test_that("cv works", {
       1, 3, 1, 2, 5, 5, 5, 10,
       1, 2, 3, NA, 8, 8, 10,
       10
-    )
+    ),
+    ref_date = "HI",  # These five cols are junk cols to test that .env is used.
+    window_fwd = ref_date,
+    max_mobile_date = ref_date,
+    k = ref_date,
+    h = ref_date
   ) %>%
     as_tsibble(index = datetime) %>%
     fill_gaps()
@@ -39,8 +44,11 @@ test_that("cv works", {
     datetime = c(as.Date("2022-04-04") + 0:1,
                  as.Date("2023-04-04") + 0:1),
     obs = c(5, 5, NA, 8),
-    h = c(1,2,1,2),
-    k = c(2,2,1,1)
+    ref_date = "HI",
+    window_fwd = ref_date,
+    max_mobile_date = ref_date,
+    k = c(2,2,1,1),  # Note col reorder. TODO: hedge against these user col names.
+    h = c(1,2,1,2)
   )
 
   out = data %>%

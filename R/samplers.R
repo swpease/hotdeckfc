@@ -387,7 +387,7 @@ sample_local_rows <- function(local_rows,
   # derived_col is not. dplyr's sorting puts NA's at the bottom, so if they
   # are selected, they're the last resorts, which seems reasonable to me.
   local_rows = local_rows %>%
-    dplyr::mutate(obs_distance = abs(current_obs - {{ .observation }}))
+    dplyr::mutate(obs_distance = abs(.env$current_obs - {{ .observation }}))
 
   # removing NAs
   filtered_local_rows = local_rows

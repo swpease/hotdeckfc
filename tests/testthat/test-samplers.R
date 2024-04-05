@@ -159,10 +159,11 @@ test_that("hot_deck_lead_sampler basic test", {
   local_rows = tibble(
     obs = 1:10,
     next_obs = dplyr::lead(obs),
-    offset = 1:10
+    offset = 1:10,
+    current_obs = 99  # Junk col to test that .env is used.
   )
   current_obs = 4
-  n_closest = 2
+  n_closest = 2  # Ties are included, so could take any of [3,4,5]
 
   wrapped = hot_deck_lead_sampler("next_obs")
   expected_1 = list(

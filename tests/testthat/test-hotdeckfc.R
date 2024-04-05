@@ -503,7 +503,11 @@ test_that("get_local_rows", {
       as.Date("2023-04-01") + 0:4,
       as.Date("2024-02-28") + 0:1  # leap year
     ),
-    obs = 1:8
+    obs = 1:8,
+    ref_idx = "HI",  # These four cols are junk cols to test that .env is used.
+    sim_num = ref_idx,
+    window_start = ref_idx,
+    window_end = ref_idx
   ) %>%
     as_tsibble(index = datetime) %>%
     fill_gaps()
@@ -519,6 +523,14 @@ test_that("get_local_rows", {
       7:8,
       NA, NA, NA,
       1),
+    ref_idx = c(
+      "HI", "HI",
+      NA, NA, NA,
+      "HI"
+    ),
+    sim_num = ref_idx,
+    window_start = ref_idx,
+    window_end = ref_idx,
     offset = c(
       -1, 0,
       -1, 0, 1,

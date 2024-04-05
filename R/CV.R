@@ -114,7 +114,7 @@ cv_hot_deck_forecast <- function(.data,
   forecasts = NULL
   test_data_sets = NULL
   while (TRUE) {
-    ref_row = .data %>% dplyr::filter({{ .datetime }} == ref_date)
+    ref_row = .data %>% dplyr::filter({{ .datetime }} == .env$ref_date)
     ref_row_obs = ref_row %>% dplyr::pull({{ .observation }})
     # If missing entire row or just obs
     if ((nrow(ref_row) == 0) || (is.na(ref_row_obs))) {
@@ -150,7 +150,7 @@ cv_hot_deck_forecast <- function(.data,
     # TODO: test_data is a tsibble right now. Do I want it and forecasts
     # to be both tibbles or both tsibbles?
     test_data = train_test_data$test_data %>%
-      mutate(k = k)
+      dplyr::mutate(k = .env$k)
     test_data_sets = dplyr::bind_rows(test_data_sets, test_data)
 
     # Forecasting
@@ -173,7 +173,7 @@ cv_hot_deck_forecast <- function(.data,
              call. = FALSE)
       }
     )
-    fc = fc %>% dplyr::mutate(k = k)
+    fc = fc %>% dplyr::mutate(k = .env$k)
     forecasts = dplyr::bind_rows(forecasts, fc)
 
     # Update vals
@@ -235,16 +235,16 @@ train_test_split <- function(.data,
   # want:     mobile_data < ante_split < test_data
   # unused:   data in `window_fwd` rows after test_data
   # TODO: h + window_fwd - 1?
-  ante_split = .data %>% dplyr::filter({{ .datetime }} <= ref_date)
-  post_split = .data %>% dplyr::filter({{ .datetime }} > ref_date)
+  ante_split = .data %>% dplyr::filter({{ .datetime }} <= .env$ref_date)
+  post_split = .data %>% dplyr::filter({{ .datetime }} > .env$ref_date)
   post_split = post_split %>% dplyr::mutate(idx = dplyr::row_number())
   test_data = post_split %>%
-    dplyr::filter(idx <= h) %>%
+    dplyr::filter(idx <= .env$h) %>%
     dplyr::select(-idx) %>%
     dplyr::mutate(h = row_number())
   if (split_type == "conservative") {
     mobile_data = post_split %>%
-      dplyr::filter(idx > (h + max(window_fwd))) %>%
+      dplyr::filter(idx > (.env$h + max(.env$window_fwd))) %>%
       dplyr::select(-idx)
   } else {
     mobile_data = post_split %>% dplyr::select(-idx)
@@ -270,7 +270,7 @@ train_test_split <- function(.data,
       mobile_data = mobile_data %>%
         dplyr::mutate(
           {{ .datetime }} := case_when(
-            lubridate::leap_year(max_mobile_date) ~ {{ .datetime }} - 366,
+            lubridate::leap_year(.env$max_mobile_date) ~ {{ .datetime }} - 366,
             .default = {{ .datetime }} - 365))
     }
     train_data = dplyr::bind_rows(mobile_data, ante_split)

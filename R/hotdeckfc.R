@@ -104,7 +104,7 @@ hot_deck_forecast <- function(.data,
     max_sim_num = 0
     for (sim_num in 1:n_sims) {
       cov_fc = covariate_forecasts %>%
-        dplyr::filter({{ k }} == .env[["sim_num"]])
+        dplyr::filter({{ k }} == .env$sim_num)
       sampler_w_covs = sampler(cov_fc)
       fc = .data %>%
         internal_hot_deck_forecast({{ .datetime }},
@@ -116,7 +116,7 @@ hot_deck_forecast <- function(.data,
                                    n_closest = n_closest,
                                    sampler = sampler_w_covs)
       fc = fc %>%
-        dplyr::mutate(simulation_num = simulation_num + max_sim_num)
+        dplyr::mutate(simulation_num = simulation_num + .env$max_sim_num)
       forecasts = dplyr::bind_rows(forecasts, fc)
       max_sim_num = max_sim_num + times_per_key
     }
@@ -164,7 +164,7 @@ internal_hot_deck_forecast <- function(.data,
                            n_closest = n_closest,
                            sampler = sampler)
     fc = fc %>%
-      dplyr::mutate(simulation_num = n_time)
+      dplyr::mutate(simulation_num = .env$n_time)
     forecasts = dplyr::bind_rows(forecasts, fc)
     n_time = n_time + 1
   }
@@ -313,7 +313,7 @@ get_local_rows <- function(.data,
       break
     }
     local_rows_part = .data %>%
-      dplyr::slice(window_start:window_end)
+      dplyr::slice(.env$window_start:.env$window_end)
 
     # nrow could == 0 if h is larger than window_back, such as for the
     # tail (recent-est) end of a long forecast horizon
@@ -357,7 +357,7 @@ get_local_rows <- function(.data,
         ref_date = ref_date + (ref_idx - idx_max)
       } else {
       ref_date = .data %>%
-        dplyr::filter(idx == ref_idx) %>%
+        dplyr::filter(idx == .env$ref_idx) %>%
         dplyr::pull({{ .datetime }})
       }
       ref_idx = if (lubridate::leap_year(ref_date)) (ref_idx - 366) else (ref_idx - 365)
