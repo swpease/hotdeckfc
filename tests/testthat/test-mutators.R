@@ -15,6 +15,24 @@ test_that("lead mutator", {
   expect_equal(data %>% lead_mutator(obs), expected)
 })
 
+test_that("n leads mutator", {
+  data = tibble(
+    datetime = as.Date("2022-03-31") + 0:9,
+    obs = 1:10
+  ) %>%
+    as_tsibble(index = datetime)
+
+  expected = tibble(
+    datetime = as.Date("2022-03-31") + 0:9,
+    obs = 1:10,
+    lead_1 = c(2:10, NA),
+    lead_2 = c(3:10, NA, NA),
+    lead_3 = c(4:10, NA, NA, NA),
+  ) %>%
+    as_tsibble(index = datetime)
+
+  expect_equal(n_leads_mutator(data, obs, n = 3), expected)
+})
 
 test_that("cov mutator", {
   data = tibble(

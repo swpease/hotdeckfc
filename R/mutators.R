@@ -18,6 +18,38 @@ lead_mutator <- function(.data, .observation) {
   .data %>% mutate(next_obs = dplyr::lead({{ .observation }}))
 }
 
+#' Add `n` columns of leads to data.
+#'
+#' Adds `n` new columns, named `lead_[1:n]`, of leads of the observation column.
+#'
+#' The corresponding selector is `hot_deck_n_leads_sampler`.
+#'
+#' This mutator should be paired with `hot_deck_n_leads_sampler` for use in CV.
+#' It is applied to the training data after the train-test split,
+#' to avoid data leakage.
+#'
+#' @param .data_ts The data. A tsibble.
+#' @param .observation The observation column. Passed via pipe.
+#' @param n Number of columns of leads to add.
+#' @returns .data_ts, augmented with `n` new columns, named `lead_[1:n]`,
+#' of leads.
+#'
+#' @export
+n_leads_mutator <- function(.data_ts, .observation, n) {
+  # set-up first lead
+  .data_ts = .data_ts %>%
+    dplyr::mutate(lead_1 = dplyr::lead({{ .observation }}))
+  # leads 2:n
+  i = 2
+  while (i <= n) {
+    .data_ts = .data_ts %>%
+      dplyr::mutate("lead_{i}" := dplyr::lead(.data[[paste0("lead_", i - 1)]]))
+    i = i + 1
+  }
+
+  .data_ts
+}
+
 
 #' Add a column of covariate and target leads to data.
 #'
