@@ -54,6 +54,88 @@ internal_hot_deck_lead_sampler <- function(local_rows,
 }
 
 
+#' Generate a hot deck forecast value using a sequence of `n` `lead`s.
+#'
+#' Forecast using samples' `n` `lead`s: (lead(obs), lead(lead(obs)), ...).
+#'
+#' The premise is like for `hot_deck_lead_sampler`, except that each randomly
+#' sampled row's `n` leads are used as forecasts (not exceeding your
+#' `hot_deck_forecast`'s `h`). Each sampling after the first one (which uses
+#' the latest observation, just like `hot_deck_lead_sampler`) uses the
+#' highest-order non-NA lead from the prior sampling. So if leads 3 through n are
+#' NA, it'll use lead_2. As such, having an empty `filter_na_col_names` risks
+#' the method breaking because it starts looking for NAs.
+#'
+#' For `n_closest`, `dplyr::slice_min` is used, and tie values are included.
+#'
+#' @param filter_na_col_names char vec. The names of any columns that you want to
+#' filter any NAs from.
+#' @returns partially applied sampler
+#'
+#' @export
+hot_deck_n_leads_sampler <- function(filter_na_col_names = "lead_1") {
+  purrr::partial(internal_hot_deck_n_leads_sampler, ... =, filter_na_col_names)
+}
+
+
+#' Wrapped method for `hot_deck_n_leads_sampler`.
+#'
+#' The `current_obs` is a scalar for the first forecast, where it's just the
+#' most recent observation. Subsequently, it is a list containing the leads
+#' of the current sample yet to be returned as a forecast, as well as the
+#' most recent non-na forecast for the current sample.
+#'
+#' @param local_rows tibble (NOT tsibble) The `local_rows` in `simulate_sample_path`.
+#' @param .observation The observation column.
+#' @param current_obs The `current_obs` in `simulate_sample_path`.
+#' @param n_closest Scalar.
+#' @param filter_na_col_names char vec. The names of any columns that you want to
+#' filter any NAs from.
+#' @returns list(new_current_obs, forecast), where
+#' new_current_obs = list(leads, last_non_na) What to use for `current_obs`
+#'   in the next iteration, i.e. the next forecast, where
+#'     leads       = any leads for the current sample that have yet
+#'                   to be returned as a forecast
+#'     last_non_na = the most recent non-na lead from the current sample
+#' forecast = The forecasted value.
+internal_hot_deck_n_leads_sampler <- function(local_rows,
+                                              .observation,
+                                              current_obs,
+                                              n_closest,
+                                              filter_na_col_names) {
+  if (!is.list(current_obs)) {
+    rand_row = local_rows %>% sample_local_rows({{ .observation }},
+                                                current_obs = current_obs,
+                                                n_closest = n_closest,
+                                                filter_na_col_names = filter_na_col_names)
+    new_leads = rand_row %>%
+      dplyr::select(dplyr::starts_with("lead_")) %>%
+      as.list()
+    forecast = new_leads[[1]]  # first lead is first fc
+    current_obs = list(
+      leads = new_leads[-1],  # this will be added to fc on subsequent iters
+      last_non_na = forecast
+    )
+  } else {
+    forecast = current_obs$leads[[1]]
+    if (!is.na(forecast)) {
+      current_obs$last_non_na = forecast
+    }
+    current_obs$leads = current_obs$leads[-1]  # `-` omits, so all but 1st el
+    if (length(current_obs$leads) == 0) {  # no more leads, need to get new sample
+      current_obs = current_obs$last_non_na
+    }
+  }
+
+  list(
+    new_current_obs = current_obs,
+    forecast = forecast
+  )
+}
+
+
+
+
 #' Generate a hot deck forecast value using a covariate's `lead`s.
 #'
 #' Given a `local_rows` and `current_obs`, it:

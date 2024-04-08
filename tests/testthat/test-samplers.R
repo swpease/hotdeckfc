@@ -207,6 +207,42 @@ test_that("hot_deck_lead_sampler no local values", {
 })
 
 
+test_that("hot_deck_n_leads_sampler hdfc test", {
+  data = tibble(
+    datetime = c(
+      as.Date("2022-02-02") + 0:4,
+      as.Date("2023-02-04")
+    ),
+    obs = c(
+      5,2,3,4,5,
+      3
+    )
+  ) %>%
+    as_tsibble(index = datetime) %>%
+    fill_gaps() %>%
+    n_leads_mutator(.observation = obs, n = 3)
+
+  expected = tibble(
+    datetime = as.Date("2023-02-05") + 0:3,
+    h = 1:4,
+    forecast = c(4, 5, NA, 2),
+    simulation_num = 1
+  )
+
+  out = hot_deck_forecast(data,
+                          .datetime = datetime,
+                          .observation = obs,
+                          times = 1,
+                          h = 4,
+                          window_back = 10,
+                          window_fwd = 10,
+                          n_closest = 1,
+                          sampler = hot_deck_n_leads_sampler())
+
+  expect_equal(out, expected)
+})
+
+
 test_that("sample_local_rows no local der vals error", {
   local_rows = tibble(
     obs = 1:10,
