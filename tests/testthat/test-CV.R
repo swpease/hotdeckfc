@@ -125,7 +125,7 @@ test_that("cv w/ cov fc getter", {
       n_closest = 1,
       sampler = sample_forecasted_covariate(next_target_obs_col_name = "next_target_obs",
                                                       filter_na_col_names = "next_target_obs"),
-      mutator = lead_cov_mutator,
+      appender = append_lead_cov_lead,
       cov_fc_getter = cov_fc_dummy_getter
     )
 
@@ -528,7 +528,7 @@ test_that("cv_crps", {
       window_fwd = 2,
       n_closest = 1,
       sampler = sample_lead("next_obs"),
-      mutator = lead_mutator
+      appender = append_lead
     )
   crps_out = cv_crps(out, "obs")
 
@@ -578,7 +578,7 @@ test_that("cv_crps NAs", {
       window_fwd = 2,
       n_closest = 1,
       sampler = sample_covariate_lead(),
-      mutator = lead_cov_mutator
+      appender = append_lead_cov_lead
     )
   crps_out = cv_crps(out, "observation")
 
@@ -619,7 +619,7 @@ test_that("cv_crps NAs", {
       window_fwd = 2,
       n_closest = 1,
       sampler = sample_covariate_lead(),
-      mutator = lead_cov_mutator
+      appender = append_lead_cov_lead
     )
   crps_out = cv_crps(out, "observation")
 
@@ -660,7 +660,7 @@ test_that("cv_crps NAs", {
       window_fwd = 2,
       n_closest = 1,
       sampler = sample_covariate_lead(),
-      mutator = lead_cov_mutator
+      appender = append_lead_cov_lead
     )
   crps_out = cv_crps(out, "observation")
 
@@ -702,7 +702,7 @@ test_that("cv_crps NAs", {
       window_fwd = 2,
       n_closest = 1,
       sampler = sample_covariate_lead(),
-      mutator = lead_cov_mutator
+      appender = append_lead_cov_lead
     )
   crps_out = cv_crps(out, "observation")
 

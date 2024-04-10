@@ -28,9 +28,9 @@ grid_search_hot_deck_cv <- function(.data,
     # sampler args.
     arg_list = arg_list %>%
       purrr::list_flatten(name_spec = "{inner}")
-    # Don't want the sm_name passed; would error as unused arg.
+    # Don't want the sa_name passed; would error as unused arg.
     passed_arg_list = arg_list %>%
-      purrr::list_assign(sm_name = rlang::zap())
+      purrr::list_assign(sa_name = rlang::zap())
     cv_out = rlang::inject(.data %>% cv_hot_deck_forecast({{ .datetime }},
                                                           {{ .observation }},
                                                           !!!passed_arg_list))
@@ -127,21 +127,21 @@ build_window_args <- function(window_back, window_fwd = window_back) {
 #'
 #' Use this function to build the `sampler_args` arg of `build_grid`.
 #'
-#' The `sm_name` argument is for downstream usage in performance
+#' The `sa_name` argument is for downstream usage in performance
 #' assessments as a... name.
 #'
-#' @param sm_name The name of your sampler-mutator pair.
+#' @param sa_name The name of your sampler-appender pair.
 #' @param sampler The sampler.
-#' @param mutator The mutator.
+#' @param appender The appender.
 #' @param cov_fc_getter The cov_fc_getter.
-#' @returns list(sm_name = sm_name, sampler = sampler, mutator = mutator)
+#' @returns list(sa_name = sa_name, sampler = sampler, appender = appender)
 #'
 #' @export
-build_sampler_args <- function(sm_name, sampler, mutator, cov_fc_getter = NULL) {
+build_sampler_args <- function(sa_name, sampler, appender, cov_fc_getter = NULL) {
   list(
-    sm_name = sm_name,
+    sa_name = sa_name,
     sampler = sampler,
-    mutator = mutator,
+    appender = appender,
     cov_fc_getter = cov_fc_getter
   )
 }

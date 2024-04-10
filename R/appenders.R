@@ -5,7 +5,7 @@
 #' The corresponding selector, `sample_lead`, defaults to this
 #' name for the lead column, so it makes things slightly easier in that regard.
 #'
-#' This mutator should be paired with `sample_lead` for use in CV.
+#' This appender should be paired with `sample_lead` for use in CV.
 #' It is applied to the training data after the train-test split,
 #' to avoid data leakage.
 #'
@@ -14,7 +14,7 @@
 #' @returns .data, augmented with a column, named `next_obs`, of leads.
 #'
 #' @export
-lead_mutator <- function(.data, .observation) {
+append_lead <- function(.data, .observation) {
   .data %>% mutate(next_obs = dplyr::lead({{ .observation }}))
 }
 
@@ -29,7 +29,7 @@ lead_mutator <- function(.data, .observation) {
 #' for the lead column(s) (the latter doesn't actually use the covariate's lead),
 #' so it makes things slightly easier in that regard.
 #'
-#' This mutator should be paired with samplers that rely on
+#' This appender should be paired with samplers that rely on
 #' covariates, for use in CV. If your target observation column is not named
 #' "observation", you can use `purrr::partial` to pass the right name
 #' before passing that output to CV.
@@ -45,7 +45,7 @@ lead_mutator <- function(.data, .observation) {
 #'   `next_target_obs`, of target leads.
 #'
 #' @export
-lead_cov_mutator <- function(.data_ts,
+append_lead_cov_lead <- function(.data_ts,
                              .cov_observation,
                              target_obs_col_name = "observation") {
   .data_ts %>% mutate(
@@ -62,7 +62,7 @@ lead_cov_mutator <- function(.data_ts,
 #' The corresponding selector, `sample_diff`, defaults to this name
 #' for the diff column, so it makes things slightly easier in that regard.
 #'
-#' This mutator should be paired with `sample_diff` for use in CV.
+#' This appender should be paired with `sample_diff` for use in CV.
 #' It is applied to the training data after the train-test split,
 #' to avoid data leakage.
 #'
@@ -72,7 +72,7 @@ lead_cov_mutator <- function(.data_ts,
 #' of leads of differences.
 #'
 #' @export
-diff_mutator <- function(.data, .observation) {
+append_diff <- function(.data, .observation) {
   .data %>%
     mutate(diff_to_next_obs = dplyr::lead(tsibble::difference({{ .observation }})))
 }
@@ -80,7 +80,7 @@ diff_mutator <- function(.data, .observation) {
 
 #' Return data, unmodified.
 #'
-#' This mutator should be paired with any sampler functions that do not have
+#' This appender should be paired with any sampler functions that do not have
 #' data leakage concerns (as with those that rely on, say, `lead` or `diff`),
 #' for use in CV.
 #' It is applied to the training data after the train-test split.
@@ -90,6 +90,6 @@ diff_mutator <- function(.data, .observation) {
 #' @returns .data
 #'
 #' @export
-non_mutator <- function(.data, .observation) {
+append_nothing <- function(.data, .observation) {
   .data
 }

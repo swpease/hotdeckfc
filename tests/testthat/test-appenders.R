@@ -1,4 +1,4 @@
-test_that("lead mutator", {
+test_that("lead appender", {
   data = tibble(
     datetime = as.Date("2022-03-31") + 0:9,
     obs = 1:10
@@ -12,11 +12,11 @@ test_that("lead mutator", {
   ) %>%
     as_tsibble(index = datetime)
 
-  expect_equal(data %>% lead_mutator(obs), expected)
+  expect_equal(data %>% append_lead(obs), expected)
 })
 
 
-test_that("cov mutator", {
+test_that("cov appender", {
   data = tibble(
     datetime = as.Date("2022-03-31") + 0:9,
     obs = 1:10,
@@ -33,11 +33,11 @@ test_that("cov mutator", {
   ) %>%
     as_tsibble(index = datetime)
 
-  expect_equal(data %>% lead_cov_mutator(cov, target_obs_col_name = "obs"), expected)
+  expect_equal(data %>% append_lead_cov_lead(cov, target_obs_col_name = "obs"), expected)
 })
 
 
-test_that("diff mutator", {
+test_that("diff appender", {
   data = tibble(
     datetime = as.Date("2022-03-31") + 0:9,
     obs = c(0,1,3,5,8,8,5,3,1,0)
@@ -51,16 +51,16 @@ test_that("diff mutator", {
   ) %>%
     as_tsibble(index = datetime)
 
-  expect_equal(data %>% diff_mutator(obs), expected)
+  expect_equal(data %>% append_diff(obs), expected)
 })
 
 
-test_that("non mutator", {
+test_that("non appender", {
   data = tibble(
     datetime = as.Date("2022-03-31") + 0:9,
     obs = c(0,1,3,5,8,8,5,3,1,0)
   ) %>%
     as_tsibble(index = datetime)
 
-  expect_equal(data %>% non_mutator(obs), data)
+  expect_equal(data %>% append_nothing(obs), data)
 })

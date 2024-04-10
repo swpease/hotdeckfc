@@ -14,7 +14,7 @@
 #' The parameters `times` through `n_closest`, plus `sampler`,
 #' are passed to `hot_deck_forecast`.
 #'
-#' The `mutator` function is for cases where the `sampler` uses subsequent
+#' The `appender` function is for cases where the `sampler` uses subsequent
 #' observations (e.g. a `lead`). While you can simply add your (e.g. `lead`)
 #' column to your data before passing it to `hot_deck_forecast`, you need
 #' to pass your desired mutation function as an argument to CV. It will
@@ -22,9 +22,9 @@
 #' the `lead` of the final training observation before your test data should
 #' be NA, not the first test data observation.
 #'
-#' If you do not want any mutation, use `non_mutator` as the argument.
+#' If you do not want any mutation, use `append_nothing` as the argument.
 #'
-#' The `mutator` looks like: fn(.data, .obs) -> .data
+#' The `appender` looks like: fn(.data, .obs) -> .data
 #'
 #' For details on `sampler`, see `hot_deck_forecast`.
 #'
@@ -64,7 +64,7 @@
 #' @param offset integer. Offset (in +- days) from the most recent row of .data
 #' to use as the starting point.
 #' @param sampler Sampler function to generate forecasted values.
-#' @param mutator Mutator function to be applied to training data.
+#' @param appender Appender function to be applied to training data.
 #' @param cov_fc_getter fn(training_max_date) -> tsibble.
 #' Getter of any covariate data, taking the max date of the current training
 #' data.
@@ -92,7 +92,7 @@ cv_hot_deck_forecast <- function(.data,
                                  n_closest,
                                  offset = 0,  # non-hdfc arg
                                  sampler = sample_lead("next_obs"),
-                                 mutator = lead_mutator,
+                                 appender = append_lead,
                                  cov_fc_getter = NULL,
                                  train_test_split_type = c("conservative", "leaky")) {
   # TODO: validate data
@@ -135,9 +135,9 @@ cv_hot_deck_forecast <- function(.data,
                                     window_fwd = window_fwd,
                                     min_date = min_date,
                                     split_type = train_test_split_type)
-    # Apply the mutator to training data after split to avoid data leak.
+    # Apply the appender to training data after split to avoid data leak.
     train_data = train_test_data$train_data %>%
-      mutator({{ .observation }})
+      appender({{ .observation }})
     # Get any covariate forecasts
     if (is.null(cov_fc_getter)) {
       cov_fc = NULL

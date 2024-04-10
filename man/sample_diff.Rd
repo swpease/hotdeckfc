@@ -8,7 +8,7 @@ sample_diff(diff_to_next_obs_col_name = "diff_to_next_obs")
 }
 \arguments{
 \item{diff_to_next_obs_col_name}{Name of the column in your data containing the next
-observation (from, e.g. \code{diff_mutator}).}
+observation (from, e.g. \code{append_diff}).}
 }
 \value{
 list(new_current_obs, forecast), where

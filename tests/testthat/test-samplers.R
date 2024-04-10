@@ -15,7 +15,7 @@ test_that("sample_forecasted_covariate basic test", {
   n_closest = 1
   current_obs = 4
 
-  local_rows = local_rows %>% lead_cov_mutator(cov_obs)
+  local_rows = local_rows %>% append_lead_cov_lead(cov_obs)
 
   wrapped = sample_forecasted_covariate(next_target_obs_col_name = "next_target_obs",
                                                   filter_na_col_names = "next_target_obs")
@@ -68,7 +68,7 @@ test_that("sample_forecasted_covariate multi-covariates err", {
   n_closest = 1
   current_obs = 4
 
-  local_rows = local_rows %>% lead_cov_mutator(cov_obs)
+  local_rows = local_rows %>% append_lead_cov_lead(cov_obs)
 
   wrapped = sample_forecasted_covariate(next_target_obs_col_name = "next_target_obs",
                                                   filter_na_col_names = "next_target_obs")
@@ -86,7 +86,7 @@ test_that("sample_covariate_lead basic test", {
   n_closest = 1
   current_obs = 4
 
-  local_rows = local_rows %>% lead_cov_mutator(cov_obs)
+  local_rows = local_rows %>% append_lead_cov_lead(cov_obs)
 
   wrapped = sample_covariate_lead(next_cov_obs_col_name = "next_cov_obs",
                                             next_target_obs_col_name = "next_target_obs")
@@ -109,7 +109,7 @@ test_that("sample_covariate_lead multiple na filters test", {
   n_closest = 1
   current_obs = 4
 
-  local_rows = local_rows %>% lead_cov_mutator(cov_obs)
+  local_rows = local_rows %>% append_lead_cov_lead(cov_obs)
 
   wrapped = sample_covariate_lead(next_cov_obs_col_name = "next_cov_obs",
                                             next_target_obs_col_name = "next_target_obs",

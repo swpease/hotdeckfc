@@ -15,7 +15,7 @@ cv_hot_deck_forecast(
   n_closest,
   offset = 0,
   sampler = sample_lead("next_obs"),
-  mutator = lead_mutator,
+  appender = append_lead,
   cov_fc_getter = NULL,
   train_test_split_type = c("conservative", "leaky")
 )
@@ -46,7 +46,7 @@ to use as the starting point.}
 
 \item{sampler}{Sampler function to generate forecasted values.}
 
-\item{mutator}{Mutator function to be applied to training data.}
+\item{appender}{Appender function to be applied to training data.}
 
 \item{cov_fc_getter}{fn(training_max_date) -> tsibble.
 Getter of any covariate data, taking the max date of the current training
@@ -84,7 +84,7 @@ datetime + the offset.
 The parameters \code{times} through \code{n_closest}, plus \code{sampler},
 are passed to \code{hot_deck_forecast}.
 
-The \code{mutator} function is for cases where the \code{sampler} uses subsequent
+The \code{appender} function is for cases where the \code{sampler} uses subsequent
 observations (e.g. a \code{lead}). While you can simply add your (e.g. \code{lead})
 column to your data before passing it to \code{hot_deck_forecast}, you need
 to pass your desired mutation function as an argument to CV. It will
@@ -92,9 +92,9 @@ be applied after the train-test split to avoid data leakage. For instance,
 the \code{lead} of the final training observation before your test data should
 be NA, not the first test data observation.
 
-If you do not want any mutation, use \code{non_mutator} as the argument.
+If you do not want any mutation, use \code{append_nothing} as the argument.
 
-The \code{mutator} looks like: fn(.data, .obs) -> .data
+The \code{appender} looks like: fn(.data, .obs) -> .data
 
 For details on \code{sampler}, see \code{hot_deck_forecast}.
 

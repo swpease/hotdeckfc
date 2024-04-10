@@ -4,24 +4,24 @@
 \alias{build_sampler_args}
 \title{Build grid search sampler argument.}
 \usage{
-build_sampler_args(sm_name, sampler, mutator, cov_fc_getter = NULL)
+build_sampler_args(sa_name, sampler, appender, cov_fc_getter = NULL)
 }
 \arguments{
-\item{sm_name}{The name of your sampler-mutator pair.}
+\item{sa_name}{The name of your sampler-appender pair.}
 
 \item{sampler}{The sampler.}
 
-\item{mutator}{The mutator.}
+\item{appender}{The appender.}
 
 \item{cov_fc_getter}{The cov_fc_getter.}
 }
 \value{
-list(sm_name = sm_name, sampler = sampler, mutator = mutator)
+list(sa_name = sa_name, sampler = sampler, appender = appender)
 }
 \description{
 Use this function to build the \code{sampler_args} arg of \code{build_grid}.
 }
 \details{
-The \code{sm_name} argument is for downstream usage in performance
+The \code{sa_name} argument is for downstream usage in performance
 assessments as a... name.
 }

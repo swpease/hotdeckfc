@@ -152,7 +152,7 @@ test_that("hot deck fc covs", {
     cov_obs = c(2, 3, 4)
   ) %>%
     as_tsibble(index = datetime)
-  data = data %>% lead_cov_mutator(cov_obs,
+  data = data %>% append_lead_cov_lead(cov_obs,
                                    target_obs_col_name = "observation")
   sampler = sample_forecasted_covariate()
 

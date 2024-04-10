@@ -71,9 +71,9 @@ internal_sample_lead <- function(local_rows,
 #' or the sampling will break.
 #'
 #' @param next_cov_obs_col_name Name of the column in your data
-#' containing the next covariate observation (from, e.g. `lead_cov_mutator`).
+#' containing the next covariate observation (from, e.g. `append_lead_cov_lead`).
 #' @param next_target_obs_col_name The corresponding target observation
-#' (from, e.g. `lead_cov_mutator`).
+#' (from, e.g. `append_lead_cov_lead`).
 #' @param filter_na_col_names char vec. The names of any columns that you want to
 #' filter any NAs from.
 #' @returns list(new_current_obs, forecast), where
@@ -99,9 +99,9 @@ sample_covariate_lead <- function(next_cov_obs_col_name = "next_cov_obs",
 #' @param current_obs The `current_obs` in `simulate_sample_path`.
 #' @param n_closest Scalar.
 #' @param next_cov_obs_col_name Name of the column in your data
-#' containing the next covariate observation (from, e.g. `lead_cov_mutator`).
+#' containing the next covariate observation (from, e.g. `append_lead_cov_lead`).
 #' @param next_target_obs_col_name The corresponding target observation
-#' (from, e.g. `lead_cov_mutator`).
+#' (from, e.g. `append_lead_cov_lead`).
 #' @param filter_na_col_names char vec. The names of any columns that you want to
 #' filter any NAs from.
 #' @returns list(new_current_obs, forecast), where
@@ -300,7 +300,7 @@ internal_sample_forecasted_covariate <- function(local_rows,
 #' For `n_closest`, `dplyr::slice_min` is used, and tie values are included.
 #'
 #' @param diff_to_next_obs_col_name Name of the column in your data containing the next
-#' observation (from, e.g. `diff_mutator`).
+#' observation (from, e.g. `append_diff`).
 #' @returns list(new_current_obs, forecast), where
 #' new_current_obs = The value to use for `current_obs` in the next iteration.
 #' forecast = The forecasted value.
@@ -318,7 +318,7 @@ sample_diff <- function(diff_to_next_obs_col_name = "diff_to_next_obs") {
 #' @param current_obs The `current_obs` in `simulate_sample_path`.
 #' @param n_closest Scalar.
 #' @param diff_to_next_obs_col_name Name of the column in your data containing
-#' the diff to the next observation (from, e.g. `diff_mutator`).
+#' the diff to the next observation (from, e.g. `append_diff`).
 #' @returns list(new_current_obs, forecast), where
 #' new_current_obs = The value to use for `current_obs` in the next iteration.
 #' forecast = The forecasted value.

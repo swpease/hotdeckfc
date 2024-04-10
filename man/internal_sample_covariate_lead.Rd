@@ -24,10 +24,10 @@ internal_sample_covariate_lead(
 \item{n_closest}{Scalar.}
 
 \item{next_cov_obs_col_name}{Name of the column in your data
-containing the next covariate observation (from, e.g. \code{lead_cov_mutator}).}
+containing the next covariate observation (from, e.g. \code{append_lead_cov_lead}).}
 
 \item{next_target_obs_col_name}{The corresponding target observation
-(from, e.g. \code{lead_cov_mutator}).}
+(from, e.g. \code{append_lead_cov_lead}).}
 
 \item{filter_na_col_names}{char vec. The names of any columns that you want to
 filter any NAs from.}

@@ -22,7 +22,7 @@ internal_sample_diff(
 \item{n_closest}{Scalar.}
 
 \item{diff_to_next_obs_col_name}{Name of the column in your data containing
-the diff to the next observation (from, e.g. \code{diff_mutator}).}
+the diff to the next observation (from, e.g. \code{append_diff}).}
 }
 \value{
 list(new_current_obs, forecast), where

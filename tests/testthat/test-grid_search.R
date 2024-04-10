@@ -18,9 +18,9 @@ test_that("grid search gridding", {
       build_window_args(window_back = 1, window_fwd = 2)
     ),
     sampler_args = list(build_sampler_args(
-      sm_name = "name",
+      sa_name = "name",
       sampler = sample_lead("next_obs"),
-      mutator = lead_mutator,
+      appender = append_lead,
       cov_fc_getter = NULL
     ))
   )
@@ -39,9 +39,9 @@ test_that("grid search gridding", {
     n_closest = 20,
     window_back = 1:5,
     window_fwd = 1:5,
-    sm_name = "name",
+    sa_name = "name",
     sampler = sample_lead("next_obs"),
-    mutator = lead_mutator,
+    appender = append_lead,
     cov_fc_getter = NULL
   )
   expected_passed_args_list_1 = list(
@@ -51,7 +51,7 @@ test_that("grid search gridding", {
     window_back = 1:5,
     window_fwd = 1:5,
     sampler = sample_lead("next_obs"),
-    mutator = lead_mutator,
+    appender = append_lead,
     cov_fc_getter = NULL
   )
 
@@ -61,9 +61,9 @@ test_that("grid search gridding", {
     n_closest = 20,
     window_back = 1,
     window_fwd = 2,
-    sm_name = "name",
+    sa_name = "name",
     sampler = sample_lead("next_obs"),
-    mutator = lead_mutator,
+    appender = append_lead,
     cov_fc_getter = NULL
   )
   expected_passed_args_list_2 = list(
@@ -73,7 +73,7 @@ test_that("grid search gridding", {
     window_back = 1,
     window_fwd = 2,
     sampler = sample_lead("next_obs"),
-    mutator = lead_mutator,
+    appender = append_lead,
     cov_fc_getter = NULL
   )
 
@@ -93,15 +93,15 @@ test_that("grid search gridding", {
 # test_that("grid search sampler_arg fn", {
 #   expected = list(
 #     list(
-#       sm_name = "a",
+#       sa_name = "a",
 #       sampler = sample_lead("hi"),
-#       mutator = lead_mutator
+#       appender = append_lead
 #     )
 #   )
 #   expect_equal(
 #     build_sampler_args("a",
 #                        sample_lead("hi"),
-#                        lead_mutator),
+#                        append_lead),
 #     expected
 #   )
 # })
@@ -135,15 +135,15 @@ test_that("build grid", {
     ),
     sampler_args = list(
       list(
-        sm_name = "sm_name",
+        sa_name = "sa_name",
         sampler = sample_lead("as"),
-        mutator = lead_mutator,
+        appender = append_lead,
         cov_fc_getter = dummy_fn
       ),
       list(
-        sm_name = "sm_name",
+        sa_name = "sa_name",
         sampler = sample_lead("as"),
-        mutator = lead_mutator,
+        appender = append_lead,
         cov_fc_getter = dummy_fn
       )
     )
@@ -155,9 +155,9 @@ test_that("build grid", {
     n_closest = 20,
     window_args = list(build_window_args(20), build_window_args(1:4, 11)),
     sampler_args = list(build_sampler_args(
-      sm_name = "sm_name",
+      sa_name = "sa_name",
       sampler = sample_lead("as"),
-      mutator = lead_mutator,
+      appender = append_lead,
       cov_fc_getter = dummy_fn
     ))
   )
