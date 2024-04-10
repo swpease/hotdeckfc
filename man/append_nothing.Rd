@@ -2,21 +2,30 @@
 % Please edit documentation in R/appenders.R
 \name{append_nothing}
 \alias{append_nothing}
-\title{Return data, unmodified.}
+\title{Return data, unmodified}
 \usage{
 append_nothing(.data, .observation)
 }
 \arguments{
-\item{.data}{The data. A tsibble.}
+\item{.data}{tsibble. The data.}
 
-\item{.observation}{The observation column. Passed via pipe.}
+\item{.observation}{symbol. The observation column.}
 }
 \value{
 .data
 }
 \description{
+Do nothing to your data.
+}
+\details{
 This appender should be paired with any sampler functions that do not have
-data leakage concerns (as with those that rely on, say, \code{lead} or \code{diff}),
-for use in CV.
+data leakage concerns for use in CV.
 It is applied to the training data after the train-test split.
+}
+\examples{
+data = tsibble::tsibble(date = as.Date("2022-02-02") + 0:9,
+                        obs = 1:10,
+                        index = date)
+append_nothing(data, obs)
+
 }

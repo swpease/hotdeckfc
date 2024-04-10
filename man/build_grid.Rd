@@ -2,7 +2,7 @@
 % Please edit documentation in R/grid_search.R
 \name{build_grid}
 \alias{build_grid}
-\title{Build a grid for grid search CV.}
+\title{Build grid for \code{\link[=grid_search_hot_deck_cv]{grid_search_hot_deck_cv()}}}
 \usage{
 build_grid(
   times = 30,
@@ -15,34 +15,57 @@ build_grid(
 )
 }
 \arguments{
-\item{times}{The number of simulated sample paths to produce per hot deck forecast.}
+\item{times}{integer (scalar OR vector). The number of simulated sample paths
+to produce per hot deck forecast.}
 
-\item{h}{How many days to forecast.}
+\item{h}{integer (scalar OR vector). The forecast horizon.}
 
-\item{n_closest}{vector of scalars or list of not-all-scalars.
+\item{n_closest}{integer ((scalar OR vector) OR list of (length-h vector(s)
+AND maybe scalar(s))).
 The number of closest observations to pick from
-per hot deck random sampling. Either scalar (length == 1) or vector
-of length == h.}
+per hot deck random sampling.}
 
-\item{offset}{integer. Offset (in +- days) from the most recent row of .data
-to use as the starting point.}
+\item{offset}{integer (scalar OR vector). Offset (in +- days) from the
+most recent row of .data to use as the starting point.}
 
-\item{window_args}{list of \code{build_window_args} outputs.}
+\item{window_args}{list of \code{\link[=build_window_args]{build_window_args()}} outputs.}
 
-\item{sampler_args}{list of \code{build_sampler_args} outputs.}
+\item{sampler_args}{list of \code{\link[=build_sampler_args]{build_sampler_args()}} outputs.}
 
-\item{train_test_split_type}{See \code{cv_hot_deck_forecast} details for details.}
+\item{train_test_split_type}{See \code{\link[=cv_hot_deck_forecast]{cv_hot_deck_forecast()}} details for details.}
 }
 \value{
 tibble. Grid of parameters for use in grid search.
 }
 \description{
-The output tibble is for use in \code{grid_search_hot_deck_cv} as the \code{grid}
-argument.
+Build the grid to pass as the \code{grid} argument for \code{\link[=grid_search_hot_deck_cv]{grid_search_hot_deck_cv()}}.
 }
 \details{
 If you want to pass a non-scalar to the grid search, you need to wrap
 the argument in \code{list()}. e.g. \verb{n_closest = list(30, c(rep(20,10),19:15)}
 or \code{window_args = list(build_window_args(3))}. Ergo, you \emph{always} need
 to wrap any \code{window_args} or \code{sampler_args} in a list.
+}
+\examples{
+build_grid(
+  h = 20,
+  n_closest = c(5, 10),
+  # even if you only use a single `build_window_args()`, wrap in `list()`
+  window_args = list(
+    build_window_args(20),  # symmetric window
+    build_window_args(20, 30),  # asymmetric window
+    build_window_args(c(10:19, rep(20,10)), 20)  # window_back increases...
+      #...from 10 to 20 for first 11 forecasts, then stays at 20
+  ),
+  # also need to wrap in list
+  sampler_args = list(
+    build_sampler_args(sa_name = "nxt",
+                       sampler = sample_lead(),  # remember to call!
+                       appender = append_lead),
+    build_sampler_args(sa_name = "dif",
+                       sampler = sample_diff(),  # remember to call!
+                       appender = append_diff)
+  )
+)
+
 }

@@ -1,18 +1,15 @@
-#' Generate a num-seasons-fold(-ish) hot deck forecast.
+#' Cross-validate hot deck forecast.
 #'
 #' Produces a set of hot deck forecasts, one per season if possible.
 #'
-#' If the `offset = 0`, then the CV will use the latest datetime as a
-#' starting point, and go back one year at a time through the data.
 #' If the observation is missing, then that year's hot deck forecast is
 #' skipped. The latest datetime is also skipped, because there's no test
 #' data to use for its forecasts.
 #'
+#' If the `offset = 0`, then the CV will use the latest datetime as a
+#' starting point, and go back one year at a time through the data.
 #' If `offset` is non-zero, then the starting point will be the latest
 #' datetime + the offset.
-#'
-#' The parameters `times` through `n_closest`, plus `sampler`,
-#' are passed to `hot_deck_forecast`.
 #'
 #' The `appender` function is for cases where the `sampler` uses subsequent
 #' observations (e.g. a `lead`). While you can simply add your (e.g. `lead`)
@@ -21,12 +18,7 @@
 #' be applied after the train-test split to avoid data leakage. For instance,
 #' the `lead` of the final training observation before your test data should
 #' be NA, not the first test data observation.
-#'
 #' If you do not want any mutation, use `append_nothing` as the argument.
-#'
-#' The `appender` looks like: fn(.data, .obs) -> .data
-#'
-#' For details on `sampler`, see `hot_deck_forecast`.
 #'
 #' The `cov_fc_getter` takes the max date of the current training data as its
 #' only argument. The returned value will be used as the `covariate_forecasts`
@@ -49,18 +41,7 @@
 #' reduced data to draw from, which seems like it could significantly effect
 #' the conclusion on which hyperparameter values to select.
 #'
-#' @param .data tsibble. The data. Passed via pipe.
-#' @param .datetime The datetime column of .data. Passed via pipe.
-#' @param .observation The observation column of .data. Passed via pipe.
-#' @param times The number of simulated sample paths to produce per hot deck forecast.
-#' @param h How many days to forecast.
-#' @param window_back How many days back to include in the window for
-#' a given season. Either scalar (length == 1) or vector of length == h.
-#' @param window_fwd How many days forward to include in the window for
-#' a given season. Either scalar (length == 1) or vector of length == h.
-#' @param n_closest The number of closest observations to pick from
-#' per hot deck random sampling. Either scalar (length == 1) or vector
-#' of length == h.
+#' @inheritParams hot_deck_forecast
 #' @param offset integer. Offset (in +- days) from the most recent row of .data
 #' to use as the starting point.
 #' @param sampler Sampler function to generate forecasted values.
@@ -81,6 +62,17 @@
 #'     - new columns:
 #'       - h: the horizon number
 #'       - k: the CV number, i.e. the hot deck forecast number
+#'
+#' @examples
+#' out = cv_hot_deck_forecast(hotdeckfc::SUGG_temp,
+#'                            .datetime = date,
+#'                            .observation = observation,
+#'                            times = 30,
+#'                            h = 20,
+#'                            window_back = 20,
+#'                            window_fwd = 20,
+#'                            n_closest = 5)
+#'
 #' @export
 cv_hot_deck_forecast <- function(.data,
                                  .datetime,
@@ -192,6 +184,8 @@ cv_hot_deck_forecast <- function(.data,
 #' so it might yield a different day number.
 #'
 #' @param date A datetime.
+#'
+#' @noRd
 subtract_year <- function(date) {
   if (lubridate::leap_year(date)) (date - 366) else (date - 365)
 }
@@ -219,6 +213,8 @@ subtract_year <- function(date) {
 #' test_data  = test_data fraction of .data, augmented with:
 #'                h = forecast horizon
 #' )
+#'
+#' @noRd
 train_test_split <- function(.data,
                              .datetime,
                              ref_date,
@@ -281,21 +277,34 @@ train_test_split <- function(.data,
 }
 
 
-#' Calculate the CRPS from hot deck CV.
+#' Calculate CRPS from hot deck CV
+#'
+#' Calculate the CRPS at each forecast horizon for each -fold of CV.
 #'
 #' Augments the CV's test data with a "score" column of CRPSes, calculated
-#' by `scoringRules::crps_sample`.
+#' by [scoringRules::crps_sample()].
 #'
 #' The score is listed as NA for missing test data observations.
 #'
-#' The CRPS uses the `times` (arg passed to `hot_deck_forecast`
-#' via `cv_hot_deck_forecast`) number of simulated values, e.g. if
-#' `times = 30` then the 30 forecasted values, for each row in the test data.
+#' The CRPS uses the `times` (arg passed to [hot_deck_forecast()]) number of
+#' simulated values -- e.g. if `times = 30` then the 30 forecasted values --
+#' for each row in the test data.
 #'
-#' @param cv_out Output of `cv_hot_deck_forecast`.
-#' @param obs_col_name string. the observation column name.
+#' @param cv_out Output of [cv_hot_deck_forecast()].
+#' @param obs_col_name string. The observation column name.
 #' @returns `cv_out$test_data_sets`, augmented with the column `score`,
 #' which is the CRPS of the simulated values against the given observation.
+#'
+#' @examples
+#' cv_out = cv_hot_deck_forecast(hotdeckfc::SUGG_temp,
+#'                               .datetime = date,
+#'                               .observation = observation,
+#'                               times = 3,
+#'                               h = 20,
+#'                               window_back = 20,
+#'                               window_fwd = 20,
+#'                               n_closest = 5)
+#' cv_out = calc_cv_crps(cv_out, "observation")
 #'
 #' @export
   calc_cv_crps <- function(cv_out, obs_col_name) {

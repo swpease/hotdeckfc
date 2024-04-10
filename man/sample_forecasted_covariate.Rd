@@ -2,7 +2,7 @@
 % Please edit documentation in R/samplers.R
 \name{sample_forecasted_covariate}
 \alias{sample_forecasted_covariate}
-\title{Generate a hot deck forecast value using a covariate's simulated sample path (forecast).}
+\title{Sampler of local observations' leads given covariate's forecast}
 \usage{
 sample_forecasted_covariate(
   next_target_obs_col_name = "next_target_obs",
@@ -17,16 +17,19 @@ observation.}
 be removed before random sampling.}
 }
 \value{
-Partially applied function to be passed to \code{hot_deck_forecast}.
+Partially applied function to be passed to \code{\link[=hot_deck_forecast]{hot_deck_forecast()}}.
 }
 \description{
+Sampler argument for \code{\link[=hot_deck_forecast]{hot_deck_forecast()}} to generate a forecast.
+}
+\details{
 Given a covariate's forecast, this sampler generates forecasts of the target
 by taking the lead (next) target observation of a row randomly sampled from
 those rows with covariate observations close to the current covariate
 forecast.
-}
-\details{
-Supply the covariate forecasts to \code{hot_deck_forecast}.
+
+Supply the covariate forecasts to \code{\link[=hot_deck_forecast]{hot_deck_forecast()}}
+as the \code{covariate_forecasts} argument.
 
 The first forecast uses the most recent covariate observation. All subsequent
 forecasts use the covariate forecasts.
@@ -75,4 +78,29 @@ as the next \code{current_obs}.
 (from the \code{next_target_obs_col_name} column) as the \code{forecast}.
 }
 }
+}
+\examples{
+# Have fun!
+data = dplyr::mutate(hotdeckfc::SUGG_temp,
+                     cov_obs = observation + rnorm(n = 1, sd = 3))  # fake cov data
+data = append_lead(data, observation)
+data = trim_leading_nas(data, observation)
+# fake cov forecasts
+cov_fc_data = tsibble::tsibble(date = c(as.Date("2024-01-23") + 0:4,
+                                        as.Date("2024-01-23") + 0:4),
+                               cov_obs = c(21:25, 23:27),
+                               sim_num = c(rep(1,5), rep(2,5)),
+                               index = date,
+                               key = sim_num)
+out = hot_deck_forecast(data,
+                        .datetime = date,
+                        .observation = observation,
+                        times = 3,
+                        h = 5,
+                        window_back = 20,
+                        window_fwd = 20,
+                        n_closest = 5,
+                        sampler = sample_forecasted_covariate("next_obs"),
+                        covariate_forecasts = cov_fc_data)
+
 }

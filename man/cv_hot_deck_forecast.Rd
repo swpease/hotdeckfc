@@ -2,7 +2,7 @@
 % Please edit documentation in R/CV.R
 \name{cv_hot_deck_forecast}
 \alias{cv_hot_deck_forecast}
-\title{Generate a num-seasons-fold(-ish) hot deck forecast.}
+\title{Cross-validate hot deck forecast.}
 \usage{
 cv_hot_deck_forecast(
   .data,
@@ -21,25 +21,27 @@ cv_hot_deck_forecast(
 )
 }
 \arguments{
-\item{.data}{tsibble. The data. Passed via pipe.}
+\item{.data}{tsibble. The data.}
 
-\item{.datetime}{The datetime column of .data. Passed via pipe.}
+\item{.datetime}{symbol. The datetime column of \code{.data}.}
 
-\item{.observation}{The observation column of .data. Passed via pipe.}
+\item{.observation}{symbol. The observation column of \code{.data}.}
 
-\item{times}{The number of simulated sample paths to produce per hot deck forecast.}
+\item{times}{integer. The number of simulated sample paths to produce.}
 
-\item{h}{How many days to forecast.}
+\item{h}{integer. How many days to forecast.}
 
-\item{window_back}{How many days back to include in the window for
-a given season. Either scalar (length == 1) or vector of length == h.}
+\item{window_back}{integer (scalar OR vector).
+How many days back to include in the window for a given season.
+Either scalar (length == 1) or vector of length == h.}
 
-\item{window_fwd}{How many days forward to include in the window for
-a given season. Either scalar (length == 1) or vector of length == h.}
+\item{window_fwd}{integer (scalar OR vector).
+How many days forward to include in the window for a given season.
+Either scalar (length == 1) or vector of length == h.}
 
-\item{n_closest}{The number of closest observations to pick from
-per hot deck random sampling. Either scalar (length == 1) or vector
-of length == h.}
+\item{n_closest}{integer (scalar OR vector).
+The number of closest observations to pick from per hot deck random sampling.
+Either scalar (length == 1) or vector of length == h.}
 
 \item{offset}{integer. Offset (in +- days) from the most recent row of .data
 to use as the starting point.}
@@ -72,17 +74,14 @@ test_data_sets: a \code{tsibble} of test data sets from your \code{.data}
 Produces a set of hot deck forecasts, one per season if possible.
 }
 \details{
-If the \code{offset = 0}, then the CV will use the latest datetime as a
-starting point, and go back one year at a time through the data.
 If the observation is missing, then that year's hot deck forecast is
 skipped. The latest datetime is also skipped, because there's no test
 data to use for its forecasts.
 
+If the \code{offset = 0}, then the CV will use the latest datetime as a
+starting point, and go back one year at a time through the data.
 If \code{offset} is non-zero, then the starting point will be the latest
 datetime + the offset.
-
-The parameters \code{times} through \code{n_closest}, plus \code{sampler},
-are passed to \code{hot_deck_forecast}.
 
 The \code{appender} function is for cases where the \code{sampler} uses subsequent
 observations (e.g. a \code{lead}). While you can simply add your (e.g. \code{lead})
@@ -91,12 +90,7 @@ to pass your desired mutation function as an argument to CV. It will
 be applied after the train-test split to avoid data leakage. For instance,
 the \code{lead} of the final training observation before your test data should
 be NA, not the first test data observation.
-
 If you do not want any mutation, use \code{append_nothing} as the argument.
-
-The \code{appender} looks like: fn(.data, .obs) -> .data
-
-For details on \code{sampler}, see \code{hot_deck_forecast}.
 
 The \code{cov_fc_getter} takes the max date of the current training data as its
 only argument. The returned value will be used as the \code{covariate_forecasts}
@@ -118,4 +112,15 @@ in the training set. While this leaks data, it might be a better option
 In that case, the default conservative implementation would have markedly
 reduced data to draw from, which seems like it could significantly effect
 the conclusion on which hyperparameter values to select.
+}
+\examples{
+out = cv_hot_deck_forecast(hotdeckfc::SUGG_temp,
+                           .datetime = date,
+                           .observation = observation,
+                           times = 30,
+                           h = 20,
+                           window_back = 20,
+                           window_fwd = 20,
+                           n_closest = 5)
+
 }

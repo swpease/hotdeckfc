@@ -2,27 +2,41 @@
 % Please edit documentation in R/CV.R
 \name{calc_cv_crps}
 \alias{calc_cv_crps}
-\title{Calculate the CRPS from hot deck CV.}
+\title{Calculate CRPS from hot deck CV}
 \usage{
 calc_cv_crps(cv_out, obs_col_name)
 }
 \arguments{
-\item{cv_out}{Output of \code{cv_hot_deck_forecast}.}
+\item{cv_out}{Output of \code{\link[=cv_hot_deck_forecast]{cv_hot_deck_forecast()}}.}
 
-\item{obs_col_name}{string. the observation column name.}
+\item{obs_col_name}{string. The observation column name.}
 }
 \value{
 \code{cv_out$test_data_sets}, augmented with the column \code{score},
 which is the CRPS of the simulated values against the given observation.
 }
 \description{
-Augments the CV's test data with a "score" column of CRPSes, calculated
-by \code{scoringRules::crps_sample}.
+Calculate the CRPS at each forecast horizon for each -fold of CV.
 }
 \details{
+Augments the CV's test data with a "score" column of CRPSes, calculated
+by \code{\link[scoringRules:scores_sample_univ]{scoringRules::crps_sample()}}.
+
 The score is listed as NA for missing test data observations.
 
-The CRPS uses the \code{times} (arg passed to \code{hot_deck_forecast}
-via \code{cv_hot_deck_forecast}) number of simulated values, e.g. if
-\code{times = 30} then the 30 forecasted values, for each row in the test data.
+The CRPS uses the \code{times} (arg passed to \code{\link[=hot_deck_forecast]{hot_deck_forecast()}}) number of
+simulated values -- e.g. if \code{times = 30} then the 30 forecasted values --
+for each row in the test data.
+}
+\examples{
+cv_out = cv_hot_deck_forecast(hotdeckfc::SUGG_temp,
+                              .datetime = date,
+                              .observation = observation,
+                              times = 3,
+                              h = 20,
+                              window_back = 20,
+                              window_fwd = 20,
+                              n_closest = 5)
+cv_out = calc_cv_crps(cv_out, "observation")
+
 }

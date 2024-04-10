@@ -2,29 +2,53 @@
 % Please edit documentation in R/grid_search.R
 \name{grid_search_hot_deck_cv}
 \alias{grid_search_hot_deck_cv}
-\title{Perform a grid search CV on \code{hot_deck_forecast}.}
+\title{Grid search cross-validation of \code{\link[=hot_deck_forecast]{hot_deck_forecast()}}.}
 \usage{
 grid_search_hot_deck_cv(.data, .datetime, .observation, grid, echo = TRUE)
 }
 \arguments{
-\item{.data}{tsibble. The data. Passed via pipe.}
+\item{.data}{tsibble. The data.}
 
-\item{.datetime}{The datetime column of .data. Passed via pipe.}
+\item{.datetime}{symbol. The datetime column of .data.}
 
-\item{.observation}{The observation column of .data. Passed via pipe.}
+\item{.observation}{symbol. The observation column of .data.}
 
-\item{grid}{tibble. Created using \code{build_grid}.}
+\item{grid}{tibble. Created using \code{\link[=build_grid]{build_grid()}}.}
 
-\item{echo}{Print progress?}
+\item{echo}{boolean. Print progress?}
 }
 \value{
 list, containing two items per element:
-args: The arguments that the particular CV was called with.
-cv_out: The output of \code{cv_hot_deck_forecast} for those args.
+\itemize{
+\item args: The arguments that the particular CV was called with.
+\item cv_out: The output of \code{\link[=cv_hot_deck_forecast]{cv_hot_deck_forecast()}} for those args.
+}
 }
 \description{
-Use \code{build_grid} to build the tibble to pass to the \code{grid} argument.
+Perform a grid search of parameters for \code{\link[=hot_deck_forecast]{hot_deck_forecast()}}
+using \code{\link[=cv_hot_deck_forecast]{cv_hot_deck_forecast()}}.
 }
 \details{
-\code{echo} prints progress like "Finished CV 3 of 8.".
+Use \code{\link[=build_grid]{build_grid()}} to build the tibble to pass to the \code{grid} argument.
+
+\code{echo} prints progress like: "Finished CV 3 of 8.".
+}
+\examples{
+grid = build_grid(
+  h = 2,
+  n_closest = c(5, 10),
+  # even if you only use a single `build_window_args()`, wrap in `list()`
+  window_args = list(build_window_args(20)),
+  # also need to wrap in list
+  sampler_args = list(
+    build_sampler_args(sa_name = "nxt",
+                       sampler = sample_lead(),  # remember to call!
+                       appender = append_lead)
+  )
+)
+out = grid_search_hot_deck_cv(hotdeckfc::SUGG_temp,
+                              .datetime = date,
+                              .observation = observation,
+                              grid = grid)
+
 }

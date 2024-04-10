@@ -2,7 +2,7 @@
 % Please edit documentation in R/appenders.R
 \name{append_lead_cov_lead}
 \alias{append_lead_cov_lead}
-\title{Add a column of covariate and target leads to data.}
+\title{Append columns of covariate and target leads}
 \usage{
 append_lead_cov_lead(
   .data_ts,
@@ -11,24 +11,26 @@ append_lead_cov_lead(
 )
 }
 \arguments{
-\item{.data_ts}{The data. A tsibble.}
+\item{.data_ts}{tsibble. The data.}
 
-\item{.cov_observation}{The covariate observation column. Passed via pipe.}
+\item{.cov_observation}{symbol. The covariate observation column.}
 
-\item{target_obs_col_name}{The target observation column name.}
+\item{target_obs_col_name}{string. The target observation column name.}
 }
 \value{
 .data_ts, augmented with two columns:
-\code{next_cov_obs}, of covariate leads.
-\code{next_target_obs}, of target leads.
+\itemize{
+\item \code{next_cov_obs}, of covariate leads.
+\item \code{next_target_obs}, of target leads.
+}
 }
 \description{
 Adds two new columns, named "next_cov_obs" and "next_target_obs",
 of the next (i.e. lead) covariate and target observations.
 }
 \details{
-The corresponding, covariate-using selectors, \code{sample_covariate_lead}
-and \code{sample_forecasted_covariate} default to these name(s)
+The corresponding, covariate-using selectors, \code{\link[=sample_covariate_lead]{sample_covariate_lead()}}
+and \code{\link[=sample_forecasted_covariate]{sample_forecasted_covariate()}} default to these name(s)
 for the lead column(s) (the latter doesn't actually use the covariate's lead),
 so it makes things slightly easier in that regard.
 
@@ -39,4 +41,21 @@ before passing that output to CV.
 
 It is applied to the training data after the train-test split,
 to avoid data leakage.
+}
+\examples{
+# regular use
+data = tsibble::tsibble(date = as.Date("2022-02-02") + 0:9,
+                        obs = 1:10,
+                        cov_obs = 11:20,
+                        index = date)
+append_lead_cov_lead(data, cov_obs, "obs")
+
+# if you need to partialize it for CV
+data = tsibble::tsibble(date = as.Date("2022-02-02") + 0:9,
+                        obs = 1:10,
+                        cov_obs = 11:20,
+                        index = date)
+append_cov_partial = purrr::partial(append_lead_cov_lead, ... =, "obs")
+append_cov_partial(data, cov_obs)
+
 }

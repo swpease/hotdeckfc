@@ -40,23 +40,22 @@
 #' The number of simulated sample paths generated per covariate simulation is
 #' the ceiling of (`times` / (# of covariate simulations))
 #'
-#' @param .data tsibble. The data. Passed via pipe.
-#' @param .datetime The datetime column of .data. Passed via pipe.
-#' @param .observation The observation column of .data. Passed via pipe.
-#' @param times The number of simulated sample paths to produce.
-#' @param h How many days to forecast.
-#' @param window_back How many days back to include in the window for
-#' a given season. Either scalar (length == 1) or vector
-#' of length == h.
-#' @param window_fwd How many days forward to include in the window for
-#' a given season. Either scalar (length == 1) or vector
-#' of length == h.
-#' @param n_closest The number of closest observations to pick from
-#' per hot deck random sampling. Either scalar (length == 1) or vector
-#' of length == h.
+#' @param .data tsibble. The data.
+#' @param .datetime symbol. The datetime column of `.data`.
+#' @param .observation symbol. The observation column of `.data`.
+#' @param times integer. The number of simulated sample paths to produce.
+#' @param h integer. How many days to forecast.
+#' @param window_back integer (scalar OR vector).
+#'   How many days back to include in the window for a given season.
+#'   Either scalar (length == 1) or vector of length == h.
+#' @param window_fwd integer (scalar OR vector).
+#'   How many days forward to include in the window for a given season.
+#'   Either scalar (length == 1) or vector of length == h.
+#' @param n_closest integer (scalar OR vector).
+#'   The number of closest observations to pick from per hot deck random sampling.
+#'   Either scalar (length == 1) or vector of length == h.
 #' @param sampler Sampler function to generate forecasted values.
-#' @param covariate_forecasts tsibble. Simulated sample paths of covariates.
-#' See details.
+#' @param covariate_forecasts optional tsibble. Simulated sample paths of covariates.
 #' @returns tibble of forecasts:
 #'   - nrow = h * times,
 #'   - columns:
@@ -64,6 +63,19 @@
 #'     - h: the forecast horizon
 #'     - forecast: the forecasted value
 #'     - simulation_num: the simulated sample path number
+#'
+#' @examples
+#' data = append_diff(hotdeckfc::SUGG_temp, observation)
+#' data = trim_leading_nas(data, observation)
+#' out = hot_deck_forecast(data,
+#'                         .datetime = date,
+#'                         .observation = observation,
+#'                         times = 3,
+#'                         h = 20,
+#'                         window_back = 20,
+#'                         window_fwd = 20,
+#'                         n_closest = 5,
+#'                         sampler = sample_diff())  # don't forget to call!
 #'
 #' @export
 hot_deck_forecast <- function(.data,
@@ -143,6 +155,8 @@ hot_deck_forecast <- function(.data,
 #' per hot deck random sampling. Either scalar (length == 1) or vector
 #' of length == h.
 #' @param sampler Sampler function to generate forecasted values.
+#'
+#' @noRd
 internal_hot_deck_forecast <- function(.data,
                                        .datetime,
                                        .observation,
@@ -204,6 +218,8 @@ internal_hot_deck_forecast <- function(.data,
 #'     - datetime: the date for the forecast
 #'     - h:        the forecast horizon
 #'     - forecast: the forecasted value
+#'
+#' @noRd
 simulate_sample_path <- function(.data,
                                  .datetime,
                                  .observation,
@@ -277,6 +293,8 @@ simulate_sample_path <- function(.data,
 #' a given season.
 #' @returns tibble (NO "s") of local rows. Same columns as .data, plus one new:
 #' "offset".
+#'
+#' @noRd
 get_local_rows <- function(.data,
                            .datetime,
                            h_curr,
@@ -372,8 +390,14 @@ get_local_rows <- function(.data,
 #' Use this function before passing your data to `hot_deck_forecast`,
 #' which requires that the most recent observation exists (is not NA).
 #'
-#' @param .data The data. Passed via pipe.
-#' @param .observation The observation column of .data. Passed via pipe.
+#' @param .data tsibble. The data.
+#' @param .observation symbol. The observation column of `.data`.
+#'
+#' @examples
+#' data = tsibble::tsibble(date = as.Date("2022-02-02") + 0:9,
+#'                         obs = c(1:8, NA, NA),
+#'                         index = date)
+#' trim_leading_nas(data, obs)
 #'
 #' @export
 trim_leading_nas <- function(.data, .observation) {
@@ -399,6 +423,8 @@ trim_leading_nas <- function(.data, .observation) {
 #' @param data The input `.data` to `hot_deck_forecast`.
 #' @param .datetime The datetime column of .data. Passed via pipe.
 #' @param .observation The observation column of .data. Passed via pipe.
+#'
+#' @noRd
 validate_data <- function(data,
                           .datetime,
                           .observation) {
@@ -439,6 +465,8 @@ validate_data <- function(data,
 #' a vector of length h.
 #' @param h Forecast horizon, per `hot_deck_forecast`.
 #' @returns hotdeck_arg vector of length h.
+#'
+#' @noRd
 ensure_vector <- function(hotdeck_arg, h) {
   if (length(hotdeck_arg) == 1) {
     hotdeck_arg = rep(hotdeck_arg, h)
@@ -463,6 +491,8 @@ ensure_vector <- function(hotdeck_arg, h) {
 #'   3. The "key" is from 1:n, where n = # of simulations.
 #'
 #' @param covariate_forecasts tsibble. Simulated sample paths of covariates.
+#'
+#' @noRd
 validate_cov_fcs <- function(covariate_forecasts) {
   if (isFALSE(tsibble::is_tsibble(covariate_forecasts))) {
     stop("Your covariate forecasts needs to be a `tsibble`.", call. = FALSE)

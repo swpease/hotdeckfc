@@ -2,7 +2,7 @@
 % Please edit documentation in R/grid_search.R
 \name{build_window_args}
 \alias{build_window_args}
-\title{Build grid search window argument.}
+\title{Build grid search window argument}
 \usage{
 build_window_args(window_back, window_fwd = window_back)
 }
@@ -15,5 +15,12 @@ build_window_args(window_back, window_fwd = window_back)
 list(window_back = window_back, window_fwd = window_fwd)
 }
 \description{
-Use this function to build the \code{window_args} arg of \code{build_grid}.
+Use this function to build the \code{window_args} arg of \code{\link[=build_grid]{build_grid()}}.
+}
+\examples{
+build_window_args(20)  # symmetric window
+build_window_args(20, 30)  # asymmetric window
+build_window_args(c(10:19, rep(20,10)), 20)  # window_back increases...
+  #...from 10 to 20 for first 11 forecasts, then stays at 20
+
 }

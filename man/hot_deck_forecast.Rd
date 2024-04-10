@@ -18,32 +18,31 @@ hot_deck_forecast(
 )
 }
 \arguments{
-\item{.data}{tsibble. The data. Passed via pipe.}
+\item{.data}{tsibble. The data.}
 
-\item{.datetime}{The datetime column of .data. Passed via pipe.}
+\item{.datetime}{symbol. The datetime column of \code{.data}.}
 
-\item{.observation}{The observation column of .data. Passed via pipe.}
+\item{.observation}{symbol. The observation column of \code{.data}.}
 
-\item{times}{The number of simulated sample paths to produce.}
+\item{times}{integer. The number of simulated sample paths to produce.}
 
-\item{h}{How many days to forecast.}
+\item{h}{integer. How many days to forecast.}
 
-\item{window_back}{How many days back to include in the window for
-a given season. Either scalar (length == 1) or vector
-of length == h.}
+\item{window_back}{integer (scalar OR vector).
+How many days back to include in the window for a given season.
+Either scalar (length == 1) or vector of length == h.}
 
-\item{window_fwd}{How many days forward to include in the window for
-a given season. Either scalar (length == 1) or vector
-of length == h.}
+\item{window_fwd}{integer (scalar OR vector).
+How many days forward to include in the window for a given season.
+Either scalar (length == 1) or vector of length == h.}
 
-\item{n_closest}{The number of closest observations to pick from
-per hot deck random sampling. Either scalar (length == 1) or vector
-of length == h.}
+\item{n_closest}{integer (scalar OR vector).
+The number of closest observations to pick from per hot deck random sampling.
+Either scalar (length == 1) or vector of length == h.}
 
 \item{sampler}{Sampler function to generate forecasted values.}
 
-\item{covariate_forecasts}{tsibble. Simulated sample paths of covariates.
-See details.}
+\item{covariate_forecasts}{optional tsibble. Simulated sample paths of covariates.}
 }
 \value{
 tibble of forecasts:
@@ -105,4 +104,18 @@ will be used to simulate a sample path.
 The number of simulated sample paths generated per covariate simulation is
 the ceiling of (\code{times} / (# of covariate simulations))
 }
+}
+\examples{
+data = append_diff(hotdeckfc::SUGG_temp, observation)
+data = trim_leading_nas(data, observation)
+out = hot_deck_forecast(data,
+                        .datetime = date,
+                        .observation = observation,
+                        times = 3,
+                        h = 20,
+                        window_back = 20,
+                        window_fwd = 20,
+                        n_closest = 5,
+                        sampler = sample_diff())  # don't forget to call!
+
 }

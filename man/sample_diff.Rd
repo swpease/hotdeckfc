@@ -2,20 +2,21 @@
 % Please edit documentation in R/samplers.R
 \name{sample_diff}
 \alias{sample_diff}
-\title{Generate a hot deck forecast value using \code{lead}s of \code{difference}s.}
+\title{Sampler of local observations' differences-to-leads}
 \usage{
 sample_diff(diff_to_next_obs_col_name = "diff_to_next_obs")
 }
 \arguments{
-\item{diff_to_next_obs_col_name}{Name of the column in your data containing the next
-observation (from, e.g. \code{append_diff}).}
+\item{diff_to_next_obs_col_name}{string. Name of the column in your data
+containing the next observation. See \code{\link[=append_diff]{append_diff()}}.}
 }
 \value{
-list(new_current_obs, forecast), where
-new_current_obs = The value to use for \code{current_obs} in the next iteration.
-forecast = The forecasted value.
+Partially applied function to be passed to \code{\link[=hot_deck_forecast]{hot_deck_forecast()}}.
 }
 \description{
+Sampler argument for \code{\link[=hot_deck_forecast]{hot_deck_forecast()}} to generate a forecast.
+}
+\details{
 Given a \code{local_rows} and \code{current_obs}, it:
 \itemize{
 \item Finds those rows in \code{local_rows} with observations closest to \code{current_obs}.
@@ -24,7 +25,20 @@ Given a \code{local_rows} and \code{current_obs}, it:
 \item Adds that sample's difference-to-its-tomorrow to the current observation.
 \item Returns this value as both the next \code{current_obs} and the \code{forecast}.
 }
-}
-\details{
+
 For \code{n_closest}, \code{dplyr::slice_min} is used, and tie values are included.
+}
+\examples{
+data = append_diff(hotdeckfc::SUGG_temp, observation)
+data = trim_leading_nas(data, observation)
+out = hot_deck_forecast(data,
+                        .datetime = date,
+                        .observation = observation,
+                        times = 3,
+                        h = 20,
+                        window_back = 20,
+                        window_fwd = 20,
+                        n_closest = 5,
+                        sampler = sample_diff())  # don't forget to call!
+
 }

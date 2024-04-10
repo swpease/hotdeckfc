@@ -7,11 +7,18 @@
 trim_leading_nas(.data, .observation)
 }
 \arguments{
-\item{.data}{The data. Passed via pipe.}
+\item{.data}{tsibble. The data.}
 
-\item{.observation}{The observation column of .data. Passed via pipe.}
+\item{.observation}{symbol. The observation column of \code{.data}.}
 }
 \description{
 Use this function before passing your data to \code{hot_deck_forecast},
 which requires that the most recent observation exists (is not NA).
+}
+\examples{
+data = tsibble::tsibble(date = as.Date("2022-02-02") + 0:9,
+                        obs = c(1:8, NA, NA),
+                        index = date)
+trim_leading_nas(data, obs)
+
 }

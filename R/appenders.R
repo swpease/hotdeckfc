@@ -1,17 +1,23 @@
-#' Add a column of leads to data.
+#' Append a column of leads
 #'
-#' Adds a new column, named "next_obs", of the next (i.e. lead) observations.
+#' Appends a new column, named "next_obs", of the next (i.e. lead) observations.
 #'
-#' The corresponding selector, `sample_lead`, defaults to this
+#' The corresponding selector, [sample_lead()], defaults to this
 #' name for the lead column, so it makes things slightly easier in that regard.
 #'
-#' This appender should be paired with `sample_lead` for use in CV.
+#' This appender should be paired with [sample_lead()] for use in CV.
 #' It is applied to the training data after the train-test split,
 #' to avoid data leakage.
 #'
-#' @param .data The data. A tsibble.
-#' @param .observation The observation column. Passed via pipe.
+#' @param .data tsibble. The data.
+#' @param .observation symbol. The observation column.
 #' @returns .data, augmented with a column, named `next_obs`, of leads.
+#'
+#' @examples
+#' data = tsibble::tsibble(date = as.Date("2022-02-02") + 0:9,
+#'                         obs = 1:10,
+#'                         index = date)
+#' append_lead(data, obs)
 #'
 #' @export
 append_lead <- function(.data, .observation) {
@@ -19,13 +25,13 @@ append_lead <- function(.data, .observation) {
 }
 
 
-#' Add a column of covariate and target leads to data.
+#' Append columns of covariate and target leads
 #'
 #' Adds two new columns, named "next_cov_obs" and "next_target_obs",
 #' of the next (i.e. lead) covariate and target observations.
 #'
-#' The corresponding, covariate-using selectors, `sample_covariate_lead`
-#' and `sample_forecasted_covariate` default to these name(s)
+#' The corresponding, covariate-using selectors, [sample_covariate_lead()]
+#' and [sample_forecasted_covariate()] default to these name(s)
 #' for the lead column(s) (the latter doesn't actually use the covariate's lead),
 #' so it makes things slightly easier in that regard.
 #'
@@ -37,12 +43,28 @@ append_lead <- function(.data, .observation) {
 #' It is applied to the training data after the train-test split,
 #' to avoid data leakage.
 #'
-#' @param .data_ts The data. A tsibble.
-#' @param .cov_observation The covariate observation column. Passed via pipe.
-#' @param target_obs_col_name The target observation column name.
+#' @param .data_ts tsibble. The data.
+#' @param .cov_observation symbol. The covariate observation column.
+#' @param target_obs_col_name string. The target observation column name.
 #' @returns .data_ts, augmented with two columns:
-#'   `next_cov_obs`, of covariate leads.
-#'   `next_target_obs`, of target leads.
+#'   * `next_cov_obs`, of covariate leads.
+#'   * `next_target_obs`, of target leads.
+#'
+#' @examples
+#' # regular use
+#' data = tsibble::tsibble(date = as.Date("2022-02-02") + 0:9,
+#'                         obs = 1:10,
+#'                         cov_obs = 11:20,
+#'                         index = date)
+#' append_lead_cov_lead(data, cov_obs, "obs")
+#'
+#' # if you need to partialize it for CV
+#' data = tsibble::tsibble(date = as.Date("2022-02-02") + 0:9,
+#'                         obs = 1:10,
+#'                         cov_obs = 11:20,
+#'                         index = date)
+#' append_cov_partial = purrr::partial(append_lead_cov_lead, ... =, "obs")
+#' append_cov_partial(data, cov_obs)
 #'
 #' @export
 append_lead_cov_lead <- function(.data_ts,
@@ -54,22 +76,28 @@ append_lead_cov_lead <- function(.data_ts,
 }
 
 
-#' Add a column of differences to the next observation.
+#' Append a column of differences-to-next-observation
 #'
 #' Adds a new column, named "diff_to_next_obs", of the differences to the
 #' next (i.e. lead) observations.
 #'
-#' The corresponding selector, `sample_diff`, defaults to this name
+#' The corresponding selector, [sample_diff()], defaults to this name
 #' for the diff column, so it makes things slightly easier in that regard.
 #'
-#' This appender should be paired with `sample_diff` for use in CV.
+#' This appender should be paired with [sample_diff()] for use in CV.
 #' It is applied to the training data after the train-test split,
 #' to avoid data leakage.
 #'
-#' @param .data The data. A tsibble.
-#' @param .observation The observation column. Passed via pipe.
+#' @param .data tsibble. The data.
+#' @param .observation symbol. The observation column.
 #' @returns .data, augmented with a column, named `diff_to_next_obs`,
 #' of leads of differences.
+#'
+#' @examples
+#' data = tsibble::tsibble(date = as.Date("2022-02-02") + 0:9,
+#'                         obs = 1:10,
+#'                         index = date)
+#' append_diff(data, obs)
 #'
 #' @export
 append_diff <- function(.data, .observation) {
@@ -78,16 +106,23 @@ append_diff <- function(.data, .observation) {
 }
 
 
-#' Return data, unmodified.
+#' Return data, unmodified
+#'
+#' Do nothing to your data.
 #'
 #' This appender should be paired with any sampler functions that do not have
-#' data leakage concerns (as with those that rely on, say, `lead` or `diff`),
-#' for use in CV.
+#' data leakage concerns for use in CV.
 #' It is applied to the training data after the train-test split.
 #'
-#' @param .data The data. A tsibble.
-#' @param .observation The observation column. Passed via pipe.
+#' @param .data tsibble. The data.
+#' @param .observation symbol. The observation column.
 #' @returns .data
+#'
+#' @examples
+#' data = tsibble::tsibble(date = as.Date("2022-02-02") + 0:9,
+#'                         obs = 1:10,
+#'                         index = date)
+#' append_nothing(data, obs)
 #'
 #' @export
 append_nothing <- function(.data, .observation) {

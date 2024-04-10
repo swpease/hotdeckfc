@@ -2,26 +2,33 @@
 % Please edit documentation in R/grid_search.R
 \name{build_sampler_args}
 \alias{build_sampler_args}
-\title{Build grid search sampler argument.}
+\title{Build grid search sampler argument}
 \usage{
 build_sampler_args(sa_name, sampler, appender, cov_fc_getter = NULL)
 }
 \arguments{
-\item{sa_name}{The name of your sampler-appender pair.}
+\item{sa_name}{string. The name of your sampler-appender pair.}
 
-\item{sampler}{The sampler.}
+\item{sampler}{called function. The sampler.}
 
-\item{appender}{The appender.}
+\item{appender}{function. The appender.}
 
-\item{cov_fc_getter}{The cov_fc_getter.}
+\item{cov_fc_getter}{optional function. The cov_fc_getter.}
 }
 \value{
-list(sa_name = sa_name, sampler = sampler, appender = appender)
+list(sa_name = sa_name, sampler = sampler,
+appender = appender, cov_fc_getter = cov_fc_getter)
 }
 \description{
-Use this function to build the \code{sampler_args} arg of \code{build_grid}.
+Use this function to build the \code{sampler_args} arg of \code{\link[=build_grid]{build_grid()}}.
 }
 \details{
 The \code{sa_name} argument is for downstream usage in performance
 assessments as a... name.
+}
+\examples{
+build_sampler_args(sa_name = "nxt",
+                   sampler = sample_lead(),  # remember to call!
+                   appender = append_lead)
+
 }

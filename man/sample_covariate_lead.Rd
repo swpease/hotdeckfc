@@ -2,7 +2,7 @@
 % Please edit documentation in R/samplers.R
 \name{sample_covariate_lead}
 \alias{sample_covariate_lead}
-\title{Generate a hot deck forecast value using a covariate's \code{lead}s.}
+\title{Sampler of local covariate's leads}
 \usage{
 sample_covariate_lead(
   next_cov_obs_col_name = "next_cov_obs",
@@ -11,21 +11,22 @@ sample_covariate_lead(
 )
 }
 \arguments{
-\item{next_cov_obs_col_name}{Name of the column in your data
-containing the next covariate observation (from, e.g. \code{append_lead_cov_lead}).}
+\item{next_cov_obs_col_name}{string. Name of the column in your data
+containing the next covariate observation. See \code{\link[=append_lead_cov_lead]{append_lead_cov_lead()}}.}
 
-\item{next_target_obs_col_name}{The corresponding target observation
-(from, e.g. \code{append_lead_cov_lead}).}
+\item{next_target_obs_col_name}{string. The corresponding target observation
+See \code{\link[=append_lead_cov_lead]{append_lead_cov_lead()}}.}
 
 \item{filter_na_col_names}{char vec. The names of any columns that you want to
 filter any NAs from.}
 }
 \value{
-list(new_current_obs, forecast), where
-new_current_obs = The value to use for \code{current_obs} in the next iteration.
-forecast = The forecasted value.
+Partially applied function to be passed to \code{\link[=hot_deck_forecast]{hot_deck_forecast()}}.
 }
 \description{
+Sampler argument for \code{\link[=hot_deck_forecast]{hot_deck_forecast()}} to generate a forecast.
+}
+\details{
 Given a \code{local_rows} and \code{current_obs}, it:
 \itemize{
 \item Finds those rows in \code{local_rows} with a covariate's
@@ -38,10 +39,25 @@ observations closest to \code{current_obs}.
 \item That sample's tomorrow's target variable's observation and the \code{forecast}.
 }
 }
-}
-\details{
+
 For \code{n_closest}, \code{dplyr::slice_min} is used, and tie values are included.
 
 For \code{filter_na_col_names}, you must include the \code{next_cov_obs_col_name},
 or the sampling will break.
+}
+\examples{
+data = dplyr::mutate(hotdeckfc::SUGG_temp,
+                     cov_obs = observation + rnorm(n = 1, sd = 3))  # fake cov data
+data = append_lead_cov_lead(data, cov_obs, "observation")
+data = trim_leading_nas(data, observation)
+out = hot_deck_forecast(data,
+                        .datetime = date,
+                        .observation = observation,
+                        times = 3,
+                        h = 5,
+                        window_back = 20,
+                        window_fwd = 20,
+                        n_closest = 5,
+                        sampler = sample_covariate_lead())  # don't forget to call!
+
 }

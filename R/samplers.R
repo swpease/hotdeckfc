@@ -1,4 +1,9 @@
-#' Generate a hot deck forecast value using `lead`s.
+#' Sampler of local observations' leads
+#'
+#' Sampler argument for [hot_deck_forecast()] to generate a forecast.
+#'
+#' Pass this called function (i.e. `sampler = sample_lead()`,
+#' NOT `sampler = sample_lead`) to [hot_deck_forecast()].
 #'
 #' Given a `local_rows` and `current_obs`, it:
 #'   - Finds those rows in `local_rows` with observations closest to `current_obs`.
@@ -9,11 +14,22 @@
 #'
 #' For `n_closest`, `dplyr::slice_min` is used, and tie values are included.
 #'
-#' @param next_obs_col_name Name of the column in your data containing the next
-#' observation (from, e.g. `dplyr::lead`).
-#' @returns list(new_current_obs, forecast), where
-#' new_current_obs = The value to use for `current_obs` in the next iteration.
-#' forecast = The forecasted value.
+#' @param next_obs_col_name string. Name of the column in your data containing
+#'   the next observation. See [append_lead()].
+#' @returns Partially applied function to be passed to [hot_deck_forecast()].
+#'
+#' @examples
+#' data = append_lead(hotdeckfc::SUGG_temp, observation)
+#' data = trim_leading_nas(data, observation)
+#' out = hot_deck_forecast(data,
+#'                         .datetime = date,
+#'                         .observation = observation,
+#'                         times = 3,
+#'                         h = 20,
+#'                         window_back = 20,
+#'                         window_fwd = 20,
+#'                         n_closest = 5,
+#'                         sampler = sample_lead())  # don't forget to call!
 #'
 #' @export
 sample_lead <- function(next_obs_col_name = "next_obs") {
@@ -30,14 +46,15 @@ sample_lead <- function(next_obs_col_name = "next_obs") {
 #' @param next_obs_col_name Name of the column in your data containing the next
 #' observation (from, e.g. `dplyr::lead`).
 #' @returns list(new_current_obs, forecast), where
-#' new_current_obs = The value to use for `current_obs` in the next iteration,
-#'                   i.e. the next forecast.
-#' forecast = The forecasted value.
+#'   - new_current_obs = The value to use for `current_obs` in the next iteration.
+#'   - forecast = The forecasted value.
+#'
+#' @noRd
 internal_sample_lead <- function(local_rows,
-                                            .observation,
-                                            current_obs,
-                                            n_closest,
-                                            next_obs_col_name) {
+                                 .observation,
+                                 current_obs,
+                                 n_closest,
+                                 next_obs_col_name) {
   rand_row = local_rows %>% sample_local_rows({{ .observation }},
                                               current_obs = current_obs,
                                               n_closest = n_closest,
@@ -53,8 +70,9 @@ internal_sample_lead <- function(local_rows,
   )
 }
 
-
-#' Generate a hot deck forecast value using a covariate's `lead`s.
+#' Sampler of local covariate's leads
+#'
+#' Sampler argument for [hot_deck_forecast()] to generate a forecast.
 #'
 #' Given a `local_rows` and `current_obs`, it:
 #'   - Finds those rows in `local_rows` with a covariate's
@@ -70,20 +88,33 @@ internal_sample_lead <- function(local_rows,
 #' For `filter_na_col_names`, you must include the `next_cov_obs_col_name`,
 #' or the sampling will break.
 #'
-#' @param next_cov_obs_col_name Name of the column in your data
-#' containing the next covariate observation (from, e.g. `append_lead_cov_lead`).
-#' @param next_target_obs_col_name The corresponding target observation
-#' (from, e.g. `append_lead_cov_lead`).
+#' @param next_cov_obs_col_name string. Name of the column in your data
+#'   containing the next covariate observation. See [append_lead_cov_lead()].
+#' @param next_target_obs_col_name string. The corresponding target observation
+#'   See [append_lead_cov_lead()].
 #' @param filter_na_col_names char vec. The names of any columns that you want to
-#' filter any NAs from.
-#' @returns list(new_current_obs, forecast), where
-#' new_current_obs = The value to use for `current_obs` in the next iteration.
-#' forecast = The forecasted value.
+#'   filter any NAs from.
+#' @returns Partially applied function to be passed to [hot_deck_forecast()].
+#'
+#' @examples
+#' data = dplyr::mutate(hotdeckfc::SUGG_temp,
+#'                      cov_obs = observation + rnorm(n = 1, sd = 3))  # fake cov data
+#' data = append_lead_cov_lead(data, cov_obs, "observation")
+#' data = trim_leading_nas(data, observation)
+#' out = hot_deck_forecast(data,
+#'                         .datetime = date,
+#'                         .observation = observation,
+#'                         times = 3,
+#'                         h = 5,
+#'                         window_back = 20,
+#'                         window_fwd = 20,
+#'                         n_closest = 5,
+#'                         sampler = sample_covariate_lead())  # don't forget to call!
 #'
 #' @export
 sample_covariate_lead <- function(next_cov_obs_col_name = "next_cov_obs",
-                                            next_target_obs_col_name = "next_target_obs",
-                                            filter_na_col_names = next_cov_obs_col_name) {
+                                  next_target_obs_col_name = "next_target_obs",
+                                  filter_na_col_names = next_cov_obs_col_name) {
   purrr::partial(internal_sample_covariate_lead,
                  ... =,
                  next_cov_obs_col_name,
@@ -105,16 +136,17 @@ sample_covariate_lead <- function(next_cov_obs_col_name = "next_cov_obs",
 #' @param filter_na_col_names char vec. The names of any columns that you want to
 #' filter any NAs from.
 #' @returns list(new_current_obs, forecast), where
-#' new_current_obs = The value to use for `current_obs` in the next iteration,
-#'                   i.e. the next forecast.
-#' forecast = The forecasted value.
+#'   - new_current_obs = The value to use for `current_obs` in the next iteration.
+#'   - forecast = The forecasted value.
+#'
+#' @noRd
 internal_sample_covariate_lead <- function(local_rows,
-                                                     .observation,
-                                                     current_obs,
-                                                     n_closest,
-                                                     next_cov_obs_col_name,
-                                                     next_target_obs_col_name,
-                                                     filter_na_col_names) {
+                                           .observation,
+                                           current_obs,
+                                           n_closest,
+                                           next_cov_obs_col_name,
+                                           next_target_obs_col_name,
+                                           filter_na_col_names) {
   rand_row = local_rows %>% sample_local_rows({{ .observation }},
                                               current_obs = current_obs,
                                               n_closest = n_closest,
@@ -133,14 +165,17 @@ internal_sample_covariate_lead <- function(local_rows,
 }
 
 
-#' Generate a hot deck forecast value using a covariate's simulated sample path (forecast).
+#' Sampler of local observations' leads given covariate's forecast
+#'
+#' Sampler argument for [hot_deck_forecast()] to generate a forecast.
 #'
 #' Given a covariate's forecast, this sampler generates forecasts of the target
 #' by taking the lead (next) target observation of a row randomly sampled from
 #' those rows with covariate observations close to the current covariate
 #' forecast.
 #'
-#' Supply the covariate forecasts to `hot_deck_forecast`.
+#' Supply the covariate forecasts to [hot_deck_forecast()]
+#' as the `covariate_forecasts` argument.
 #'
 #' The first forecast uses the most recent covariate observation. All subsequent
 #' forecasts use the covariate forecasts.
@@ -186,11 +221,35 @@ internal_sample_covariate_lead <- function(local_rows,
 #' be removed before random sampling.
 #' @param next_target_obs_col_name The column name of the lead of the target
 #' observation.
-#' @returns Partially applied function to be passed to `hot_deck_forecast`.
+#' @returns Partially applied function to be passed to [hot_deck_forecast()].
+#'
+#' @examples
+#' # Have fun!
+#' data = dplyr::mutate(hotdeckfc::SUGG_temp,
+#'                      cov_obs = observation + rnorm(n = 1, sd = 3))  # fake cov data
+#' data = append_lead(data, observation)
+#' data = trim_leading_nas(data, observation)
+#' # fake cov forecasts
+#' cov_fc_data = tsibble::tsibble(date = c(as.Date("2024-01-23") + 0:4,
+#'                                         as.Date("2024-01-23") + 0:4),
+#'                                cov_obs = c(21:25, 23:27),
+#'                                sim_num = c(rep(1,5), rep(2,5)),
+#'                                index = date,
+#'                                key = sim_num)
+#' out = hot_deck_forecast(data,
+#'                         .datetime = date,
+#'                         .observation = observation,
+#'                         times = 3,
+#'                         h = 5,
+#'                         window_back = 20,
+#'                         window_fwd = 20,
+#'                         n_closest = 5,
+#'                         sampler = sample_forecasted_covariate("next_obs"),
+#'                         covariate_forecasts = cov_fc_data)
 #'
 #' @export
 sample_forecasted_covariate <- function(next_target_obs_col_name = "next_target_obs",
-                                                  filter_na_col_names = vector(mode = "character")) {
+                                        filter_na_col_names = vector(mode = "character")) {
   purrr::partial(internal_sam_fc_cov_appl_covs,
                  ... =,
                  next_target_obs_col_name,
@@ -212,9 +271,11 @@ sample_forecasted_covariate <- function(next_target_obs_col_name = "next_target_
 #' observation.
 #' @returns Partially applied function of the sampling method now with its
 #' covariates.
+#'
+#' @noRd
 internal_sam_fc_cov_appl_covs <- function(covariate_forecast,
-                                                   next_target_obs_col_name,
-                                                   filter_na_col_names) {
+                                          next_target_obs_col_name,
+                                          filter_na_col_names) {
   m = tsibble::measured_vars(covariate_forecast)
   if (length(m) > 1) {
     stop(paste("Multiple forecasted covariates supplied.\n",
@@ -247,16 +308,18 @@ internal_sam_fc_cov_appl_covs <- function(covariate_forecast,
 #' @param filter_na_col_names The column names for which rows with NAs should
 #' be removed before random sampling.
 #' @returns list(new_current_obs, forecast), where
-#' new_current_obs = list. The covariate's forecasts.
-#'   Contains the value to use for `current_obs` in the next iteration at index 1.
-#' forecast = The forecasted value.
+#'   - new_current_obs = list. The covariate's forecasts.
+#'     Contains the value to use for `current_obs` in the next iteration at index 1.
+#'   - forecast = The forecasted value.
+#'
+#' @noRd
 internal_sample_forecasted_covariate <- function(local_rows,
-                                                           .cov_observation,
-                                                           current_obs,
-                                                           n_closest,
-                                                           covariate_forecast,
-                                                           next_target_obs_col_name,
-                                                           filter_na_col_names) {
+                                                 .cov_observation,
+                                                 current_obs,
+                                                 n_closest,
+                                                 covariate_forecast,
+                                                 next_target_obs_col_name,
+                                                 filter_na_col_names) {
   if (length(current_obs) == 0) {
     # If our horizon exceeds our covariate forecasts, we'll just return
     # "NA" forecasts.
@@ -288,7 +351,9 @@ internal_sample_forecasted_covariate <- function(local_rows,
 }
 
 
-#' Generate a hot deck forecast value using `lead`s of `difference`s.
+#' Sampler of local observations' differences-to-leads
+#'
+#' Sampler argument for [hot_deck_forecast()] to generate a forecast.
 #'
 #' Given a `local_rows` and `current_obs`, it:
 #'   - Finds those rows in `local_rows` with observations closest to `current_obs`.
@@ -299,11 +364,22 @@ internal_sample_forecasted_covariate <- function(local_rows,
 #'
 #' For `n_closest`, `dplyr::slice_min` is used, and tie values are included.
 #'
-#' @param diff_to_next_obs_col_name Name of the column in your data containing the next
-#' observation (from, e.g. `append_diff`).
-#' @returns list(new_current_obs, forecast), where
-#' new_current_obs = The value to use for `current_obs` in the next iteration.
-#' forecast = The forecasted value.
+#' @param diff_to_next_obs_col_name string. Name of the column in your data
+#'   containing the next observation. See [append_diff()].
+#' @returns Partially applied function to be passed to [hot_deck_forecast()].
+#'
+#' @examples
+#' data = append_diff(hotdeckfc::SUGG_temp, observation)
+#' data = trim_leading_nas(data, observation)
+#' out = hot_deck_forecast(data,
+#'                         .datetime = date,
+#'                         .observation = observation,
+#'                         times = 3,
+#'                         h = 20,
+#'                         window_back = 20,
+#'                         window_fwd = 20,
+#'                         n_closest = 5,
+#'                         sampler = sample_diff())  # don't forget to call!
 #'
 #' @export
 sample_diff <- function(diff_to_next_obs_col_name = "diff_to_next_obs") {
@@ -320,13 +396,15 @@ sample_diff <- function(diff_to_next_obs_col_name = "diff_to_next_obs") {
 #' @param diff_to_next_obs_col_name Name of the column in your data containing
 #' the diff to the next observation (from, e.g. `append_diff`).
 #' @returns list(new_current_obs, forecast), where
-#' new_current_obs = The value to use for `current_obs` in the next iteration.
-#' forecast = The forecasted value.
+#'   - new_current_obs = The value to use for `current_obs` in the next iteration.
+#'   - forecast = The forecasted value.
+#'
+#' @noRd
 internal_sample_diff <- function(local_rows,
-                                           .observation,
-                                           current_obs,
-                                           n_closest,
-                                           diff_to_next_obs_col_name) {
+                                 .observation,
+                                 current_obs,
+                                 n_closest,
+                                 diff_to_next_obs_col_name) {
   rand_row = local_rows %>% sample_local_rows({{ .observation }},
                                               current_obs = current_obs,
                                               n_closest = n_closest,
@@ -378,6 +456,8 @@ internal_sample_diff <- function(local_rows,
 #' @param filter_na_col_names char vec. The names of any columns that you want to
 #' filter any NAs from.
 #' @returns A row from `local_rows`, without the `offset` column anymore.
+#'
+#' @noRd
 sample_local_rows <- function(local_rows,
                               .observation,
                               current_obs,

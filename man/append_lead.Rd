@@ -2,26 +2,33 @@
 % Please edit documentation in R/appenders.R
 \name{append_lead}
 \alias{append_lead}
-\title{Add a column of leads to data.}
+\title{Append a column of leads}
 \usage{
 append_lead(.data, .observation)
 }
 \arguments{
-\item{.data}{The data. A tsibble.}
+\item{.data}{tsibble. The data.}
 
-\item{.observation}{The observation column. Passed via pipe.}
+\item{.observation}{symbol. The observation column.}
 }
 \value{
 .data, augmented with a column, named \code{next_obs}, of leads.
 }
 \description{
-Adds a new column, named "next_obs", of the next (i.e. lead) observations.
+Appends a new column, named "next_obs", of the next (i.e. lead) observations.
 }
 \details{
-The corresponding selector, \code{sample_lead}, defaults to this
+The corresponding selector, \code{\link[=sample_lead]{sample_lead()}}, defaults to this
 name for the lead column, so it makes things slightly easier in that regard.
 
-This appender should be paired with \code{sample_lead} for use in CV.
+This appender should be paired with \code{\link[=sample_lead]{sample_lead()}} for use in CV.
 It is applied to the training data after the train-test split,
 to avoid data leakage.
+}
+\examples{
+data = tsibble::tsibble(date = as.Date("2022-02-02") + 0:9,
+                        obs = 1:10,
+                        index = date)
+append_lead(data, obs)
+
 }
