@@ -490,7 +490,7 @@ test_that("train-test split vector window", {
 })
 
 
-test_that("cv_crps", {
+test_that("calc_cv_crps", {
   data = tibble(
     datetime = c(
       as.Date("2021-04-02"),
@@ -508,7 +508,7 @@ test_that("cv_crps", {
     as_tsibble(index = datetime) %>%
     fill_gaps()
 
-  expected_cv_crps_out = tibble(
+  expected_crps_out = tibble(
     datetime = c(as.Date("2022-04-04") + 0:1,
                  as.Date("2023-04-04") + 0:1),
     obs = c(5, 6, NA, 8),
@@ -530,15 +530,15 @@ test_that("cv_crps", {
       sampler = sample_lead("next_obs"),
       appender = append_lead
     )
-  crps_out = cv_crps(out, "obs")
+  crps_out = calc_cv_crps(out, "obs")
 
-  expect_equal(crps_out, expected_cv_crps_out)
+  expect_equal(crps_out, expected_crps_out)
 })
 
 
 
 
-test_that("cv_crps NAs", {
+test_that("calc_cv_crps NAs", {
   # basic
   data = tibble(
     datetime = c(
@@ -557,7 +557,7 @@ test_that("cv_crps NAs", {
     as_tsibble(index = datetime) %>%
     fill_gaps()
 
-  expected_cv_crps_out = tibble(
+  expected_crps_out = tibble(
     datetime = as.Date("2022-04-04"),
     cov = 0,
     observation = 1,
@@ -580,9 +580,9 @@ test_that("cv_crps NAs", {
       sampler = sample_covariate_lead(),
       appender = append_lead_cov_lead
     )
-  crps_out = cv_crps(out, "observation")
+  crps_out = calc_cv_crps(out, "observation")
 
-  expect_equal(crps_out, expected_cv_crps_out)
+  expect_equal(crps_out, expected_crps_out)
 
 
   # test obs NA should yield CRPS NA
@@ -603,7 +603,7 @@ test_that("cv_crps NAs", {
     as_tsibble(index = datetime) %>%
     fill_gaps()
 
-  expected_cv_crps_out = expected_cv_crps_out %>%
+  expected_crps_out = expected_crps_out %>%
     dplyr::mutate(score = NA,
                   observation = as.double(NA))
 
@@ -621,9 +621,9 @@ test_that("cv_crps NAs", {
       sampler = sample_covariate_lead(),
       appender = append_lead_cov_lead
     )
-  crps_out = cv_crps(out, "observation")
+  crps_out = calc_cv_crps(out, "observation")
 
-  expect_equal(crps_out, expected_cv_crps_out)
+  expect_equal(crps_out, expected_crps_out)
 
 
   # fc all NA should yield CRPS NA
@@ -644,7 +644,7 @@ test_that("cv_crps NAs", {
     as_tsibble(index = datetime) %>%
     fill_gaps()
 
-  expected_cv_crps_out = expected_cv_crps_out %>%
+  expected_crps_out = expected_crps_out %>%
     dplyr::mutate(score = NA,
                   observation = 1)
 
@@ -662,9 +662,9 @@ test_that("cv_crps NAs", {
       sampler = sample_covariate_lead(),
       appender = append_lead_cov_lead
     )
-  crps_out = cv_crps(out, "observation")
+  crps_out = calc_cv_crps(out, "observation")
 
-  expect_equal(crps_out, expected_cv_crps_out)
+  expect_equal(crps_out, expected_crps_out)
 
 
   # fc some NA: does it filter forecasted NAs (scoring breaks w/ NAs)?
@@ -686,7 +686,7 @@ test_that("cv_crps NAs", {
     as_tsibble(index = datetime) %>%
     fill_gaps()
 
-  expected_cv_crps_out = expected_cv_crps_out %>%
+  expected_crps_out = expected_crps_out %>%
     dplyr::mutate(score = 0,
                   observation = 1)
 
@@ -704,9 +704,9 @@ test_that("cv_crps NAs", {
       sampler = sample_covariate_lead(),
       appender = append_lead_cov_lead
     )
-  crps_out = cv_crps(out, "observation")
+  crps_out = calc_cv_crps(out, "observation")
 
-  expect_equal(crps_out, expected_cv_crps_out)
+  expect_equal(crps_out, expected_crps_out)
 })
 
 

@@ -298,7 +298,7 @@ train_test_split <- function(.data,
 #' which is the CRPS of the simulated values against the given observation.
 #'
 #' @export
-cv_crps <- function(cv_out, obs_col_name) {
+  calc_cv_crps <- function(cv_out, obs_col_name) {
   # Joining
   forecasts = cv_out$forecasts %>% select(-simulation_num, -datetime)
   # Have this here for now b/c unsure if tsibble will affect `rowwise`,
