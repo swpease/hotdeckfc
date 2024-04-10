@@ -16,7 +16,7 @@ test_that("hot deck fc real data", {
       window_back = 20,
       window_fwd = 20,
       n_closest = 10,
-      sampler = hot_deck_lead_sampler("next_observation")
+      sampler = sample_lead("next_observation")
     )
 
   set.seed(3)
@@ -63,7 +63,7 @@ test_that("hot deck fc basic test", {
       window_back = 2,
       window_fwd = 2,
       n_closest = 1,  # only get closest obs; tsibble designed to yield unique closest obs
-      sampler = hot_deck_lead_sampler("next_obs")
+      sampler = sample_lead("next_obs")
     )
   expected = tibble(
     datetime = c(as.Date("2023-01-04") + 0:1,
@@ -124,7 +124,7 @@ test_that("hot deck fc vector test", {
       window_back = 2,
       window_fwd = c(2,3),
       n_closest = c(1,2),
-      sampler = hot_deck_lead_sampler("next_obs")
+      sampler = sample_lead("next_obs")
     )
   expected = tibble(
     datetime = c(as.Date("2023-01-04") + 0:1,
@@ -154,7 +154,7 @@ test_that("hot deck fc covs", {
     as_tsibble(index = datetime)
   data = data %>% lead_cov_mutator(cov_obs,
                                    target_obs_col_name = "observation")
-  sampler = hot_deck_forecasted_covariate_sampler()
+  sampler = sample_forecasted_covariate()
 
   out = data %>% hot_deck_forecast(datetime,
                                    cov_obs,
@@ -481,7 +481,7 @@ test_that("simulate sample path basic test", {
       window_back = rep(2,2),
       window_fwd = rep(2,2),
       n_closest = rep(1,2),  # only get closest obs; tsibble designed to yield unique closest obs
-      sampler = hot_deck_lead_sampler("next_obs")
+      sampler = sample_lead("next_obs")
     )
   expected = tibble(
     datetime = as.Date("2023-01-04") + 0:1,

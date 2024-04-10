@@ -20,10 +20,10 @@ Adds a new column, named "diff_to_next_obs", of the differences to the
 next (i.e. lead) observations.
 }
 \details{
-The corresponding selector, \code{hot_deck_diff_sampler}, defaults to this name
+The corresponding selector, \code{sample_diff}, defaults to this name
 for the diff column, so it makes things slightly easier in that regard.
 
-This mutator should be paired with \code{hot_deck_diff_sampler} for use in CV.
+This mutator should be paired with \code{sample_diff} for use in CV.
 It is applied to the training data after the train-test split,
 to avoid data leakage.
 }

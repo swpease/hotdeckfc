@@ -61,7 +61,7 @@ test_that("cv works", {
       window_back = 2,
       window_fwd = 2,
       n_closest = 1,
-      sampler = hot_deck_lead_sampler("next_obs")
+      sampler = sample_lead("next_obs")
     )
 
   expect_equal(out$forecasts, expected_fcs)
@@ -123,7 +123,7 @@ test_that("cv w/ cov fc getter", {
       window_back = 5,
       window_fwd = 2,
       n_closest = 1,
-      sampler = hot_deck_forecasted_covariate_sampler(next_target_obs_col_name = "next_target_obs",
+      sampler = sample_forecasted_covariate(next_target_obs_col_name = "next_target_obs",
                                                       filter_na_col_names = "next_target_obs"),
       mutator = lead_cov_mutator,
       cov_fc_getter = cov_fc_dummy_getter
@@ -527,7 +527,7 @@ test_that("cv_crps", {
       window_back = 2,
       window_fwd = 2,
       n_closest = 1,
-      sampler = hot_deck_lead_sampler("next_obs"),
+      sampler = sample_lead("next_obs"),
       mutator = lead_mutator
     )
   crps_out = cv_crps(out, "obs")
@@ -577,7 +577,7 @@ test_that("cv_crps NAs", {
       window_back = 2,
       window_fwd = 2,
       n_closest = 1,
-      sampler = hot_deck_covariate_lead_sampler(),
+      sampler = sample_covariate_lead(),
       mutator = lead_cov_mutator
     )
   crps_out = cv_crps(out, "observation")
@@ -618,7 +618,7 @@ test_that("cv_crps NAs", {
       window_back = 2,
       window_fwd = 2,
       n_closest = 1,
-      sampler = hot_deck_covariate_lead_sampler(),
+      sampler = sample_covariate_lead(),
       mutator = lead_cov_mutator
     )
   crps_out = cv_crps(out, "observation")
@@ -659,7 +659,7 @@ test_that("cv_crps NAs", {
       window_back = 2,
       window_fwd = 2,
       n_closest = 1,
-      sampler = hot_deck_covariate_lead_sampler(),
+      sampler = sample_covariate_lead(),
       mutator = lead_cov_mutator
     )
   crps_out = cv_crps(out, "observation")
@@ -701,7 +701,7 @@ test_that("cv_crps NAs", {
       window_back = 2,
       window_fwd = 2,
       n_closest = 1,
-      sampler = hot_deck_covariate_lead_sampler(),
+      sampler = sample_covariate_lead(),
       mutator = lead_cov_mutator
     )
   crps_out = cv_crps(out, "observation")

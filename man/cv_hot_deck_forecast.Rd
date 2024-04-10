@@ -14,7 +14,7 @@ cv_hot_deck_forecast(
   window_fwd,
   n_closest,
   offset = 0,
-  sampler = hot_deck_lead_sampler("next_obs"),
+  sampler = sample_lead("next_obs"),
   mutator = lead_mutator,
   cov_fc_getter = NULL,
   train_test_split_type = c("conservative", "leaky")

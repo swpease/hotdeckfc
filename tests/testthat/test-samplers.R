@@ -1,4 +1,4 @@
-test_that("hot_deck_forecasted_covariate_sampler basic test", {
+test_that("sample_forecasted_covariate basic test", {
   # Setup
   cov_tsib = tibble(
     datetime = as.Date("2022-02-02"),
@@ -17,7 +17,7 @@ test_that("hot_deck_forecasted_covariate_sampler basic test", {
 
   local_rows = local_rows %>% lead_cov_mutator(cov_obs)
 
-  wrapped = hot_deck_forecasted_covariate_sampler(next_target_obs_col_name = "next_target_obs",
+  wrapped = sample_forecasted_covariate(next_target_obs_col_name = "next_target_obs",
                                                   filter_na_col_names = "next_target_obs")
   wrapped_w_covs = wrapped(cov_tsib)
 
@@ -51,7 +51,7 @@ test_that("hot_deck_forecasted_covariate_sampler basic test", {
 })
 
 
-test_that("hot_deck_forecasted_covariate_sampler multi-covariates err", {
+test_that("sample_forecasted_covariate multi-covariates err", {
   cov_tsib = tibble(
     datetime = as.Date("2022-02-02"),
     sim_num = 1,
@@ -70,7 +70,7 @@ test_that("hot_deck_forecasted_covariate_sampler multi-covariates err", {
 
   local_rows = local_rows %>% lead_cov_mutator(cov_obs)
 
-  wrapped = hot_deck_forecasted_covariate_sampler(next_target_obs_col_name = "next_target_obs",
+  wrapped = sample_forecasted_covariate(next_target_obs_col_name = "next_target_obs",
                                                   filter_na_col_names = "next_target_obs")
 
   expect_error(wrapped(cov_tsib),
@@ -78,7 +78,7 @@ test_that("hot_deck_forecasted_covariate_sampler multi-covariates err", {
 })
 
 
-test_that("hot_deck_covariate_lead_sampler basic test", {
+test_that("sample_covariate_lead basic test", {
   local_rows = tibble(
     observation = c(1,8,20),
     cov_obs = c(2, 3, 4)  # 4 gets filtered out b/c its lead is NA
@@ -88,7 +88,7 @@ test_that("hot_deck_covariate_lead_sampler basic test", {
 
   local_rows = local_rows %>% lead_cov_mutator(cov_obs)
 
-  wrapped = hot_deck_covariate_lead_sampler(next_cov_obs_col_name = "next_cov_obs",
+  wrapped = sample_covariate_lead(next_cov_obs_col_name = "next_cov_obs",
                                             next_target_obs_col_name = "next_target_obs")
   expected = list(
     new_current_obs = 4,
@@ -101,7 +101,7 @@ test_that("hot_deck_covariate_lead_sampler basic test", {
 })
 
 
-test_that("hot_deck_covariate_lead_sampler multiple na filters test", {
+test_that("sample_covariate_lead multiple na filters test", {
   local_rows = tibble(
     observation = c(0,1,8,NA),  # b/c NA, cov_obs == 3 gets filtered out
     cov_obs = c(0, 2, 3, 4)
@@ -111,7 +111,7 @@ test_that("hot_deck_covariate_lead_sampler multiple na filters test", {
 
   local_rows = local_rows %>% lead_cov_mutator(cov_obs)
 
-  wrapped = hot_deck_covariate_lead_sampler(next_cov_obs_col_name = "next_cov_obs",
+  wrapped = sample_covariate_lead(next_cov_obs_col_name = "next_cov_obs",
                                             next_target_obs_col_name = "next_target_obs",
                                             filter_na_col_names = c("next_cov_obs",
                                                                     "next_target_obs"))
@@ -126,7 +126,7 @@ test_that("hot_deck_covariate_lead_sampler multiple na filters test", {
 })
 
 
-test_that("hot_deck_diff_sampler basic test", {
+test_that("sample_diff basic test", {
   local_rows = tibble(
     obs = c(1,8,20),
     diff_to_next_obs = dplyr::lead(tsibble::difference(obs)),
@@ -136,7 +136,7 @@ test_that("hot_deck_diff_sampler basic test", {
   current_obs_1 = 4
   current_obs_2 = 20
 
-  wrapped = hot_deck_diff_sampler("diff_to_next_obs")
+  wrapped = sample_diff("diff_to_next_obs")
   expected_1 = list(
     new_current_obs = 11,
     forecast = 11
@@ -155,7 +155,7 @@ test_that("hot_deck_diff_sampler basic test", {
 })
 
 
-test_that("hot_deck_lead_sampler basic test", {
+test_that("sample_lead basic test", {
   local_rows = tibble(
     obs = 1:10,
     next_obs = dplyr::lead(obs),
@@ -165,7 +165,7 @@ test_that("hot_deck_lead_sampler basic test", {
   current_obs = 4
   n_closest = 2  # Ties are included, so could take any of [3,4,5]
 
-  wrapped = hot_deck_lead_sampler("next_obs")
+  wrapped = sample_lead("next_obs")
   expected_1 = list(
     new_current_obs = 5,
     forecast = 5
@@ -191,7 +191,7 @@ test_that("hot_deck_lead_sampler basic test", {
 })
 
 
-test_that("hot_deck_lead_sampler no local values", {
+test_that("sample_lead no local values", {
   local_rows = tibble(
     obs = 1:10,
     next_obs = rep(NA, 10),
@@ -200,7 +200,7 @@ test_that("hot_deck_lead_sampler no local values", {
   current_obs = 4
   n_closest = 2
 
-  wrapped = hot_deck_lead_sampler("next_obs")
+  wrapped = sample_lead("next_obs")
 
   expect_error(local_rows %>% wrapped(obs, current_obs, n_closest),
                regexp = "No local values.*for")

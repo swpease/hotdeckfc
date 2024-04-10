@@ -39,7 +39,7 @@ Procedure outline:
 The \code{filter_na_col_names} may be something like the column of leads or
 differences, or it could be the observation column itself, or it could be
 nothing. In some cases a value is required. For instance, NAs are removed
-from the leads column for the \code{hot_deck_lead_sampler} because these values
+from the leads column for the \code{sample_lead} because these values
 are used for subsequent horizons as the "current value".
 
 If you leave NAs in your observation column, then they will only be

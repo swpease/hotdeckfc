@@ -2,10 +2,10 @@
 #'
 #' Adds a new column, named "next_obs", of the next (i.e. lead) observations.
 #'
-#' The corresponding selector, `hot_deck_lead_sampler`, defaults to this
+#' The corresponding selector, `sample_lead`, defaults to this
 #' name for the lead column, so it makes things slightly easier in that regard.
 #'
-#' This mutator should be paired with `hot_deck_lead_sampler` for use in CV.
+#' This mutator should be paired with `sample_lead` for use in CV.
 #' It is applied to the training data after the train-test split,
 #' to avoid data leakage.
 #'
@@ -24,8 +24,8 @@ lead_mutator <- function(.data, .observation) {
 #' Adds two new columns, named "next_cov_obs" and "next_target_obs",
 #' of the next (i.e. lead) covariate and target observations.
 #'
-#' The corresponding, covariate-using selectors, `hot_deck_covariate_lead_sampler`
-#' and `hot_deck_forecasted_covariate_sampler` default to these name(s)
+#' The corresponding, covariate-using selectors, `sample_covariate_lead`
+#' and `sample_forecasted_covariate` default to these name(s)
 #' for the lead column(s) (the latter doesn't actually use the covariate's lead),
 #' so it makes things slightly easier in that regard.
 #'
@@ -59,10 +59,10 @@ lead_cov_mutator <- function(.data_ts,
 #' Adds a new column, named "diff_to_next_obs", of the differences to the
 #' next (i.e. lead) observations.
 #'
-#' The corresponding selector, `hot_deck_diff_sampler`, defaults to this name
+#' The corresponding selector, `sample_diff`, defaults to this name
 #' for the diff column, so it makes things slightly easier in that regard.
 #'
-#' This mutator should be paired with `hot_deck_diff_sampler` for use in CV.
+#' This mutator should be paired with `sample_diff` for use in CV.
 #' It is applied to the training data after the train-test split,
 #' to avoid data leakage.
 #'

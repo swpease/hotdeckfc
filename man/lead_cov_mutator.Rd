@@ -27,8 +27,8 @@ Adds two new columns, named "next_cov_obs" and "next_target_obs",
 of the next (i.e. lead) covariate and target observations.
 }
 \details{
-The corresponding, covariate-using selectors, \code{hot_deck_covariate_lead_sampler}
-and \code{hot_deck_forecasted_covariate_sampler} default to these name(s)
+The corresponding, covariate-using selectors, \code{sample_covariate_lead}
+and \code{sample_forecasted_covariate} default to these name(s)
 for the lead column(s) (the latter doesn't actually use the covariate's lead),
 so it makes things slightly easier in that regard.
 

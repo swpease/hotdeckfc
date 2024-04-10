@@ -16,12 +16,12 @@
 #' forecast = The forecasted value.
 #'
 #' @export
-hot_deck_lead_sampler <- function(next_obs_col_name = "next_obs") {
-  purrr::partial(internal_hot_deck_lead_sampler, ... =, next_obs_col_name)
+sample_lead <- function(next_obs_col_name = "next_obs") {
+  purrr::partial(internal_sample_lead, ... =, next_obs_col_name)
 }
 
 
-#' Wrapped method for `hot_deck_lead_sampler`.
+#' Wrapped method for `sample_lead`.
 #'
 #' @param local_rows tibble (NOT tsibble) The `local_rows` in `simulate_sample_path`.
 #' @param .observation The observation column.
@@ -33,7 +33,7 @@ hot_deck_lead_sampler <- function(next_obs_col_name = "next_obs") {
 #' new_current_obs = The value to use for `current_obs` in the next iteration,
 #'                   i.e. the next forecast.
 #' forecast = The forecasted value.
-internal_hot_deck_lead_sampler <- function(local_rows,
+internal_sample_lead <- function(local_rows,
                                             .observation,
                                             current_obs,
                                             n_closest,
@@ -81,10 +81,10 @@ internal_hot_deck_lead_sampler <- function(local_rows,
 #' forecast = The forecasted value.
 #'
 #' @export
-hot_deck_covariate_lead_sampler <- function(next_cov_obs_col_name = "next_cov_obs",
+sample_covariate_lead <- function(next_cov_obs_col_name = "next_cov_obs",
                                             next_target_obs_col_name = "next_target_obs",
                                             filter_na_col_names = next_cov_obs_col_name) {
-  purrr::partial(internal_hot_deck_covariate_lead_sampler,
+  purrr::partial(internal_sample_covariate_lead,
                  ... =,
                  next_cov_obs_col_name,
                  next_target_obs_col_name,
@@ -92,7 +92,7 @@ hot_deck_covariate_lead_sampler <- function(next_cov_obs_col_name = "next_cov_ob
 }
 
 
-#' Wrapped method for `hot_deck_covariate_lead_sampler`.
+#' Wrapped method for `sample_covariate_lead`.
 #'
 #' @param local_rows tibble (NOT tsibble) The `local_rows` in `simulate_sample_path`.
 #' @param .observation The covariate's observation column.
@@ -108,7 +108,7 @@ hot_deck_covariate_lead_sampler <- function(next_cov_obs_col_name = "next_cov_ob
 #' new_current_obs = The value to use for `current_obs` in the next iteration,
 #'                   i.e. the next forecast.
 #' forecast = The forecasted value.
-internal_hot_deck_covariate_lead_sampler <- function(local_rows,
+internal_sample_covariate_lead <- function(local_rows,
                                                      .observation,
                                                      current_obs,
                                                      n_closest,
@@ -189,9 +189,9 @@ internal_hot_deck_covariate_lead_sampler <- function(local_rows,
 #' @returns Partially applied function to be passed to `hot_deck_forecast`.
 #'
 #' @export
-hot_deck_forecasted_covariate_sampler <- function(next_target_obs_col_name = "next_target_obs",
+sample_forecasted_covariate <- function(next_target_obs_col_name = "next_target_obs",
                                                   filter_na_col_names = vector(mode = "character")) {
-  purrr::partial(internal_hot_deck_fc_cov_sam_appl_covs,
+  purrr::partial(internal_sam_fc_cov_appl_covs,
                  ... =,
                  next_target_obs_col_name,
                  filter_na_col_names)
@@ -212,13 +212,13 @@ hot_deck_forecasted_covariate_sampler <- function(next_target_obs_col_name = "ne
 #' observation.
 #' @returns Partially applied function of the sampling method now with its
 #' covariates.
-internal_hot_deck_fc_cov_sam_appl_covs <- function(covariate_forecast,
+internal_sam_fc_cov_appl_covs <- function(covariate_forecast,
                                                    next_target_obs_col_name,
                                                    filter_na_col_names) {
   m = tsibble::measured_vars(covariate_forecast)
   if (length(m) > 1) {
     stop(paste("Multiple forecasted covariates supplied.\n",
-               "`hot_deck_forecasted_covariate_sampler` designed for",
+               "`sample_forecasted_covariate` designed for",
                "one covariate."),
             call. = FALSE)
   }
@@ -228,7 +228,7 @@ internal_hot_deck_fc_cov_sam_appl_covs <- function(covariate_forecast,
     as.list()  # yields list of {col-name: vals-vec}
   covariate_forecast = covariate_forecast[[1]] %>% as.list()
 
-  purrr::partial(internal_hot_deck_forecasted_covariate_sampler,
+  purrr::partial(internal_sample_forecasted_covariate,
                  ... =,
                  covariate_forecast,
                  next_target_obs_col_name,
@@ -236,7 +236,7 @@ internal_hot_deck_fc_cov_sam_appl_covs <- function(covariate_forecast,
 }
 
 
-#' Actual sampling method for `hot_deck_forecasted_covariate_sampler`.
+#' Actual sampling method for `sample_forecasted_covariate`.
 #'
 #' @param local_rows tibble (NOT tsibble) The `local_rows` in `simulate_sample_path`.
 #' @param .cov_observation The covariate's observation column.
@@ -250,7 +250,7 @@ internal_hot_deck_fc_cov_sam_appl_covs <- function(covariate_forecast,
 #' new_current_obs = list. The covariate's forecasts.
 #'   Contains the value to use for `current_obs` in the next iteration at index 1.
 #' forecast = The forecasted value.
-internal_hot_deck_forecasted_covariate_sampler <- function(local_rows,
+internal_sample_forecasted_covariate <- function(local_rows,
                                                            .cov_observation,
                                                            current_obs,
                                                            n_closest,
@@ -306,12 +306,12 @@ internal_hot_deck_forecasted_covariate_sampler <- function(local_rows,
 #' forecast = The forecasted value.
 #'
 #' @export
-hot_deck_diff_sampler <- function(diff_to_next_obs_col_name = "diff_to_next_obs") {
-  purrr::partial(internal_hot_deck_diff_sampler, ... =, diff_to_next_obs_col_name)
+sample_diff <- function(diff_to_next_obs_col_name = "diff_to_next_obs") {
+  purrr::partial(internal_sample_diff, ... =, diff_to_next_obs_col_name)
 }
 
 
-#' Wrapped method for `hot_deck_diff_sampler`.
+#' Wrapped method for `sample_diff`.
 #'
 #' @param local_rows tibble (NOT tsibble) The `local_rows` in `simulate_sample_path`.
 #' @param .observation The observation column.
@@ -322,7 +322,7 @@ hot_deck_diff_sampler <- function(diff_to_next_obs_col_name = "diff_to_next_obs"
 #' @returns list(new_current_obs, forecast), where
 #' new_current_obs = The value to use for `current_obs` in the next iteration.
 #' forecast = The forecasted value.
-internal_hot_deck_diff_sampler <- function(local_rows,
+internal_sample_diff <- function(local_rows,
                                            .observation,
                                            current_obs,
                                            n_closest,
@@ -355,7 +355,7 @@ internal_hot_deck_diff_sampler <- function(local_rows,
 #' The `filter_na_col_names` may be something like the column of leads or
 #' differences, or it could be the observation column itself, or it could be
 #' nothing. In some cases a value is required. For instance, NAs are removed
-#' from the leads column for the `hot_deck_lead_sampler` because these values
+#' from the leads column for the `sample_lead` because these values
 #' are used for subsequent horizons as the "current value".
 #'
 #' If you leave NAs in your observation column, then they will only be

@@ -19,7 +19,7 @@ test_that("grid search gridding", {
     ),
     sampler_args = list(build_sampler_args(
       sm_name = "name",
-      sampler = hot_deck_lead_sampler("next_obs"),
+      sampler = sample_lead("next_obs"),
       mutator = lead_mutator,
       cov_fc_getter = NULL
     ))
@@ -40,7 +40,7 @@ test_that("grid search gridding", {
     window_back = 1:5,
     window_fwd = 1:5,
     sm_name = "name",
-    sampler = hot_deck_lead_sampler("next_obs"),
+    sampler = sample_lead("next_obs"),
     mutator = lead_mutator,
     cov_fc_getter = NULL
   )
@@ -50,7 +50,7 @@ test_that("grid search gridding", {
     n_closest = 20,
     window_back = 1:5,
     window_fwd = 1:5,
-    sampler = hot_deck_lead_sampler("next_obs"),
+    sampler = sample_lead("next_obs"),
     mutator = lead_mutator,
     cov_fc_getter = NULL
   )
@@ -62,7 +62,7 @@ test_that("grid search gridding", {
     window_back = 1,
     window_fwd = 2,
     sm_name = "name",
-    sampler = hot_deck_lead_sampler("next_obs"),
+    sampler = sample_lead("next_obs"),
     mutator = lead_mutator,
     cov_fc_getter = NULL
   )
@@ -72,7 +72,7 @@ test_that("grid search gridding", {
     n_closest = 20,
     window_back = 1,
     window_fwd = 2,
-    sampler = hot_deck_lead_sampler("next_obs"),
+    sampler = sample_lead("next_obs"),
     mutator = lead_mutator,
     cov_fc_getter = NULL
   )
@@ -94,13 +94,13 @@ test_that("grid search gridding", {
 #   expected = list(
 #     list(
 #       sm_name = "a",
-#       sampler = hot_deck_lead_sampler("hi"),
+#       sampler = sample_lead("hi"),
 #       mutator = lead_mutator
 #     )
 #   )
 #   expect_equal(
 #     build_sampler_args("a",
-#                        hot_deck_lead_sampler("hi"),
+#                        sample_lead("hi"),
 #                        lead_mutator),
 #     expected
 #   )
@@ -136,13 +136,13 @@ test_that("build grid", {
     sampler_args = list(
       list(
         sm_name = "sm_name",
-        sampler = hot_deck_lead_sampler("as"),
+        sampler = sample_lead("as"),
         mutator = lead_mutator,
         cov_fc_getter = dummy_fn
       ),
       list(
         sm_name = "sm_name",
-        sampler = hot_deck_lead_sampler("as"),
+        sampler = sample_lead("as"),
         mutator = lead_mutator,
         cov_fc_getter = dummy_fn
       )
@@ -156,7 +156,7 @@ test_that("build grid", {
     window_args = list(build_window_args(20), build_window_args(1:4, 11)),
     sampler_args = list(build_sampler_args(
       sm_name = "sm_name",
-      sampler = hot_deck_lead_sampler("as"),
+      sampler = sample_lead("as"),
       mutator = lead_mutator,
       cov_fc_getter = dummy_fn
     ))
