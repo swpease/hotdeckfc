@@ -9,7 +9,7 @@ plot_grid_search_crps(grid_out, .observation, ymax = NULL)
 \arguments{
 \item{grid_out}{output from \code{\link[=grid_search_hot_deck_cv]{grid_search_hot_deck_cv()}}.}
 
-\item{.observation}{symbol. The observation column name from your data.}
+\item{.observation}{symbol OR string. The observation column name from your data.}
 
 \item{ymax}{optional numeric. The plots' y max.}
 }

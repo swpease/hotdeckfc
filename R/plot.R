@@ -2,6 +2,11 @@
 #'
 #' Plot forecast over the historical seasonal data.
 #'
+#' Using a `forecasts_geom` of "line" is more useful for less zig-zaggy
+#' forecasts. This generally means small values of `n_closest`. Using "point"
+#' is good for zig-zaggy forecasts, because in these cases, "line" yeilds a
+#' spiky blob.
+#'
 #' @param forecast tibble. Output of [hot_deck_forecast()].
 #' @param historical_data tsibble. The data.
 #' @param observation_col_name string. The observation column name.
@@ -41,6 +46,7 @@ plot_forecast = function(forecast,
       doy = lubridate::yday({{ historical_data_index }}),
       yr = lubridate::year({{ historical_data_index }})
     )
+  # TODO: meta, .env
   forecast = forecast %>%
     dplyr::mutate(
       doy = lubridate::yday(datetime),
@@ -199,7 +205,6 @@ shiny_visualize_forecast <- function(.data,
     )
   )
 
-  # Define server logic ----
   server <- function(input, output, session) {
     counter = shiny::reactiveVal(value = 0, label = "counter")  # for caching
 
@@ -308,7 +313,7 @@ plot_cv_crps <- function(arg_list, cv_crps_out, ymax = NULL) {
 #' sum of that vector is used as the value.
 #'
 #' @param grid_out output from [grid_search_hot_deck_cv()].
-#' @param .observation symbol. The observation column name from your data.
+#' @param .observation symbol OR string. The observation column name from your data.
 #' @param ymax optional numeric. The plots' y max.
 #'
 #' @examples
@@ -335,4 +340,152 @@ plot_grid_search_crps <- function(grid_out, .observation, ymax = NULL) {
   gs_crps = grid_out %>%
     purrr::map(\(x) c(x, list(crps = calc_cv_crps(x$cv_out, rlang::as_name(rlang::ensym(.observation))))))
   gs_crps %>% purrr::walk(\(x) plot_cv_crps(x$arg_list, x$crps, ymax = ymax))
+}
+
+
+#' Plot CV forecasts
+#'
+#' Plot the k forecasts for a CV.
+#'
+#' @param data tsibble. The data.
+#' @param arg_list list. The `$arg_list` element in grid search output.
+#' @param cv_out list. The `$cv_out` element in grid search output.
+#' @inheritParams plot_grid_search_forecasts
+plot_cv_forecast = function(data,
+                            arg_list,
+                            cv_out,
+                            observation_col_name,
+                            window_back,
+                            window_fwd,
+                            forecasts_geom) {
+  datetime_col_name = tsibble::index_var(data)
+
+  plts = list()
+
+  k_vals = cv_out$forecasts %>%
+    dplyr::distinct(k) %>%
+    dplyr::pull()
+  for (k_val in k_vals) {
+    k_fc = cv_out$forecasts %>%
+      dplyr::filter(k == .env$k_val)
+    mindt = k_fc %>%
+      dplyr::select(datetime) %>%
+      dplyr::slice_min(order_by = datetime) %>%
+      dplyr::first() %>%
+      dplyr::pull() - window_back
+    maxdt = k_fc %>%
+      dplyr::select(datetime) %>%
+      dplyr::slice_max(order_by = datetime) %>%
+      dplyr::first() %>%
+      dplyr::pull() + window_fwd
+    data_part = data %>%
+      tsibble::filter_index(as.character(mindt) ~ as.character(maxdt))
+    td_min_t = data %>% dplyr::pull(observation) %>% min()
+    td_max_t = data %>% dplyr::pull(observation) %>% max()
+
+    # forecasts geom types
+    fcs_as_lines = ggplot2::geom_line(
+      data = k_fc,
+      mapping = ggplot2::aes(
+        x = datetime,
+        y = forecast,
+        color = as.factor(simulation_num)
+      ),
+      show.legend = FALSE,
+      linewidth = 0.25
+    )
+    fcs_as_points = ggplot2::geom_point(
+      data = k_fc,
+      mapping = ggplot2::aes(
+        x = datetime,
+        y = forecast,
+        color = as.factor(simulation_num)
+      ),
+      show.legend = FALSE,
+      alpha = 0.3,
+      size = 0.25
+    )
+    fc_geom = if (forecasts_geom == "line") fcs_as_lines else fcs_as_points
+
+
+    plt = ggplot2::ggplot() +
+      fc_geom +
+      ggplot2::geom_line(
+        data = data_part,
+        mapping = ggplot2::aes(
+          x = .data[[datetime_col_name]],
+          y = .data[[observation_col_name]]
+        )
+      ) +
+      ggplot2::ggtitle(paste("k =", k_val,
+                    "wf", sum(arg_list$window_fwd),
+                    "wb", sum(arg_list$window_back),
+                    "nc", sum(arg_list$n_closest),
+                    "sa_name", arg_list$sa_name))
+    plts[[k_val]] = plt
+  }
+
+  plts
+}
+
+
+#' Plot grid search forecasts
+#'
+#' Plot the forecasts produced by [grid_search_hot_deck_cv()].
+#'
+#' Using a `forecasts_geom` of "line" is more useful for less zig-zaggy
+#' forecasts. This generally means small values of `n_closest`. Using "point"
+#' is good for zig-zaggy forecasts, because in these cases, "line" yeilds a
+#' spiky blob.
+#'
+#' @param grid_out output from [grid_search_hot_deck_cv()].
+#' @param .data tsibble. Your data.
+#' @param observation_col_name string. The observation column name.
+#' @param window_back positive integer. How many days back to include
+#'   of the .data.
+#' @param window_fwd positive integer. How many days forward to include
+#'   of the .data.
+#' @param forecasts_geom string. The geom to use for the forecasts on the ggplot
+#'
+#' @examples
+#' grid = build_grid(
+#'   h = 2,
+#'   n_closest = c(5, 10),
+#'   # even if you only use a single `build_window_args()`, wrap in `list()`
+#'   window_args = list(build_window_args(20)),
+#'   # also need to wrap in list
+#'   sampler_args = list(
+#'     build_sampler_args(sa_name = "nxt",
+#'                        sampler = sample_lead(),  # remember to call!
+#'                        appender = append_lead)
+#'   )
+#' )
+#' out = grid_search_hot_deck_cv(hotdeckfc::SUGG_temp,
+#'                               .datetime = date,
+#'                               .observation = observation,
+#'                               grid = grid)
+#' suppressWarnings(plot_grid_search_forecasts(out, hotdeckfc::SUGG_temp))
+#'
+#' @export
+plot_grid_search_forecasts <- function(grid_out,
+                                       .data,
+                                       observation_col_name = "observation",
+                                       window_back = 120,
+                                       window_fwd = 120,
+                                       forecasts_geom = c("line", "point")) {
+  forecasts_geom = match.arg(forecasts_geom)
+
+  gs_crps = grid_out %>%
+    purrr::map(\(x) c(x, list(crps = calc_cv_crps(x$cv_out, rlang::as_name(rlang::ensym(observation_col_name))))))
+  gs_crps %>%
+    purrr::map(\(x) plot_cv_forecast(.data,
+                                     x$arg_list,
+                                     x$cv_out,
+                                     observation_col_name = observation_col_name,
+                                     window_back = window_back,
+                                     window_fwd = window_fwd,
+                                     forecasts_geom = forecasts_geom)) %>%
+    purrr::pmap(\(...) rlang::list2(...)) %>%
+    purrr::flatten() %>%
+    purrr::walk(\(plt) show(plt))
 }

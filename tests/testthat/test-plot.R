@@ -58,7 +58,7 @@ test_that("plot_forecast snapshot", {
 # So, I'm extracting plot 1 on its own,
 # then running the whole shebang to get plot 2.
 # This way, I snapshot both, and make sure that the mapping works.
-test_that("plot_forecast snapshot", {
+test_that("plot_grid_search_crps snapshot", {
   grid = build_grid(
     h = 2,
     n_closest = c(5, 10),
@@ -81,4 +81,37 @@ test_that("plot_forecast snapshot", {
                               plot_grid_search_crps(fist_el, observation, 5))
   vdiffr::expect_doppelganger("plot_grid_search_crps_2",
                               plot_grid_search_crps(out, observation, 5))
+})
+
+
+# Same strategy as above, except this is the last plot for...
+# the last two plots, b/c I'm slicing the output list prior to
+# all that purrr rearrangement shenanigans
+test_that("plot_grid_search_forecasts snapshot", {
+  grid = build_grid(
+    h = 2,
+    n_closest = c(5, 10),
+    # even if you only use a single `build_window_args()`, wrap in `list()`
+    window_args = list(build_window_args(20)),
+    # also need to wrap in list
+    sampler_args = list(
+      build_sampler_args(sa_name = "nxt",
+                         sampler = sample_lead(),  # remember to call!
+                         appender = append_lead)
+    )
+  )
+  set.seed(3)
+  out = grid_search_hot_deck_cv(hotdeckfc::SUGG_temp,
+                                .datetime = date,
+                                .observation = observation,
+                                grid = grid)
+  fist_el = list(out[[1]])
+  vdiffr::expect_doppelganger(
+    "plot_grid_search_forecasts_1",
+    suppressWarnings(plot_grid_search_forecasts(fist_el, hotdeckfc::SUGG_temp))
+  )
+  vdiffr::expect_doppelganger(
+    "plot_grid_search_forecasts_2",
+    suppressWarnings(plot_grid_search_forecasts(out, hotdeckfc::SUGG_temp))
+  )
 })

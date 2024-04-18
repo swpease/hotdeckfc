@@ -38,6 +38,12 @@ plot_forecast(
 \description{
 Plot forecast over the historical seasonal data.
 }
+\details{
+Using a \code{forecasts_geom} of "line" is more useful for less zig-zaggy
+forecasts. This generally means small values of \code{n_closest}. Using "point"
+is good for zig-zaggy forecasts, because in these cases, "line" yeilds a
+spiky blob.
+}
 \examples{
 data = append_lead(hotdeckfc::SUGG_temp, observation)
 fc = hot_deck_forecast(data,
