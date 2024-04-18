@@ -37,6 +37,7 @@ suppressWarnings(shiny::testServer(
     expect_equal(fc1b, fc1e)
 }))
 
+
 test_that("plot_forecast snapshot", {
   data = append_lead(hotdeckfc::SUGG_temp, observation)
   set.seed(3)
@@ -49,4 +50,35 @@ test_that("plot_forecast snapshot", {
                          window_fwd = 20,
                          n_closest = 5)
   suppressWarnings(vdiffr::expect_doppelganger("plot_forecast", plot_forecast(fc, data)))
+})
+
+
+# My testing strategy here is kinda annoying.
+# vdiffr only snapshots the last plot shown.
+# So, I'm extracting plot 1 on its own,
+# then running the whole shebang to get plot 2.
+# This way, I snapshot both, and make sure that the mapping works.
+test_that("plot_forecast snapshot", {
+  grid = build_grid(
+    h = 2,
+    n_closest = c(5, 10),
+    # even if you only use a single `build_window_args()`, wrap in `list()`
+    window_args = list(build_window_args(20)),
+    # also need to wrap in list
+    sampler_args = list(
+      build_sampler_args(sa_name = "nxt",
+                         sampler = sample_lead(),  # remember to call!
+                         appender = append_lead)
+    )
+  )
+  set.seed(3)
+  out = grid_search_hot_deck_cv(hotdeckfc::SUGG_temp,
+                                .datetime = date,
+                                .observation = observation,
+                                grid = grid)
+  fist_el = list(out[[1]])
+  vdiffr::expect_doppelganger("plot_grid_search_crps_1",
+                              plot_grid_search_crps(fist_el, observation, 5))
+  vdiffr::expect_doppelganger("plot_grid_search_crps_2",
+                              plot_grid_search_crps(out, observation, 5))
 })

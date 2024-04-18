@@ -265,3 +265,74 @@ shiny_visualize_forecast <- function(.data,
   shiny::shinyApp(ui = ui, server = server)
 }
 
+
+#' Plot CRPS of CV
+#'
+#' Plot the CRPS'es of cross validation output.
+#'
+#' @param arg_list list. The `$arg_list` element in grid search output.
+#' @param cv_crps_out The output of [calc_cv_crps()] applied to the relevant
+#'   grid search output's element.
+#' @param ymax optional numeric. The plots' y max.
+plot_cv_crps <- function(arg_list, cv_crps_out, ymax = NULL) {
+  plt = cv_crps_out %>%
+    ggplot2::ggplot() +
+    ggplot2::geom_line(
+      mapping = ggplot2::aes(x = h,
+                    y = score,
+                    color = as.factor(k))
+    ) +
+    ggplot2::ggtitle(paste("wf", sum(arg_list$window_fwd),
+                  "wb", sum(arg_list$window_back),
+                  "nc", arg_list$n_closest,
+                  "sa_name", arg_list$sa_name)) +
+    ggplot2::guides(color=ggplot2::guide_legend(title="k")) +
+    ggplot2::ylab("CRPS")
+  plt = if (is.null(ymax)) plt else {
+    plt + ggplot2::ylim(0, ymax)
+  }
+  show(plt)
+}
+
+
+#' Plot CRPS of grid search
+#'
+#' Plot the CRPS'es of grid search output along h.
+#'
+#' The title of the plot is the various parameter values, where
+#'   - "wf" = window_forward
+#'   - "wb" = window_back
+#'   - "nc" = n_closest
+#'   - "sa_name" = sa_name
+#' For the first wf, wb, and nc, if you provided a vector, then the
+#' sum of that vector is used as the value.
+#'
+#' @param grid_out output from [grid_search_hot_deck_cv()].
+#' @param .observation symbol. The observation column name from your data.
+#' @param ymax optional numeric. The plots' y max.
+#'
+#' @examples
+#' grid = build_grid(
+#'   h = 2,
+#'   n_closest = c(5, 10),
+#'   # even if you only use a single `build_window_args()`, wrap in `list()`
+#'   window_args = list(build_window_args(20)),
+#'   # also need to wrap in list
+#'   sampler_args = list(
+#'     build_sampler_args(sa_name = "nxt",
+#'                        sampler = sample_lead(),  # remember to call!
+#'                        appender = append_lead)
+#'   )
+#' )
+#' out = grid_search_hot_deck_cv(hotdeckfc::SUGG_temp,
+#'                               .datetime = date,
+#'                               .observation = observation,
+#'                               grid = grid)
+#' plot_grid_search_crps(out, observation, 5)
+#'
+#' @export
+plot_grid_search_crps <- function(grid_out, .observation, ymax = NULL) {
+  gs_crps = grid_out %>%
+    purrr::map(\(x) c(x, list(crps = calc_cv_crps(x$cv_out, rlang::as_name(rlang::ensym(.observation))))))
+  gs_crps %>% purrr::walk(\(x) plot_cv_crps(x$arg_list, x$crps, ymax = ymax))
+}
