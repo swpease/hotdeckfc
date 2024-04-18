@@ -13,15 +13,18 @@ Suggests:
     devtools,
     readr,
     testthat (>= 3.0.0),
-    usethis
+    usethis,
+    vdiffr
 Imports: 
     dplyr,
+    ggplot2,
     lubridate,
     magrittr,
     memoise,
     purrr,
     rlang,
     scoringRules,
+    shiny,
     tibble,
     tidyr,
     tsibble
