@@ -271,9 +271,9 @@ shiny_visualize_forecast <- function(.data,
 }
 
 
-#' Plot CRPS of CV
+#' Plot CRPSes of CV
 #'
-#' Plot the CRPS'es of cross validation output.
+#' Plot the CRPSes of cross validation output.
 #'
 #' @param arg_list list. The `$arg_list` element in grid search output.
 #' @param cv_crps_out The output of [calc_cv_crps()] applied to the relevant
@@ -300,9 +300,9 @@ plot_cv_crps <- function(arg_list, cv_crps_out, ymax = NULL) {
 }
 
 
-#' Plot CRPS of grid search
+#' Plot CRPSes of grid search
 #'
-#' Plot the CRPS'es of grid search output along h.
+#' Plot the CRPSes of grid search output along h.
 #'
 #' The title of the plot is the various parameter values, where
 #'   - "wf" = window_forward
@@ -313,7 +313,7 @@ plot_cv_crps <- function(arg_list, cv_crps_out, ymax = NULL) {
 #' sum of that vector is used as the value.
 #'
 #' @param grid_out output from [grid_search_hot_deck_cv()].
-#' @param .observation symbol OR string. The observation column name from your data.
+#' @param observation_col_name string. The observation column name from your data.
 #' @param ymax optional numeric. The plots' y max.
 #'
 #' @examples
@@ -333,12 +333,14 @@ plot_cv_crps <- function(arg_list, cv_crps_out, ymax = NULL) {
 #'                               .datetime = date,
 #'                               .observation = observation,
 #'                               grid = grid)
-#' plot_grid_search_crps(out, observation, 5)
+#' plot_grid_search_crps(out, "observation", 5)
 #'
 #' @export
-plot_grid_search_crps <- function(grid_out, .observation, ymax = NULL) {
+plot_grid_search_crps <- function(grid_out,
+                                  observation_col_name = "observation",
+                                  ymax = NULL) {
   gs_crps = grid_out %>%
-    purrr::map(\(x) c(x, list(crps = calc_cv_crps(x$cv_out, rlang::as_name(rlang::ensym(.observation))))))
+    purrr::map(\(x) c(x, list(crps = calc_cv_crps(x$cv_out, rlang::as_name(rlang::ensym(observation_col_name))))))
   gs_crps %>% purrr::walk(\(x) plot_cv_crps(x$arg_list, x$crps, ymax = ymax))
 }
 
@@ -351,7 +353,7 @@ plot_grid_search_crps <- function(grid_out, .observation, ymax = NULL) {
 #' @param arg_list list. The `$arg_list` element in grid search output.
 #' @param cv_out list. The `$cv_out` element in grid search output.
 #' @inheritParams plot_grid_search_forecasts
-plot_cv_forecast = function(data,
+plot_cv_forecasts = function(data,
                             arg_list,
                             cv_out,
                             observation_col_name,
@@ -478,7 +480,7 @@ plot_grid_search_forecasts <- function(grid_out,
   gs_crps = grid_out %>%
     purrr::map(\(x) c(x, list(crps = calc_cv_crps(x$cv_out, rlang::as_name(rlang::ensym(observation_col_name))))))
   gs_crps %>%
-    purrr::map(\(x) plot_cv_forecast(.data,
+    purrr::map(\(x) plot_cv_forecasts(.data,
                                      x$arg_list,
                                      x$cv_out,
                                      observation_col_name = observation_col_name,

@@ -78,9 +78,9 @@ test_that("plot_grid_search_crps snapshot", {
                                 grid = grid)
   fist_el = list(out[[1]])
   vdiffr::expect_doppelganger("plot_grid_search_crps_1",
-                              plot_grid_search_crps(fist_el, observation, 5))
+                              plot_grid_search_crps(fist_el, "observation", 5))
   vdiffr::expect_doppelganger("plot_grid_search_crps_2",
-                              plot_grid_search_crps(out, observation, 5))
+                              plot_grid_search_crps(out, "observation", 5))
 })
 
 

@@ -2,19 +2,23 @@
 % Please edit documentation in R/plot.R
 \name{plot_grid_search_crps}
 \alias{plot_grid_search_crps}
-\title{Plot CRPS of grid search}
+\title{Plot CRPSes of grid search}
 \usage{
-plot_grid_search_crps(grid_out, .observation, ymax = NULL)
+plot_grid_search_crps(
+  grid_out,
+  observation_col_name = "observation",
+  ymax = NULL
+)
 }
 \arguments{
 \item{grid_out}{output from \code{\link[=grid_search_hot_deck_cv]{grid_search_hot_deck_cv()}}.}
 
-\item{.observation}{symbol OR string. The observation column name from your data.}
+\item{observation_col_name}{string. The observation column name from your data.}
 
 \item{ymax}{optional numeric. The plots' y max.}
 }
 \description{
-Plot the CRPS'es of grid search output along h.
+Plot the CRPSes of grid search output along h.
 }
 \details{
 The title of the plot is the various parameter values, where
@@ -44,6 +48,6 @@ out = grid_search_hot_deck_cv(hotdeckfc::SUGG_temp,
                               .datetime = date,
                               .observation = observation,
                               grid = grid)
-plot_grid_search_crps(out, observation, 5)
+plot_grid_search_crps(out, "observation", 5)
 
 }

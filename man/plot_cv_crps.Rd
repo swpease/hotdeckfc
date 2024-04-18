@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot.R
 \name{plot_cv_crps}
 \alias{plot_cv_crps}
-\title{Plot CRPS of CV}
+\title{Plot CRPSes of CV}
 \usage{
 plot_cv_crps(arg_list, cv_crps_out, ymax = NULL)
 }
@@ -15,5 +15,5 @@ grid search output's element.}
 \item{ymax}{optional numeric. The plots' y max.}
 }
 \description{
-Plot the CRPS'es of cross validation output.
+Plot the CRPSes of cross validation output.
 }
