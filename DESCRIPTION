@@ -24,7 +24,7 @@ Imports:
     purrr,
     rlang,
     scoringRules,
-    shiny,
+    shiny (>= 1.8.1),
     tibble,
     tidyr,
     tsibble
