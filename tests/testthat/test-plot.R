@@ -20,16 +20,16 @@ suppressWarnings(shiny::testServer(
 
     # TEST 2:
     #  - click "recalculate" (now have 2 fc's w/ these params)
-    #  - change a param (now have a new fc w/ new params)
+    #  - change a param and "calculate" (now have a new fc w/ new params)
     #  - change back to orig params
     #    - should fc same as initial fc
     #  - recalculate
     #    - should equal fc from first item in this list
     session$setInputs(recalculate = 1)
     fc1b = forecast()
-    session$setInputs(times = 3)
+    session$setInputs(times = 3, calculate = 1)
     fc2a = forecast()
-    session$setInputs(times = 5)
+    session$setInputs(times = 5, calculate = 2)
     fc1d = forecast()
     expect_equal(fc1a1, fc1d)
     session$setInputs(recalculate = 1)
@@ -78,9 +78,9 @@ test_that("plot_grid_search_crps snapshot", {
                                 grid = grid)
   fist_el = list(out[[1]])
   vdiffr::expect_doppelganger("plot_grid_search_crps_1",
-                              plot_grid_search_crps(fist_el, "observation", 5))
+                              suppressWarnings(plot_grid_search_crps(fist_el, "observation", 5)))
   vdiffr::expect_doppelganger("plot_grid_search_crps_2",
-                              plot_grid_search_crps(out, "observation", 5))
+                              suppressWarnings(plot_grid_search_crps(out, "observation", 5)))
 })
 
 
@@ -106,12 +106,12 @@ test_that("plot_grid_search_forecasts snapshot", {
                                 .observation = observation,
                                 grid = grid)
   fist_el = list(out[[1]])
-  vdiffr::expect_doppelganger(
+  suppressWarnings(vdiffr::expect_doppelganger(
     "plot_grid_search_forecasts_1",
     suppressWarnings(plot_grid_search_forecasts(fist_el, hotdeckfc::SUGG_temp))
-  )
-  vdiffr::expect_doppelganger(
+  ))
+  suppressWarnings(vdiffr::expect_doppelganger(
     "plot_grid_search_forecasts_2",
     suppressWarnings(plot_grid_search_forecasts(out, hotdeckfc::SUGG_temp))
-  )
+  ))
 })

@@ -193,8 +193,11 @@ shiny_visualize_forecast <- function(.data,
                     label = "Forecast paths display type",
                     choices = c("line", "point"),
                     selected = "line",),
+        shiny::actionButton(inputId = "calculate",
+                            label = "Calculate",
+                            disabled = TRUE),
         shiny::actionButton(inputId = "recalculate",
-                     label = "Recalculate",)
+                     label = "Recalculate")
       ),
       mainPanel = shiny::mainPanel(
         shiny::plotOutput(
@@ -207,21 +210,55 @@ shiny_visualize_forecast <- function(.data,
 
   server <- function(input, output, session) {
     counter = shiny::reactiveVal(value = 0, label = "counter")  # for caching
+    safe = shiny::reactiveVal(value = TRUE, label = "safe")
+    geom_trigger = shiny::reactiveVal(value = 0, label = "geom_trigger")
 
-    # Reset counter on fc param change
-    shiny::observe({ counter(0) }) %>%
+    # If you change a param:
+    #  - reset counter
+    #  - make calculate enabled, recalculate disabled
+    #  - no longer "safe"
+    shiny::observe({
+      counter(0)
+      # switch disabled
+      shiny::updateActionButton(inputId = "calculate", disabled = FALSE)
+      shiny::updateActionButton(inputId = "recalculate", disabled = TRUE)
+      # no longer safe; would mis-cache if `fc_geom_type` were changed
+      safe(FALSE)
+    }) %>%
       shiny::bindEvent(input$sampler,
                 input$times,
                 input$h,
                 input$window_back,
                 input$window_fwd,
-                input$n_closest)
+                input$n_closest,
+                ignoreInit = TRUE)
 
+    # If you click "recalculate", increment the counter
     shiny::observe({
       new_val = counter() + 1
       counter(new_val)  # triggers this reactive, `counter`
     }) %>%
       shiny::bindEvent(input$recalculate)
+
+    # If you click "calculate":
+    #  - make calculate disabled
+    #  - make recalculate enabled
+    #  - make safe == TRUE
+    shiny::observe({
+      shiny::updateActionButton(inputId = "calculate", disabled = TRUE)
+      shiny::updateActionButton(inputId = "recalculate", disabled = FALSE)
+      safe(TRUE)
+    }) %>%
+      shiny::bindEvent(input$calculate)
+
+    # Only trigger renderer if safe
+    shiny::observe({
+      if (isTRUE(safe())) {
+        new_val = geom_trigger() + 1
+        geom_trigger(new_val)
+      }
+    }) %>%
+      shiny::bindEvent(input$fc_geom_type)
 
     forecast = shiny::reactive({
       hot_deck_forecast(.data,
@@ -244,7 +281,8 @@ shiny_visualize_forecast <- function(.data,
                        input$n_closest,
                        input$sampler,
                        covariate_forecasts,
-                       counter())
+                       counter()) %>%
+      shiny::bindEvent(input$calculate, input$recalculate)
 
     output$forecastPlot <- shiny::renderPlot({
       fc = forecast()
@@ -264,7 +302,8 @@ shiny_visualize_forecast <- function(.data,
                 input$sampler,
                 covariate_forecasts,
                 input$fc_geom_type,
-                counter())
+                counter()) %>%
+      shiny::bindEvent(input$calculate, input$recalculate, geom_trigger())
   }
 
   shiny::shinyApp(ui = ui, server = server)
