@@ -75,6 +75,10 @@ Aside from the data and some fairly straightforward parameters, the forecast dep
 # `hotdeckfc` in action
 I've been using it to submit forecasts to the forementioned NEON forecasting challenge. 
 
+## Performance vs Climatology Model After 1-2 Months
+Here is the relative performance of this model vs the climatology model across all sites that I have submitted forecasts of to the NEON EFC, with per-site submission counts ranging from about 1 to 2 months.
+![](images/CRPS_comp_graph.png)
+
 ## Single Forecasts
 Below are a few forecasts. In all images, the grey lines are historical data, the red dot is the latest observation, the thin colored lines / dots are forecasts, and the red line is the forecast mean.
 
