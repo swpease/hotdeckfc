@@ -55,19 +55,142 @@ I made this for the [NEON Ecological Forecasting Challenge](https://projects.eco
 
 # Usage
 ## Example Code
+### Basic Workflow
+This package operates on [`tsibble`s](https://tsibble.tidyverts.org/). Also, it is currently limited to operating on daily observations of annual data, and assumes that the temporal column (the `tsibble`'s `index`) is a `Date`. It also requires the latest observation to have been, well, observed (not `NA`). So, the data preparation requirements are:
+  - Temporal column is of class `Date`.
+  - Data is a `tsibble`.
+  - Latest observation is not `NA`.
+
+Example data preparation:
 ```{r}
-data = append_lead(hotdeckfc::SUGG_temp, observation)
-data = trim_leading_nas(data, observation)
-fc = hot_deck_forecast(data,
+# From non-tsibble
+my_data = my_data %>% 
+  dplyr::mutate(date = as.Date(date))
+my_data = tsibble::as_tsibble(my_data, index = date)
+my_data = trim_leading_nas(my_data, observation)
+
+# If you already have a tsibble, may need to convert to tibble
+# to mutate the temporal column.
+my_data = my_data %>% 
+  tibble::as_tibble() %>% 
+  dplyr::mutate(date = as.Date(date))
+my_data = tsibble::as_tsibble(my_data, index = date)
+my_data = trim_leading_nas(my_data, observation)
+```
+
+Once your data is ready, you need to `append` any columns that are needed for your chosen `sampler` ([see below](#concerning-samplers)).
+```
+my_data = append_lead(hotdeckfc::SUGG_temp, observation)
+```
+
+Then forecast. Note that you need to *call* the `sampler`, because they all use `purrr::partial()` internally.
+```
+fc = hot_deck_forecast(my_data,
                        .datetime = date,
                        .observation = observation,
-                       times = 3,
-                       h = 20,
+                       times = 30,
+                       h = 30,
                        window_back = 20,
                        window_fwd = 20,
                        n_closest = 5,
                        sampler = sample_lead())
 ```
+
+### Picking Parameters
+I have implemented a grid search CV and a Shiny widget to help find parameters.
+
+#### Shiny widget
+Using the Shiny widget is straightforward:
+```
+my_data = append_lead(hotdeckfc::SUGG_temp, observation)
+my_data = append_diff(my_data, observation)
+shiny_visualize_forecast(my_data, .datetime = date, .observation = observation)
+```
+
+#### Grid search
+Using the grid search requires setting up the grid. This is the most painful part of the package. The `window_args` and `sampler_args` each need a few things to be grouped together, e.g.:
+  - The `window_back` and `window_fwd` params should be coupled for a given CV
+  - The `sampler` and `appender` need to be coupled for a given CV
+
+Because of how `tibble`s work, these complex objects need to be wrapped in `list()`s.
+
+The other arguments can be passed as vectors, `c()`. Except if you're passing in a vector as a single argument for `n_closest`, in which case you'd need to wrap things in a `list()`. I'm not sure I've actually used the ability to pass a vector of length h to `n_closest`...
+
+```
+grid = build_grid(
+  h = 30,
+  n_closest = c(5, 10),
+  # even if you only use a single `build_window_args()`, wrap in `list()`
+  window_args = list(build_window_args(20)),
+  # also need to wrap in list
+  sampler_args = list(
+    build_sampler_args(sa_name = "nxt",
+                       sampler = sample_lead(),  # remember to call!
+                       appender = append_lead)
+  )
+)
+```
+
+After building the grid, just pass it to the grid search:
+
+```
+out = grid_search_hot_deck_cv(hotdeckfc::SUGG_temp,
+                              .datetime = date,
+                              .observation = observation,
+                              grid = grid)
+```
+
+##### Evaluating Grid Search
+There are many metrics you can use to evaluate forecast accuracy. In this package, there is `calc_cv_crps()`, which calculates the CRPS for a given CV. You can map the grid search output to this function, e.g.
+
+```
+gs_crps = out %>%
+  purrr::map(\(x) c(x, list(crps = calc_cv_crps(x$cv_out, "observation"))))
+```
+
+There is a plotting function that uses this mapping internally:
+```
+suppressWarnings(
+  plot_grid_search_forecasts(out, hotdeckfc::SUGG_temp)
+)
+```
+
+I've used this mapping as a precursor to a few CRPS metrics (not in the package), such as the total CRPS for a given CV:
+```
+crps_k_sums = function(arg_list, cv_crps_out) {
+  name = paste("wf", sum(arg_list$window_fwd),
+               "wb", sum(arg_list$window_back),
+               "nc", sum(arg_list$n_closest),
+               "sa_name", arg_list$sa_name)
+  cv_crps_out %>% 
+    group_by(k) %>% 
+    select(k, score) %>% 
+    summarise("{name}" := sum(score, na.rm = TRUE)) %>% 
+    ungroup()
+}
+
+gs_crps_k_sums = gs_crps %>% 
+  map(\(x) crps_k_sums(x$arg_list, x$crps)) %>% 
+  reduce(\(acc, nxt) mutate(acc, nxt))
+```
+
+### Parameter Guidelines
+The higher you set `n_closest`, the closer your model approaches just taking all of the local data and giving you something approaching a simple moving average of the climatology model.
+
+`sample_lead()` tends to work well for data that has fairly consistent seasonality. 
+
+`sample_diff()` may be more useful if there is little local data, or if the data takes fairly different paths seasonally.
+
+`sample_covariate_lead()` only seems to be useful if you're desperate, such as forecasting in Spring a dataset that only has target variable observations for Summers. Similarly, I haven't impressed by the results I've gotten using `sample_forecasted_covariate()` (which is why I haven't gotten around to writing up how to use it in this README), but maybe I just need to try a few more datasets.
+
+## Concerning Defaults
+For the data that I have worked with, the parameters used in the example above, namely:
+  - window_back = 20,
+  - window_fwd = 20,
+  - n_closest = 5,
+  - sampler = sample_lead()
+  
+Seem to work well often. However, I have not worked with enough different data sources to feel comfortable foisting these upon others as defaults (except for the Shiny visualizer).
 
 ## Concerning `sampler`s
 Aside from the data and some fairly straightforward parameters, the forecast depends upon a `sampler`. The `sampler` is what gives you your forecasts. All current samplers depend upon some data-derived column added to your existing data. For instance, the default `sampler`, `sampler_lead`, depends upon a column of leads of your observations existing in the data. Each `sampler` currently implemented in this package has a corresponding `append_*` function for adding these required columns.
