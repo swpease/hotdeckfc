@@ -150,9 +150,7 @@ gs_crps = out %>%
 
 There is a plotting function that uses this mapping internally:
 ```
-suppressWarnings(
-  plot_grid_search_forecasts(out, hotdeckfc::SUGG_temp)
-)
+plot_grid_search_crps(out, "observation", ymax = 5)
 ```
 
 I've used this mapping as a precursor to a few CRPS metrics (not in the package), such as the total CRPS for a given CV:
