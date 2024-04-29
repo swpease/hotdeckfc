@@ -27,10 +27,17 @@ test_that("build_na_tibble", {
 test_that("impute mocked cast", {
   # NB: This only works for n_imputations <= 2.
   local_mocked_bindings(
-    cast = function(na_len,
+    cast = function(.data,
+                    .datetime,
+                    .observation,
+                    na_len,
                     forward_start_date,
                     backward_start_date,
-                    n_imputations) {
+                    n_imputations,
+                    window_back,
+                    window_fwd,
+                    n_closest,
+                    sampler) {
       a = tibble::tibble(
         datetime = forward_start_date + 1:na_len,
         forecast = 1,

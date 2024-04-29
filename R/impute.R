@@ -12,7 +12,7 @@
 #' @export
 impute <- function(.data,
                    .observation,
-                   n_imputations,
+                   n_imputations = 5,
                    window_back = 20,
                    window_fwd = 20,
                    n_closest = 5,
@@ -21,9 +21,20 @@ impute <- function(.data,
   date_col = tsibble::index(.data)
 
   na_tibble = build_na_tibble(.data, {{ .observation }})
-  casts = na_tibble %>%
-    purrr::pmap(\(na_len, forward_start_date, backward_start_date) {
-      cast(na_len, forward_start_date, backward_start_date, n_imputations)
+  casts = purrr::pmap(na_tibble,
+                      \(na_len, forward_start_date, backward_start_date) {
+      cast(.data = .data,
+           .datetime = {{ date_col }},
+           .observation = {{ .observation }},
+           na_len,
+           forward_start_date,
+           backward_start_date,
+           n_imputations = n_imputations,
+           window_back = window_back,
+           window_fwd = window_fwd,
+           n_closest = n_closest,
+           sampler = sampler
+           )
     }) %>%
     purrr::reduce(\(acc, nxt) dplyr::bind_rows(acc, nxt))  # , .init = NULL
 
@@ -46,8 +57,27 @@ impute <- function(.data,
 
 
 #' @noRd
-cast <- function(na_len, fwd_start_date, back_start_date, n_imputations) {
-  invisible()
+cast <- function(.data,
+                 .datetime,
+                 .observation,
+                 na_len,
+                 forward_start_date,
+                 backward_start_date,
+                 n_imputations,
+                 window_back,
+                 window_fwd,
+                 n_closest,
+                 sampler) {
+  forecast_for_imputation(.data = .data,
+                          .datetime = {{ .datetime }},
+                          .observation = {{ .observation }},
+                          forward_start_date = forward_start_date,
+                          n_imputations = n_imputations,
+                          na_len = na_len,
+                          window_back = window_back,
+                          window_fwd = window_fwd,
+                          n_closest = n_closest,
+                          sampler = sampler)
 }
 
 #' @noRd
@@ -57,11 +87,14 @@ forecast_for_imputation <- function(.data,
                                     forward_start_date,
                                     n_imputations,  # = times
                                     na_len,  # = h
-                                    window_back = 20,
-                                    window_fwd = 20,
-                                    n_closest = 5,
-                                    sampler = sample_lead("next_obs")) {
+                                    window_back,
+                                    window_fwd,
+                                    n_closest,
+                                    sampler) {
   .data = set_head(.data, forward_start_date)
+  .data = append_lead(.data, {{ .observation }})
+  .data = append_diff(.data, {{ .observation }})
+
   fcs = hot_deck_forecast(.data,
                           {{ .datetime }},
                           {{ .observation }},
@@ -214,4 +247,35 @@ validate_imputation <- function(.data, .observation) {
     stop("Your tsibble's index need to be a `Date`.",
          call. = FALSE)
   }
+}
+
+
+plot_imputation <- function(.imputation, .observation) {
+  x_axis = tsibble::index(.imputation)
+  # b/c tsibble, keeps index col
+  imputations = .imputation %>%
+    dplyr::select(dplyr::starts_with("imputation_")) %>%
+    tibble::as_tibble() %>%
+    tidyr::pivot_longer(!{{ x_axis }},
+                        names_to = "imputation_num",
+                        values_to = "imputed_obs")
+
+  ggplot2::ggplot() +
+    ggplot2::geom_line(
+      data = imputations,
+      mapping = ggplot2::aes(
+        y = imputed_obs,
+        x = {{ x_axis }},
+        color = imputation_num
+      ),
+      show.legend = FALSE,
+      alpha = 0.6
+    ) +
+    ggplot2::geom_line(
+      data = .imputation,
+      mapping = ggplot2::aes(
+        y = {{ .observation }},
+        x = {{ x_axis }}
+      )
+    )
 }

@@ -7,7 +7,7 @@
 impute(
   .data,
   .observation,
-  n_imputations,
+  n_imputations = 5,
   window_back = 20,
   window_fwd = 20,
   n_closest = 5,
