@@ -64,3 +64,37 @@ test_that("non appender", {
 
   expect_equal(data %>% append_nothing(obs), data)
 })
+
+
+test_that("lag appender", {
+  data = tibble(
+    datetime = as.Date("2022-03-31") + 0:9,
+    obs = 1:10
+  ) %>%
+    as_tsibble(index = datetime)
+
+  expected = tibble(
+    datetime = as.Date("2022-03-31") + 0:9,
+    obs = 1:10,
+    next_obs = c(NA, 1:9)
+  ) %>%
+    as_tsibble(index = datetime)
+
+  expect_equal(data %>% append_lag(obs), expected)
+})
+
+
+test_that("lag diff appender", {
+  data = tsibble::tsibble(date = as.Date("2022-02-02") + 0:4,
+                          obs = c(1,3,5,1,10),
+                          index = date)
+
+  expected = tibble(
+    date = as.Date("2022-02-02") + 0:4,
+    obs = c(1,3,5,1,10),
+    diff_to_next_obs = c(NA, -2, -2, 4, -9)
+  ) %>%
+    as_tsibble(index = date)
+
+  expect_equal(data %>% append_lag_diff(obs), expected)
+})

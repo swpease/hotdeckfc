@@ -68,17 +68,104 @@ cast <- function(.data,
                  window_fwd,
                  n_closest,
                  sampler) {
-  forecast_for_imputation(.data = .data,
-                          .datetime = {{ .datetime }},
-                          .observation = {{ .observation }},
-                          forward_start_date = forward_start_date,
-                          n_imputations = n_imputations,
-                          na_len = na_len,
-                          window_back = window_back,
-                          window_fwd = window_fwd,
-                          n_closest = n_closest,
-                          sampler = sampler)
+  forecasts = forecast_for_imputation(.data = .data,
+                                      .datetime = {{ .datetime }},
+                                      .observation = {{ .observation }},
+                                      forward_start_date = forward_start_date,
+                                      n_imputations = n_imputations,
+                                      na_len = na_len,
+                                      window_back = window_back,
+                                      window_fwd = window_fwd,
+                                      n_closest = n_closest,
+                                      sampler = sampler)
+  backcasts = backcast_for_imputation(.data = .data,
+                                      .datetime = {{ .datetime }},
+                                      .observation = {{ .observation }},
+                                      backward_start_date = backward_start_date,
+                                      n_imputations = n_imputations,
+                                      na_len = na_len,
+                                      window_back = window_back,
+                                      window_fwd = window_fwd,
+                                      n_closest = n_closest,
+                                      sampler = sampler)
 }
+
+
+#' @inheritParams hot_deck_forecast
+#' @noRd
+backcast <- function(.data,
+                     .datetime,
+                     .observation,
+                     times,
+                     h,
+                     window_back,
+                     window_fwd,
+                     n_closest,
+                     sampler) {
+  backcasts = NULL
+  for (sim_num_curr in 1:times) {
+    data_curr = .data
+    h_curr = h
+    while (h_curr > 0) {
+      one_step_backcast = hot_deck_forecast(data_curr,
+                                            .datetime = {{ .datetime }},
+                                            .observation = {{ .observation }},
+                                            times = 1,
+                                            h = 1,
+                                            window_back = window_back,
+                                            window_fwd = window_fwd,
+                                            n_closest = n_closest,
+                                            sampler = sampler)
+      one_step_backcast = one_step_backcast %>%
+        dplyr::mutate(h = .env$h_curr,
+                      simulation_num = .env$sim_num_curr)
+      backcasts = dplyr::bind_rows(backcasts, one_step_backcast)
+
+      # Updating dataset
+      new_obs = one_step_backcast %>% dplyr::pull(forecast)
+      data_curr = data_curr %>% dplyr::slice(1:(dplyr::n() - 1))
+      data_curr = data_curr %>% dplyr::mutate(
+        {{ .observation }} := dplyr::if_else(dplyr::row_number() == dplyr::n(),
+                                             .env$new_obs,
+                                             {{ .observation }})
+      )
+      h_curr = h_curr - 1
+    }
+  }
+
+  backcasts
+}
+
+
+
+#' @noRd
+backcast_for_imputation <- function(.data,
+                                    .datetime,
+                                    .observation,
+                                    backward_start_date,
+                                    n_imputations,  # = times
+                                    na_len,  # = h
+                                    window_back,
+                                    window_fwd,
+                                    n_closest,
+                                    sampler) {
+  .data = set_head(.data, backward_start_date)
+  .data = append_lag(.data, {{ .observation }})
+  .data = append_lag_diff(.data, {{ .observation }})
+
+  bcs = backcast(.data,
+                 {{ .datetime }},
+                 {{ .observation }},
+                 times = n_imputations,
+                 h = na_len,
+                 window_back = window_back,
+                 window_fwd = window_fwd,
+                 n_closest = n_closest,
+                 sampler = sampler)
+
+  bcs %>% dplyr::select(-h)  # Useless col for imputation.
+}
+
 
 #' @noRd
 forecast_for_imputation <- function(.data,

@@ -88,3 +88,42 @@ test_that("set_head", {
   out = set_head(data, "2022-02-04")
   expect_equal(out, expected)
 })
+
+
+test_that("backcast", {
+  data = tibble(
+    datetime = c(
+      as.Date("2021-01-01") + 0:1,
+      as.Date("2022-01-01") + 0:2,
+      as.Date("2023-01-01")
+    ),
+    obs = c(
+      2, 7,
+      7, 8, 10,
+      10
+    )
+  ) %>%
+    as_tsibble(index = datetime) %>%
+    fill_gaps()
+  data = append_lag(data, obs)
+
+  expected = tibble(
+    datetime = c(as.Date("2023-01-02") - 0:2,
+                 as.Date("2023-01-02") - 0:2),
+    h = c(3, 2, 1, 3, 2, 1),
+    forecast = c(8, 7, 2, 8, 7, 2),
+    simulation_num = c(1, 1, 1, 2, 2, 2)
+  )
+
+  out = backcast(data,
+                 .datetime = datetime,
+                 .observation = obs,
+                 times = 2,
+                 h = 3,
+                 window_back = 20,
+                 window_fwd = 20,
+                 n_closest = 1,
+                 sampler = sample_lead())
+
+  expect_equal(out, expected)
+})

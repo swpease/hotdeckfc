@@ -128,3 +128,62 @@ append_diff <- function(.data, .observation) {
 append_nothing <- function(.data, .observation) {
   .data
 }
+
+
+#' Append a column of lags
+#'
+#' Appends a new column, named "next_obs", of the prior (i.e. lag) observations.
+#'
+#' The corresponding selector is [sample_lead()].
+#'
+#' This appender is for [impute()] usage, applied internally during
+#' backcasting. Note that the column name is still "next_obs", because
+#' of the kludgy implementation of backcasting (co-opting the
+#' forecasting infrastructure).
+#'
+#' @param .data tsibble. The data.
+#' @param .observation symbol. The observation column.
+#' @returns .data, augmented with a column, named `next_obs`, of lags.
+#'
+#' @examples
+#' data = tsibble::tsibble(date = as.Date("2022-02-02") + 0:9,
+#'                         obs = 1:10,
+#'                         index = date)
+#' append_lag(data, obs)
+#'
+#' @noRd
+append_lag <- function(.data, .observation) {
+  .data %>% mutate(next_obs = dplyr::lag({{ .observation }}))
+}
+
+
+
+
+#' Append a column of differences-to-prior-observation
+#'
+#' Adds a new column, named "diff_to_next_obs", of the differences to the
+#' prior (i.e. lag) observations.
+#'
+#' The corresponding selector is [sample_diff()].
+#'
+#' This appender is for [impute()] usage, applied internally during
+#' backcasting. Note that the column name is still "diff_to_next_obs", because
+#' of the kludgy implementation of backcasting (co-opting the
+#' forecasting infrastructure).
+#'
+#' @param .data tsibble. The data.
+#' @param .observation symbol. The observation column.
+#' @returns .data, augmented with a column, named `diff_to_next_obs`,
+#' of differences to the prior observations.
+#'
+#' @examples
+#' data = tsibble::tsibble(date = as.Date("2022-02-02") + 0:4,
+#'                         obs = c(1,3,5,1,10),
+#'                         index = date)
+#' append_lag_diff(data, obs)
+#'
+#' @noRd
+append_lag_diff <- function(.data, .observation) {
+  .data %>%
+    mutate(diff_to_next_obs = -1 * tsibble::difference({{ .observation }}))
+}
