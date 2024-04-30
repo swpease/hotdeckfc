@@ -49,19 +49,33 @@ impute <- function(.data,
   na_tibble = build_na_tibble(.data, {{ .observation }})
   casts = purrr::pmap(na_tibble,
                       \(na_len, forward_start_date, backward_start_date) {
-      cast(.data = .data,
-           .datetime = {{ date_col }},
-           .observation = {{ .observation }},
-           na_len,
-           forward_start_date,
-           backward_start_date,
-           max_gap = max_gap,
-           n_imputations = n_imputations,
-           window_back = window_back,
-           window_fwd = window_fwd,
-           n_closest = n_closest,
-           sampler = sampler
-           )
+      tryCatch(
+        expr = cast(.data = .data,
+                    .datetime = {{ date_col }},
+                    .observation = {{ .observation }},
+                    na_len,
+                    forward_start_date,
+                    backward_start_date,
+                    max_gap = max_gap,
+                    n_imputations = n_imputations,
+                    window_back = window_back,
+                    window_fwd = window_fwd,
+                    n_closest = n_closest,
+                    sampler = sampler),
+        error = function(e) {
+          # grep returns integer(0) if no matches; index of first match if match
+          added_msg = if (length(grep("No local values", conditionMessage(e), fixed = TRUE)) > 0) {
+            paste("\n\nTry setting a smaller `max_gap`\n",
+                  "and/or larger `window_back` and/or larger `window_fwd`.\n\n")
+          } else {
+            ""
+          }
+          stop(paste("\nHot Deck Error Msg:\n", conditionMessage(e),
+                     added_msg),
+               call. = FALSE)
+        }
+      )
+
     }) %>%
     purrr::reduce(\(acc, nxt) dplyr::bind_rows(acc, nxt))  # , .init = NULL
 
@@ -116,7 +130,7 @@ cast <- function(.data,
                  n_closest,
                  sampler) {
   if (na_len > max_gap) {
-    sim_nums = purrr:::map(1:n_imputations, \(x) rep(x, na_len)) %>% purrr::list_c()
+    sim_nums = purrr::map(1:n_imputations, \(x) rep(x, na_len)) %>% purrr::list_c()
     tibble::tibble(
       datetime = rep(forward_start_date + 1:na_len, n_imputations),
       simulation_num = sim_nums,

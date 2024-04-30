@@ -71,6 +71,16 @@ test_that("impute", {
 })
 
 
+test_that("imputation errors", {
+  data = readr::read_csv(test_path("CRAM_target_temp_data.csv")) %>%
+    dplyr::select(-site_id, -field_site_subtype) %>%
+    tsibble::as_tsibble(index = datetime) %>%
+    tsibble::fill_gaps()
+  expect_error(suppressWarnings(impute(data, observation)),
+               regexp = "Try setting a smaller `max_gap`")
+})
+
+
 test_that("impute mocked cast", {
   # NB: This only works for n_imputations <= 2.
   local_mocked_bindings(
