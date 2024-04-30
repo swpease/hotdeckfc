@@ -2,9 +2,30 @@
 #'
 #' Impute using hot deck forecasting.
 #'
+#' `max_gap` and your windows are related. If your window contains no
+#' observations, then the imputation will error. So, you need to make sure
+#' that the `max_gap` is small enough -- or that your window is wide enough --
+#' so that there are always observations to sample from.
+#'
+#' `window_back`, `window_fwd`, and `n_closest` are restricted to being
+#' scalars for imputation (they can be vectors when calling
+#' [hot_deck_forecast()]).
+#'
+#' For `sampler`, `"diff"` can be tried if `"lead"` isn't producing
+#' sensible forecasts. It uses differences between observations -- rather
+#' than taking those adjacent observations -- to generate the imputed
+#' values. As such, it can inject some diversity into sparse regions.
+#'
 #' @param .data tsibble. The data
 #' @param .observation symbol. The observations column.
+#' @param max_gap integer. Largest gap size to impute. Larger gaps return NAs.
 #' @param n_imputations integer. Number of imputations to perform.
+#' @param window_back integer.
+#'   How many days back to include in the window for a given season.
+#' @param window_fwd integer.
+#'   How many days forward to include in the window for a given season.
+#' @param n_closest integer.
+#'   The number of closest observations to pick from per hot deck random sampling.
 #' @inheritParams hot_deck_forecast
 #' @returns .data, augmented with `n_imputations` new columns of imputed
 #'   observations, named "imputation_{n}".
@@ -12,11 +33,16 @@
 #' @export
 impute <- function(.data,
                    .observation,
+                   max_gap = 1000,
                    n_imputations = 5,
                    window_back = 20,
                    window_fwd = 20,
                    n_closest = 5,
-                   sampler = sample_lead("next_obs")) {
+                   sampler = c("lead", "diff")) {
+  # I'm restricting the user's sampler options b/c of backcasting-related
+  # restrictions.
+  sampler = match.arg(sampler)
+  sampler = if (sampler == "lead") sample_lead() else sample_diff()
   # TODO: validation
   date_col = tsibble::index(.data)
 
@@ -29,6 +55,7 @@ impute <- function(.data,
            na_len,
            forward_start_date,
            backward_start_date,
+           max_gap = max_gap,
            n_imputations = n_imputations,
            window_back = window_back,
            window_fwd = window_fwd,
@@ -56,6 +83,25 @@ impute <- function(.data,
 }
 
 
+#' Cast an NA contig
+#'
+#' Cast (fore + back melded) a contiguous sequence of NAs.
+#'
+#' See [build_na_tibble()] for details on `na_len`, `forward_start_date`,
+#' and `backward_start_date`.
+#'
+#' @param .datetime symbol. The dates column.
+#' @param na_len integer. The length of the NA contig.
+#' @param forward_start_date Date. The date from which to being forecasting.
+#' @param backward_start_date Date. The date from which to being backcasting.
+#' @inheritParams impute
+#' @inheritParams hot_deck_forecast
+#' @returns tibble of casts:
+#'   - nrow = na_len * n_imputations,
+#'   - columns:
+#'     - simulation_num: the simulated sample path number
+#'     - datetime: the date for the cast
+#'     - forecast: the casted value
 #' @noRd
 cast <- function(.data,
                  .datetime,
@@ -63,31 +109,102 @@ cast <- function(.data,
                  na_len,
                  forward_start_date,
                  backward_start_date,
+                 max_gap,
                  n_imputations,
                  window_back,
                  window_fwd,
                  n_closest,
                  sampler) {
-  forecasts = forecast_for_imputation(.data = .data,
-                                      .datetime = {{ .datetime }},
-                                      .observation = {{ .observation }},
-                                      forward_start_date = forward_start_date,
-                                      n_imputations = n_imputations,
-                                      na_len = na_len,
-                                      window_back = window_back,
-                                      window_fwd = window_fwd,
-                                      n_closest = n_closest,
-                                      sampler = sampler)
-  backcasts = backcast_for_imputation(.data = .data,
-                                      .datetime = {{ .datetime }},
-                                      .observation = {{ .observation }},
-                                      backward_start_date = backward_start_date,
-                                      n_imputations = n_imputations,
-                                      na_len = na_len,
-                                      window_back = window_back,
-                                      window_fwd = window_fwd,
-                                      n_closest = n_closest,
-                                      sampler = sampler)
+  if (na_len > max_gap) {
+    sim_nums = purrr:::map(1:n_imputations, \(x) rep(x, na_len)) %>% purrr::list_c()
+    tibble::tibble(
+      datetime = rep(forward_start_date + 1:na_len, n_imputations),
+      simulation_num = sim_nums,
+      forecast = NA
+    )
+  } else {
+    forecasts = forecast_for_imputation(.data = .data,
+                                        .datetime = {{ .datetime }},
+                                        .observation = {{ .observation }},
+                                        forward_start_date = forward_start_date,
+                                        n_imputations = n_imputations,
+                                        na_len = na_len,
+                                        window_back = window_back,
+                                        window_fwd = window_fwd,
+                                        n_closest = n_closest,
+                                        sampler = sampler)
+    backcasts = backcast_for_imputation(.data = .data,
+                                        .datetime = {{ .datetime }},
+                                        .observation = {{ .observation }},
+                                        backward_start_date = backward_start_date,
+                                        n_imputations = n_imputations,
+                                        na_len = na_len,
+                                        window_back = window_back,
+                                        window_fwd = window_fwd,
+                                        n_closest = n_closest,
+                                        sampler = sampler)
+
+    meld(forecasts, backcasts)
+  }
+}
+
+
+#' Meld forecasts and backcasts
+#'
+#' Meld forecasts and backcasts, yeilding combined casts.
+#'
+#' Finds the closest point between the forecasts and backcasts for each
+#' `simulation_num`, then creates a melded cast where points prior to
+#' said closest point are from the forecast, points after are from the
+#' backcast, and the point in question is taken as the average between the two.
+#'
+#' @param forecasts tibble. Output of [forecast_for_imputation()]
+#' @param backcasts tibble. Output of [backcast_for_imputation()]
+#' @returns tibble.
+#' @noRd
+meld <- function(forecasts, backcasts) {
+  casts = dplyr::inner_join(forecasts,
+                            backcasts,
+                            by = dplyr::join_by(datetime, simulation_num),
+                            suffix = c(".fc", ".bc"),
+                            unmatched = "error")
+  casts = casts %>% dplyr::mutate(diff = abs(forecast.fc - forecast.bc))
+  casts = casts %>%
+    dplyr::group_by(simulation_num) %>%
+    dplyr::group_modify(.f = group_meld) %>%
+    dplyr::ungroup()
+
+  casts
+}
+
+
+#' Helper function for [meld()]
+#'
+#' This function does the actual melding.
+#'
+#' @param grp The group data (without the grouping cols)
+#' @param .by The corresponding grouping values
+#' @noRd
+group_meld <- function(grp, .by) {
+  diff = grp %>% dplyr::pull(diff)
+  min_diff = min(diff)
+  min_diff_idx = purrr::detect_index(diff, \(x) x == min_diff)
+  avg_at_min = grp %>%
+    dplyr::slice(min_diff_idx) %>%
+    dplyr::mutate(avg = (forecast.fc + forecast.bc) / 2) %>%
+    dplyr::pull(avg)
+
+  grp = grp %>% dplyr::mutate(idx = dplyr::row_number())
+
+  grp = grp %>% dplyr::mutate(
+    forecast = dplyr::case_when(
+      idx < min_diff_idx ~ forecast.fc,
+      idx == min_diff_idx ~ avg_at_min,
+      idx > min_diff_idx ~ forecast.bc
+    )
+  )
+
+  grp %>% dplyr::select(datetime, forecast)
 }
 
 
@@ -117,7 +234,9 @@ backcast <- function(.data,
                                             n_closest = n_closest,
                                             sampler = sampler)
       one_step_backcast = one_step_backcast %>%
-        dplyr::mutate(h = .env$h_curr,
+        # hdfc puts date as next; we want prior. c.f. forecast.R#269
+        dplyr::mutate(datetime = datetime - 2,
+                      h = .env$h_curr,
                       simulation_num = .env$sim_num_curr)
       backcasts = dplyr::bind_rows(backcasts, one_step_backcast)
 
@@ -137,7 +256,23 @@ backcast <- function(.data,
 }
 
 
-
+#' Backcast an NA contig
+#'
+#' Backcast a contiguous sequence of NAs.
+#'
+#' This method handles the details that make the backcasting aspect
+#' of the imputation work. It adjusts the leading date, calls the `append`ers
+#' -- which I don't want to bother the user with -- and removes the `h` column
+#' from the backcast.
+#'
+#' @inheritParams hot_deck_forecast
+#' @inheritParams cast
+#' @returns tibble of backcasts:
+#'   - nrow = na_len * n_imputations,
+#'   - columns:
+#'     - datetime: the date for the backcast
+#'     - forecast: the backcasted value
+#'     - simulation_num: the simulated sample path number
 #' @noRd
 backcast_for_imputation <- function(.data,
                                     .datetime,
@@ -167,6 +302,23 @@ backcast_for_imputation <- function(.data,
 }
 
 
+#' Forecast an NA contig
+#'
+#' Forecast a contiguous sequence of NAs.
+#'
+#' This method handles the details that make the forecasting aspect
+#' of the imputation work. It adjusts the leading date, calls the `append`ers
+#' -- which I don't want to bother the user with -- and removes the `h` column
+#' from the forecast.
+#'
+#' @inheritParams hot_deck_forecast
+#' @inheritParams cast
+#' @returns tibble of forecasts:
+#'   - nrow = na_len * n_imputations,
+#'   - columns:
+#'     - datetime: the date for the forecast
+#'     - forecast: the forecasted value
+#'     - simulation_num: the simulated sample path number
 #' @noRd
 forecast_for_imputation <- function(.data,
                                     .datetime,
@@ -228,7 +380,7 @@ set_head <- function(.data, date) {
 
 #' Build NA tibble
 #'
-#' Build tibble of lengths, start dates, and end dates for missing data.
+#' Build tibble of lengths, start dates (-1), and end dates (+1) for missing data.
 #'
 #' For each row of the output, you can think of the `forward_start_date` (and
 #' `backward_start_date`) as equivalent to the observation you would use for
@@ -259,16 +411,18 @@ build_na_tibble <- function(.data, .observation) {
   fwd_start_dates = augmented_data %>%
     dplyr::filter(!is.na({{ .observation }}),
                   is.na(lead_obs)) %>%
-    dplyr::slice(1:(dplyr::n() - 1)) %>%
+    dplyr::slice(1:(dplyr::n() - 1)) %>%  # Final obs always has NA for lead
     dplyr::pull(.env$date_col)
   back_start_dates = augmented_data %>%
     dplyr::filter(!is.na({{ .observation }}),
                   is.na(lag_obs)) %>%
-    dplyr::slice(2:dplyr::n()) %>%
+    dplyr::slice(2:dplyr::n()) %>%  # First obs always has NA for lag
     dplyr::pull(.env$date_col)
+  # ... also re slicing, don't want to include any leading/trailing NAs
+  # anyway. c.f. `trim_nas`, below.
 
   obses = .data %>% dplyr::pull({{ .observation }})
-  trimmed_obses = trim_nas(obses)
+  trimmed_obses = trim_nas(obses)  # Only deal w/ NAs bounded by obses
   na_rle = rle(is.na(trimmed_obses))
   na_lens = na_rle$length[na_rle$value]
 

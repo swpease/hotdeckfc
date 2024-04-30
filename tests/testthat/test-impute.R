@@ -24,6 +24,53 @@ test_that("build_na_tibble", {
 })
 
 
+test_that("impute", {
+  data = tsibble::tsibble(
+    date = c(
+      as.Date("2021-02-10") + 0:3,
+      as.Date("2022-02-11") + 0:4,
+      as.Date("2023-02-12") + 0:3
+    ),
+    obs = c(
+      1,2,3,4,
+      1,NA,NA,NA,1,
+      20,5,10,1
+    ),
+    index = date
+  ) %>% tsibble::fill_gaps()
+
+  expected = tsibble::tsibble(
+    date = c(
+      as.Date("2021-02-10") + 0:3,
+      as.Date("2022-02-11") + 0:4,
+      as.Date("2023-02-12") + 0:3
+    ),
+    obs = c(
+      1,2,3,4,
+      1,NA,NA,NA,1,
+      20,5,10,1
+    ),
+    imputation_1 = c(
+      1,2,3,4,
+      1,2,4,10,1,
+      20,5,10,1
+    ),
+    index = date
+  ) %>% tsibble::fill_gaps()
+
+  out = impute(data,
+               .observation = obs,
+               max_gap = 3,
+               n_imputations = 1,
+               window_back = 1,
+               window_fwd = 1,
+               n_closest = 1,
+               sampler = "lead")
+
+  expect_equal(out, expected)
+})
+
+
 test_that("impute mocked cast", {
   # NB: This only works for n_imputations <= 2.
   local_mocked_bindings(
@@ -33,6 +80,7 @@ test_that("impute mocked cast", {
                     na_len,
                     forward_start_date,
                     backward_start_date,
+                    max_gap,
                     n_imputations,
                     window_back,
                     window_fwd,
@@ -65,7 +113,7 @@ test_that("impute mocked cast", {
     index = date
   )
 
-  out = impute(data, obs, n_imputations = 2)
+  out = impute(data, obs, max_gap = 30, n_imputations = 2, sampler = "lead")
   expect_equal(out, expected)
 })
 
@@ -108,8 +156,8 @@ test_that("backcast", {
   data = append_lag(data, obs)
 
   expected = tibble(
-    datetime = c(as.Date("2023-01-02") - 0:2,
-                 as.Date("2023-01-02") - 0:2),
+    datetime = c(as.Date("2022-12-31") - 0:2,
+                 as.Date("2022-12-31") - 0:2),
     h = c(3, 2, 1, 3, 2, 1),
     forecast = c(8, 7, 2, 8, 7, 2),
     simulation_num = c(1, 1, 1, 2, 2, 2)

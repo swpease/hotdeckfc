@@ -7,11 +7,12 @@
 impute(
   .data,
   .observation,
+  max_gap = 1000,
   n_imputations = 5,
   window_back = 20,
   window_fwd = 20,
   n_closest = 5,
-  sampler = sample_lead("next_obs")
+  sampler = c("lead", "diff")
 )
 }
 \arguments{
@@ -19,19 +20,18 @@ impute(
 
 \item{.observation}{symbol. The observations column.}
 
+\item{max_gap}{integer. Largest gap size to impute. Larger gaps return NAs.}
+
 \item{n_imputations}{integer. Number of imputations to perform.}
 
-\item{window_back}{integer (scalar OR vector).
-How many days back to include in the window for a given season.
-Either scalar (length == 1) or vector of length == h.}
+\item{window_back}{integer.
+How many days back to include in the window for a given season.}
 
-\item{window_fwd}{integer (scalar OR vector).
-How many days forward to include in the window for a given season.
-Either scalar (length == 1) or vector of length == h.}
+\item{window_fwd}{integer.
+How many days forward to include in the window for a given season.}
 
-\item{n_closest}{integer (scalar OR vector).
-The number of closest observations to pick from per hot deck random sampling.
-Either scalar (length == 1) or vector of length == h.}
+\item{n_closest}{integer.
+The number of closest observations to pick from per hot deck random sampling.}
 
 \item{sampler}{Sampler function to generate forecasted values.}
 }
@@ -41,4 +41,19 @@ observations, named "imputation_{n}".
 }
 \description{
 Impute using hot deck forecasting.
+}
+\details{
+\code{max_gap} and your windows are related. If your window contains no
+observations, then the imputation will error. So, you need to make sure
+that the \code{max_gap} is small enough -- or that your window is wide enough --
+so that there are always observations to sample from.
+
+\code{window_back}, \code{window_fwd}, and \code{n_closest} are restricted to being
+scalars for imputation (they can be vectors when calling
+\code{\link[=hot_deck_forecast]{hot_deck_forecast()}}).
+
+For \code{sampler}, \code{"diff"} can be tried if \code{"lead"} isn't producing
+sensible forecasts. It uses differences between observations -- rather
+than taking those adjacent observations -- to generate the imputed
+values. As such, it can inject some diversity into sparse regions.
 }
