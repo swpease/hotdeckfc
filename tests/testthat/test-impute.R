@@ -72,12 +72,64 @@ test_that("impute", {
 
 
 test_that("imputation errors", {
+  # NA sequence too big
   data = readr::read_csv(test_path("CRAM_target_temp_data.csv")) %>%
     dplyr::select(-site_id, -field_site_subtype) %>%
     tsibble::as_tsibble(index = datetime) %>%
     tsibble::fill_gaps()
   expect_error(suppressWarnings(impute(data, observation)),
                regexp = "Try setting a smaller `max_gap`")
+
+  # Not a tsibble
+  data = readr::read_csv(test_path("CRAM_target_temp_data.csv"))
+  expect_error(impute(data, observation),
+               regexp = "needs to be a `tsibble`")
+
+  # tsibble has gaps
+  data_w_gaps = tibble(
+    datetime = c(
+      as.Date("2021-01-01") + 0:3,
+      as.Date("2022-04-01") + 0:3,
+      as.Date("2023-01-01") + 0:2
+    ),
+    obs = c(
+      1, 3, 1, 2,
+      1, 1, 1, 1,
+      1, 2, 3
+    )
+  ) %>%
+    as_tsibble(index = datetime)
+  expect_error(impute(data_w_gaps, obs),
+               regexp = "gap")
+
+
+  # multi-key tsibble
+  data_w_keys = tibble(
+    datetime = c(
+      as.Date("2021-01-01") + 0:3,
+      as.Date("2022-04-01") + 0:3,
+      as.Date("2023-01-01") + 0:2
+    ),
+    obs = c(
+      1, 3, 1, 2,
+      1, 1, 1, 1,
+      1, 2, 3
+    ),
+    k = c(rep("A", 4), rep("B", 7))
+  ) %>%
+    as_tsibble(index = datetime, key = k)
+  expect_error(impute(data_w_keys, obs),
+               regexp = "key")
+
+
+  # tsibble index not Date
+  data_w_posix = tibble(
+    datetime = c(as.POSIXct("2021-01-01") + 0:1),
+    obs = c(1, 3)
+  ) %>%
+    as_tsibble(index = datetime)
+  expect_error(impute(data_w_posix, obs),
+               regexp = "to be a `Date`")
 })
 
 

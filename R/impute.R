@@ -2,6 +2,12 @@
 #'
 #' Impute using hot deck forecasting.
 #'
+#' Restrictions on the input data:
+#'   1. The data is a `tsibble`.
+#'   2. The tsibble is not multi-keyed (i.e. multiple time serieses).
+#'   3. The data has no gaps (i.e. missing rows; NA observations okay).
+#'   4. The index is a Date.
+#'
 #' `max_gap` and your windows are related. If your window contains no
 #' observations, then the imputation will error. So, you need to make sure
 #' that the `max_gap` is small enough -- or that your window is wide enough --
@@ -39,11 +45,13 @@ impute <- function(.data,
                    window_fwd = 20,
                    n_closest = 5,
                    sampler = c("lead", "diff")) {
+  validate_impute_input_data(.data, {{ .observation }})
+
   # I'm restricting the user's sampler options b/c of backcasting-related
   # restrictions.
   sampler = match.arg(sampler)
   sampler = if (sampler == "lead") sample_lead() else sample_diff()
-  # TODO: validation
+
   date_col = tsibble::index(.data)
 
   na_tibble = build_na_tibble(.data, {{ .observation }})
@@ -476,7 +484,7 @@ trim_nas <- function(vec) {
 #' @inheritParams impute
 #'
 #' @noRd
-validate_imputation <- function(.data, .observation) {
+validate_impute_input_data <- function(data, .observation) {
   if (isFALSE(tsibble::is_tsibble(data))) {
     stop("Your data needs to be a `tsibble`.", call. = FALSE)
   }
@@ -495,16 +503,24 @@ validate_imputation <- function(.data, .observation) {
          call. = FALSE)
   }
 
-  is_date = .data %>%
+  is_date = data %>%
     dplyr::pull(tsibble::index(.)) %>%
     is.Date()
   if (isFALSE(is_date)) {
-    stop("Your tsibble's index need to be a `Date`.",
+    stop("Your tsibble's index needs to be a `Date`.",
          call. = FALSE)
   }
 }
 
 
+#' Plot imputation
+#'
+#' Plot output of [impute()]
+#'
+#' @param .imputation Output of [impute()].
+#' @param .observation symbol. The observations column.
+#'
+#' @export
 plot_imputation <- function(.imputation, .observation) {
   x_axis = tsibble::index(.imputation)
   # b/c tsibble, keeps index col

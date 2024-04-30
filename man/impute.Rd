@@ -43,6 +43,14 @@ observations, named "imputation_{n}".
 Impute using hot deck forecasting.
 }
 \details{
+Restrictions on the input data:
+\enumerate{
+\item The data is a \code{tsibble}.
+\item The tsibble is not multi-keyed (i.e. multiple time serieses).
+\item The data has no gaps (i.e. missing rows; NA observations okay).
+\item The index is a Date.
+}
+
 \code{max_gap} and your windows are related. If your window contains no
 observations, then the imputation will error. So, you need to make sure
 that the \code{max_gap} is small enough -- or that your window is wide enough --
