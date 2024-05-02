@@ -7,12 +7,12 @@
 plot_imputation(.imputation, .observation)
 }
 \arguments{
-\item{.imputation}{Output of \code{\link[=impute]{impute()}}.}
+\item{.imputation}{Output of \code{\link[=hot_deck_impute]{hot_deck_impute()}}.}
 
 \item{.observation}{symbol. The observations column.}
 }
 \description{
-Plot output of \code{\link[=impute]{impute()}}.
+Plot output of \code{\link[=hot_deck_impute]{hot_deck_impute()}}.
 }
 \details{
 This is a basic plot of your data over time, with the imputations added

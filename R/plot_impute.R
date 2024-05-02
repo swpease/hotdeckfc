@@ -1,11 +1,11 @@
 #' Plot imputation
 #'
-#' Plot output of [impute()].
+#' Plot output of [hot_deck_impute()].
 #'
 #' This is a basic plot of your data over time, with the imputations added
 #' as colored lines.
 #'
-#' @param .imputation Output of [impute()].
+#' @param .imputation Output of [hot_deck_impute()].
 #' @param .observation symbol. The observations column.
 #'
 #' @export

@@ -37,14 +37,14 @@
 #'   observations, named "imputation_{n}".
 #'
 #' @export
-impute <- function(.data,
-                   .observation,
-                   max_gap = 1000,
-                   n_imputations = 5,
-                   window_back = 20,
-                   window_fwd = 20,
-                   n_closest = 5,
-                   sampler = c("lead", "diff")) {
+hot_deck_impute <- function(.data,
+                            .observation,
+                            max_gap = 1000,
+                            n_imputations = 5,
+                            window_back = 20,
+                            window_fwd = 20,
+                            n_closest = 5,
+                            sampler = c("lead", "diff")) {
   validate_impute_input_data(.data, {{ .observation }})
 
   # I'm restricting the user's sampler options b/c of backcasting-related
@@ -116,7 +116,7 @@ impute <- function(.data,
 #' @param na_len integer. The length of the NA contig.
 #' @param forward_start_date Date. The date from which to being forecasting.
 #' @param backward_start_date Date. The date from which to being backcasting.
-#' @inheritParams impute
+#' @inheritParams hot_deck_impute
 #' @inheritParams hot_deck_forecast
 #' @returns tibble of casts:
 #'   - nrow = na_len * n_imputations,
@@ -471,9 +471,9 @@ trim_nas <- function(vec) {
 }
 
 
-#' [impute()] validation
+#' [hot_deck_impute()] validation
 #'
-#' Validation for [impute()].
+#' Validation for [hot_deck_impute()].
 #'
 #' Checks that:
 #'   1. The data is a `tsibble`.
@@ -481,7 +481,7 @@ trim_nas <- function(vec) {
 #'   3. The data has no gaps (i.e. missing rows; NA observations okay).
 #'   4. The index is a Date.
 #'
-#' @inheritParams impute
+#' @inheritParams hot_deck_impute
 #'
 #' @noRd
 validate_impute_input_data <- function(data, .observation) {
@@ -491,7 +491,7 @@ validate_impute_input_data <- function(data, .observation) {
 
   # keyless tsibbles have n_keys == 1
   if (tsibble::n_keys(data) > 1) {
-    stop(paste("`impute` cannot handle multi-key tsibbles.\n",
+    stop(paste("`hot_deck_impute` cannot handle multi-key tsibbles.\n",
                "Multiple keys means multiple time series.",
                "Examine your keys with `tsibble::key`,",
                "and filter to one key's data."))

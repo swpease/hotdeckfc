@@ -58,14 +58,14 @@ test_that("impute", {
     index = date
   ) %>% tsibble::fill_gaps()
 
-  out = impute(data,
-               .observation = obs,
-               max_gap = 3,
-               n_imputations = 1,
-               window_back = 1,
-               window_fwd = 1,
-               n_closest = 1,
-               sampler = "lead")
+  out = hot_deck_impute(data,
+                        .observation = obs,
+                        max_gap = 3,
+                        n_imputations = 1,
+                        window_back = 1,
+                        window_fwd = 1,
+                        n_closest = 1,
+                        sampler = "lead")
 
   expect_equal(out, expected)
 })
@@ -106,14 +106,14 @@ test_that("impute using diff", {
     index = date
   ) %>% tsibble::fill_gaps()
 
-  out = impute(data,
-               .observation = obs,
-               max_gap = 3,
-               n_imputations = 1,
-               window_back = 1,
-               window_fwd = 1,
-               n_closest = 1,
-               sampler = "diff")
+  out = hot_deck_impute(data,
+                        .observation = obs,
+                        max_gap = 3,
+                        n_imputations = 1,
+                        window_back = 1,
+                        window_fwd = 1,
+                        n_closest = 1,
+                        sampler = "diff")
 
   expect_equal(out, expected)
 })
@@ -153,14 +153,14 @@ test_that("impute two gaps", {
     index = date
   ) %>% tsibble::fill_gaps()
 
-  out = impute(data,
-               .observation = obs,
-               max_gap = 3,
-               n_imputations = 1,
-               window_back = 1,
-               window_fwd = 1,
-               n_closest = 1,
-               sampler = "lead")
+  out = hot_deck_impute(data,
+                        .observation = obs,
+                        max_gap = 3,
+                        n_imputations = 1,
+                        window_back = 1,
+                        window_fwd = 1,
+                        n_closest = 1,
+                        sampler = "lead")
 
   expect_equal(out, expected)
 })
@@ -172,12 +172,12 @@ test_that("imputation errors", {
     dplyr::select(-site_id, -field_site_subtype) %>%
     tsibble::as_tsibble(index = datetime) %>%
     tsibble::fill_gaps()
-  expect_error(suppressWarnings(impute(data, observation)),
+  expect_error(suppressWarnings(hot_deck_impute(data, observation)),
                regexp = "Try setting a smaller `max_gap`")
 
   # Not a tsibble
   data = readr::read_csv(test_path("CRAM_target_temp_data.csv"))
-  expect_error(impute(data, observation),
+  expect_error(hot_deck_impute(data, observation),
                regexp = "needs to be a `tsibble`")
 
   # tsibble has gaps
@@ -194,7 +194,7 @@ test_that("imputation errors", {
     )
   ) %>%
     as_tsibble(index = datetime)
-  expect_error(impute(data_w_gaps, obs),
+  expect_error(hot_deck_impute(data_w_gaps, obs),
                regexp = "gap")
 
 
@@ -213,7 +213,7 @@ test_that("imputation errors", {
     k = c(rep("A", 4), rep("B", 7))
   ) %>%
     as_tsibble(index = datetime, key = k)
-  expect_error(impute(data_w_keys, obs),
+  expect_error(hot_deck_impute(data_w_keys, obs),
                regexp = "key")
 
 
@@ -223,7 +223,7 @@ test_that("imputation errors", {
     obs = c(1, 3)
   ) %>%
     as_tsibble(index = datetime)
-  expect_error(impute(data_w_posix, obs),
+  expect_error(hot_deck_impute(data_w_posix, obs),
                regexp = "to be a `Date`")
 })
 
@@ -270,7 +270,7 @@ test_that("impute mocked cast", {
     index = date
   )
 
-  out = impute(data, obs, max_gap = 30, n_imputations = 2, sampler = "lead")
+  out = hot_deck_impute(data, obs, max_gap = 30, n_imputations = 2, sampler = "lead")
   expect_equal(out, expected)
 })
 
