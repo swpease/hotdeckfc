@@ -10,9 +10,9 @@ hot_deck_forecast(
   .observation,
   times,
   h,
-  window_back,
-  window_fwd,
-  n_closest,
+  window_back = 20,
+  window_fwd = 20,
+  n_closest = 5,
   sampler = sample_lead("next_obs"),
   covariate_forecasts = NULL
 )
