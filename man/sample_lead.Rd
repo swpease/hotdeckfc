@@ -32,7 +32,7 @@ the next \code{current_obs} and the \code{forecast}.
 For \code{n_closest}, \code{dplyr::slice_min} is used, and tie values are included.
 }
 \examples{
-data = append_lead(hotdeckfc::SUGG_temp, observation)
+data = append_lead(hotdeckts::SUGG_temp, observation)
 data = trim_leading_nas(data, observation)
 out = hot_deck_forecast(data,
                         .datetime = date,

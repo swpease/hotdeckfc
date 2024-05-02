@@ -45,7 +45,7 @@ is good for zig-zaggy forecasts, because in these cases, "line" yeilds a
 spiky blob.
 }
 \examples{
-data = append_lead(hotdeckfc::SUGG_temp, observation)
+data = append_lead(hotdeckts::SUGG_temp, observation)
 fc = hot_deck_forecast(data,
                        date,
                        observation,

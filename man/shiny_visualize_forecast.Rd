@@ -35,7 +35,7 @@ Currently, this widget doesn't allow for vectors to be passed to those
 forecasting parameters that can take vectors (\verb{window_*}, \code{n_closest}).
 }
 \examples{
-data = append_lead(hotdeckfc::SUGG_temp, observation)
+data = append_lead(hotdeckts::SUGG_temp, observation)
 #shiny_visualize_forecast(data, date, observation)
 
 

@@ -64,7 +64,7 @@
 #'       - k: the CV number, i.e. the hot deck forecast number
 #'
 #' @examples
-#' out = cv_hot_deck_forecast(hotdeckfc::SUGG_temp,
+#' out = cv_hot_deck_forecast(hotdeckts::SUGG_temp,
 #'                            .datetime = date,
 #'                            .observation = observation,
 #'                            times = 30,
@@ -296,7 +296,7 @@ train_test_split <- function(.data,
 #' which is the CRPS of the simulated values against the given observation.
 #'
 #' @examples
-#' cv_out = cv_hot_deck_forecast(hotdeckfc::SUGG_temp,
+#' cv_out = cv_hot_deck_forecast(hotdeckts::SUGG_temp,
 #'                               .datetime = date,
 #'                               .observation = observation,
 #'                               times = 3,

@@ -50,10 +50,10 @@ grid = build_grid(
                        appender = append_lead)
   )
 )
-out = grid_search_hot_deck_cv(hotdeckfc::SUGG_temp,
+out = grid_search_hot_deck_cv(hotdeckts::SUGG_temp,
                               .datetime = date,
                               .observation = observation,
                               grid = grid)
-suppressWarnings(plot_grid_search_forecasts(out, hotdeckfc::SUGG_temp))
+suppressWarnings(plot_grid_search_forecasts(out, hotdeckts::SUGG_temp))
 
 }

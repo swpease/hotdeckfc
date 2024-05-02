@@ -19,7 +19,7 @@
 #' @returns Partially applied function to be passed to [hot_deck_forecast()].
 #'
 #' @examples
-#' data = append_lead(hotdeckfc::SUGG_temp, observation)
+#' data = append_lead(hotdeckts::SUGG_temp, observation)
 #' data = trim_leading_nas(data, observation)
 #' out = hot_deck_forecast(data,
 #'                         .datetime = date,
@@ -97,7 +97,7 @@ internal_sample_lead <- function(local_rows,
 #' @returns Partially applied function to be passed to [hot_deck_forecast()].
 #'
 #' @examples
-#' data = dplyr::mutate(hotdeckfc::SUGG_temp,
+#' data = dplyr::mutate(hotdeckts::SUGG_temp,
 #'                      cov_obs = observation + rnorm(n = 1, sd = 3))  # fake cov data
 #' data = append_lead_cov_lead(data, cov_obs, "observation")
 #' data = trim_leading_nas(data, observation)
@@ -225,7 +225,7 @@ internal_sample_covariate_lead <- function(local_rows,
 #'
 #' @examples
 #' # Have fun!
-#' data = dplyr::mutate(hotdeckfc::SUGG_temp,
+#' data = dplyr::mutate(hotdeckts::SUGG_temp,
 #'                      cov_obs = observation + rnorm(n = 1, sd = 3))  # fake cov data
 #' data = append_lead(data, observation)
 #' data = trim_leading_nas(data, observation)
@@ -369,7 +369,7 @@ internal_sample_forecasted_covariate <- function(local_rows,
 #' @returns Partially applied function to be passed to [hot_deck_forecast()].
 #'
 #' @examples
-#' data = append_diff(hotdeckfc::SUGG_temp, observation)
+#' data = append_diff(hotdeckts::SUGG_temp, observation)
 #' data = trim_leading_nas(data, observation)
 #' out = hot_deck_forecast(data,
 #'                         .datetime = date,

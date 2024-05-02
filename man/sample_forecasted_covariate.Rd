@@ -81,7 +81,7 @@ as the next \code{current_obs}.
 }
 \examples{
 # Have fun!
-data = dplyr::mutate(hotdeckfc::SUGG_temp,
+data = dplyr::mutate(hotdeckts::SUGG_temp,
                      cov_obs = observation + rnorm(n = 1, sd = 3))  # fake cov data
 data = append_lead(data, observation)
 data = trim_leading_nas(data, observation)

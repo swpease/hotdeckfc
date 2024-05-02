@@ -44,7 +44,7 @@ grid = build_grid(
                        appender = append_lead)
   )
 )
-out = grid_search_hot_deck_cv(hotdeckfc::SUGG_temp,
+out = grid_search_hot_deck_cv(hotdeckts::SUGG_temp,
                               .datetime = date,
                               .observation = observation,
                               grid = grid)

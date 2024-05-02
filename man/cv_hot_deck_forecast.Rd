@@ -114,7 +114,7 @@ reduced data to draw from, which seems like it could significantly effect
 the conclusion on which hyperparameter values to select.
 }
 \examples{
-out = cv_hot_deck_forecast(hotdeckfc::SUGG_temp,
+out = cv_hot_deck_forecast(hotdeckts::SUGG_temp,
                            .datetime = date,
                            .observation = observation,
                            times = 30,

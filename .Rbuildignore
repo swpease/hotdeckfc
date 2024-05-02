@@ -1,6 +1,6 @@
 ^renv$
 ^renv\.lock$
-^hotdeckfc\.Rproj$
+^hotdeckts\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^images$

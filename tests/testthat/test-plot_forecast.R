@@ -39,7 +39,7 @@ suppressWarnings(shiny::testServer(
 
 
 test_that("plot_forecast snapshot", {
-  data = append_lead(hotdeckfc::SUGG_temp, observation)
+  data = append_lead(hotdeckts::SUGG_temp, observation)
   set.seed(3)
   fc = hot_deck_forecast(data,
                          date,
@@ -72,7 +72,7 @@ test_that("plot_grid_search_crps snapshot", {
     )
   )
   set.seed(3)
-  out = grid_search_hot_deck_cv(hotdeckfc::SUGG_temp,
+  out = grid_search_hot_deck_cv(hotdeckts::SUGG_temp,
                                 .datetime = date,
                                 .observation = observation,
                                 grid = grid)
@@ -101,17 +101,17 @@ test_that("plot_grid_search_forecasts snapshot", {
     )
   )
   set.seed(3)
-  out = grid_search_hot_deck_cv(hotdeckfc::SUGG_temp,
+  out = grid_search_hot_deck_cv(hotdeckts::SUGG_temp,
                                 .datetime = date,
                                 .observation = observation,
                                 grid = grid)
   fist_el = list(out[[1]])
   suppressWarnings(vdiffr::expect_doppelganger(
     "plot_grid_search_forecasts_1",
-    suppressWarnings(plot_grid_search_forecasts(fist_el, hotdeckfc::SUGG_temp))
+    suppressWarnings(plot_grid_search_forecasts(fist_el, hotdeckts::SUGG_temp))
   ))
   suppressWarnings(vdiffr::expect_doppelganger(
     "plot_grid_search_forecasts_2",
-    suppressWarnings(plot_grid_search_forecasts(out, hotdeckfc::SUGG_temp))
+    suppressWarnings(plot_grid_search_forecasts(out, hotdeckts::SUGG_temp))
   ))
 })

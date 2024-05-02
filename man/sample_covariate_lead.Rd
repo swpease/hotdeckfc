@@ -46,7 +46,7 @@ For \code{filter_na_col_names}, you must include the \code{next_cov_obs_col_name
 or the sampling will break.
 }
 \examples{
-data = dplyr::mutate(hotdeckfc::SUGG_temp,
+data = dplyr::mutate(hotdeckts::SUGG_temp,
                      cov_obs = observation + rnorm(n = 1, sd = 3))  # fake cov data
 data = append_lead_cov_lead(data, cov_obs, "observation")
 data = trim_leading_nas(data, observation)

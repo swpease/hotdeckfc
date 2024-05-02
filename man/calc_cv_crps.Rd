@@ -29,7 +29,7 @@ simulated values -- e.g. if \code{times = 30} then the 30 forecasted values --
 for each row in the test data.
 }
 \examples{
-cv_out = cv_hot_deck_forecast(hotdeckfc::SUGG_temp,
+cv_out = cv_hot_deck_forecast(hotdeckts::SUGG_temp,
                               .datetime = date,
                               .observation = observation,
                               times = 3,

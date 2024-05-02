@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(hotdeckfc)
+library(hotdeckts)
 
-test_check("hotdeckfc")
+test_check("hotdeckts")

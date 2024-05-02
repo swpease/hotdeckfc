@@ -1,4 +1,4 @@
-# hotdeckfc
+# hotdeckts
 Seasonally-local, hot-deck-based simulated sample path forecasting
 
 
@@ -80,7 +80,7 @@ my_data = trim_leading_nas(my_data, observation)
 
 Once your data is ready, you need to `append` any columns that are needed for your chosen `sampler` ([see below](#concerning-samplers)).
 ```
-my_data = append_lead(hotdeckfc::SUGG_temp, observation)
+my_data = append_lead(hotdeckts::SUGG_temp, observation)
 ```
 
 Then forecast. Note that you need to *call* the `sampler`, because they all use `purrr::partial()` internally.
@@ -102,7 +102,7 @@ I have implemented a grid search CV and a Shiny widget to help find parameters.
 #### Shiny widget
 Using the Shiny widget is straightforward:
 ```
-my_data = append_lead(hotdeckfc::SUGG_temp, observation)
+my_data = append_lead(hotdeckts::SUGG_temp, observation)
 my_data = append_diff(my_data, observation)
 shiny_visualize_forecast(my_data, .datetime = date, .observation = observation)
 ```
@@ -134,7 +134,7 @@ grid = build_grid(
 After building the grid, just pass it to the grid search:
 
 ```
-out = grid_search_hot_deck_cv(hotdeckfc::SUGG_temp,
+out = grid_search_hot_deck_cv(hotdeckts::SUGG_temp,
                               .datetime = date,
                               .observation = observation,
                               grid = grid)
@@ -193,7 +193,7 @@ Seem to work well often. However, I have not worked with enough different data s
 ## Concerning `sampler`s
 Aside from the data and some fairly straightforward parameters, the forecast depends upon a `sampler`. The `sampler` is what gives you your forecasts. All current samplers depend upon some data-derived column added to your existing data. For instance, the default `sampler`, `sampler_lead`, depends upon a column of leads of your observations existing in the data. Each `sampler` currently implemented in this package has a corresponding `append_*` function for adding these required columns.
 
-# `hotdeckfc` in action
+# `hotdeckts` in action
 I've been using it to submit forecasts to the forementioned NEON forecasting challenge. 
 
 ## Performance vs Climatology Model After 1-2 Months
@@ -215,7 +215,7 @@ Can still get a spread with few seasons of data:
 Recent observations can affect the model:
 ![](images/LECO_fc.png)
 
-A case that `hotdeckfc` has difficulty with:
+A case that `hotdeckts` has difficulty with:
 ![](images/CRAM_oxygen.png)
 
 Another difficult case:

@@ -152,7 +152,7 @@ test_that("cv empty window err", {
     as_tsibble(index = datetime) %>%
     fill_gaps()
 
-  # c.f. "test-hotdeckfc.R: hot deck fc warning then error"
+  # c.f. "test-hotdeckts.R: hot deck fc warning then error"
   expect_error(
     expect_warning(data %>%
       cv_hot_deck_forecast(

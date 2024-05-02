@@ -65,7 +65,7 @@
 #'     - simulation_num: the simulated sample path number
 #'
 #' @examples
-#' data = append_diff(hotdeckfc::SUGG_temp, observation)
+#' data = append_diff(hotdeckts::SUGG_temp, observation)
 #' data = trim_leading_nas(data, observation)
 #' out = hot_deck_forecast(data,
 #'                         .datetime = date,

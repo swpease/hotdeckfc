@@ -18,7 +18,7 @@
 #' @param caption string. The figure caption.
 #'
 #' @examples
-#' data = append_lead(hotdeckfc::SUGG_temp, observation)
+#' data = append_lead(hotdeckts::SUGG_temp, observation)
 #' fc = hot_deck_forecast(data,
 #'                        date,
 #'                        observation,
@@ -139,7 +139,7 @@ plot_forecast = function(forecast,
 #' @param title optional string. Plot title.
 #'
 #' @examples
-#' data = append_lead(hotdeckfc::SUGG_temp, observation)
+#' data = append_lead(hotdeckts::SUGG_temp, observation)
 #' #shiny_visualize_forecast(data, date, observation)
 #'
 #'
@@ -368,7 +368,7 @@ plot_cv_crps <- function(arg_list, cv_crps_out, ymax = NULL) {
 #'                        appender = append_lead)
 #'   )
 #' )
-#' out = grid_search_hot_deck_cv(hotdeckfc::SUGG_temp,
+#' out = grid_search_hot_deck_cv(hotdeckts::SUGG_temp,
 #'                               .datetime = date,
 #'                               .observation = observation,
 #'                               grid = grid)
@@ -501,11 +501,11 @@ plot_cv_forecasts = function(data,
 #'                        appender = append_lead)
 #'   )
 #' )
-#' out = grid_search_hot_deck_cv(hotdeckfc::SUGG_temp,
+#' out = grid_search_hot_deck_cv(hotdeckts::SUGG_temp,
 #'                               .datetime = date,
 #'                               .observation = observation,
 #'                               grid = grid)
-#' suppressWarnings(plot_grid_search_forecasts(out, hotdeckfc::SUGG_temp))
+#' suppressWarnings(plot_grid_search_forecasts(out, hotdeckts::SUGG_temp))
 #'
 #' @export
 plot_grid_search_forecasts <- function(grid_out,
