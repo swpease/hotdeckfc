@@ -71,6 +71,101 @@ test_that("impute", {
 })
 
 
+test_that("impute using diff", {
+  # Huh. Apparently it yields the same answer w/ deterministic setup.
+  data = tsibble::tsibble(
+    date = c(
+      as.Date("2021-02-10") + 0:3,
+      as.Date("2022-02-11") + 0:4,
+      as.Date("2023-02-12") + 0:3
+    ),
+    obs = c(
+      1,2,3,4,
+      1,NA,NA,NA,1,
+      20,5,10,1
+    ),
+    index = date
+  ) %>% tsibble::fill_gaps()
+
+  expected = tsibble::tsibble(
+    date = c(
+      as.Date("2021-02-10") + 0:3,
+      as.Date("2022-02-11") + 0:4,
+      as.Date("2023-02-12") + 0:3
+    ),
+    obs = c(
+      1,2,3,4,
+      1,NA,NA,NA,1,
+      20,5,10,1
+    ),
+    imputation_1 = c(
+      1,2,3,4,
+      1,2,4,10,1,
+      20,5,10,1
+    ),
+    index = date
+  ) %>% tsibble::fill_gaps()
+
+  out = impute(data,
+               .observation = obs,
+               max_gap = 3,
+               n_imputations = 1,
+               window_back = 1,
+               window_fwd = 1,
+               n_closest = 1,
+               sampler = "diff")
+
+  expect_equal(out, expected)
+})
+
+
+test_that("impute two gaps", {
+  data = tsibble::tsibble(
+    date = c(
+      as.Date("2021-02-10") + 0:3,
+      as.Date("2022-02-11") + 0:4,
+      as.Date("2023-02-12") + 0:3
+    ),
+    obs = c(
+      1,2,4,1,
+      1,NA,1,NA,1,
+      20,5,9,1
+    ),
+    index = date
+  ) %>% tsibble::fill_gaps()
+
+  expected = tsibble::tsibble(
+    date = c(
+      as.Date("2021-02-10") + 0:3,
+      as.Date("2022-02-11") + 0:4,
+      as.Date("2023-02-12") + 0:3
+    ),
+    obs = c(
+      1,2,4,1,
+      1,NA,1,NA,1,
+      20,5,9,1
+    ),
+    imputation_1 = c(
+      1,2,4,1,
+      1,3,1,5,1,
+      20,5,9,1
+    ),
+    index = date
+  ) %>% tsibble::fill_gaps()
+
+  out = impute(data,
+               .observation = obs,
+               max_gap = 3,
+               n_imputations = 1,
+               window_back = 1,
+               window_fwd = 1,
+               n_closest = 1,
+               sampler = "lead")
+
+  expect_equal(out, expected)
+})
+
+
 test_that("imputation errors", {
   # NA sequence too big
   data = readr::read_csv(test_path("CRAM_target_temp_data.csv")) %>%
