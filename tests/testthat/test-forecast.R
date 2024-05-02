@@ -194,6 +194,12 @@ test_that("hot deck fc data validators", {
     )
   )
 
+  data_w_posix = tibble(
+    datetime = c(as.POSIXct("2021-01-01") + 0:1),
+    obs = c(1, 3)
+  ) %>%
+    as_tsibble(index = datetime)
+
   data_w_gaps = tibble(
     datetime = c(
       as.Date("2021-01-01") + 0:3,
@@ -231,6 +237,7 @@ test_that("hot deck fc data validators", {
   ) %>%
     as_tsibble(index = datetime)
 
+
   expect_error(data_not_tsib %>%
     hot_deck_forecast(
       .datetime = datetime,
@@ -241,7 +248,18 @@ test_that("hot deck fc data validators", {
       window_fwd = 2,
       n_closest = 1
     ),
-    regexp = "needs to be a")
+    regexp = "needs to be a `tsibble`")
+  expect_error(data_w_posix %>%
+                 hot_deck_forecast(
+                   .datetime = datetime,
+                   .observation = obs,
+                   times = 2,
+                   h = 2,
+                   window_back = 2,
+                   window_fwd = 2,
+                   n_closest = 1
+                 ),
+               regexp = "needs to be a `Date`")
   expect_error(data_w_gaps %>%
                  hot_deck_forecast(
                    .datetime = datetime,

@@ -197,7 +197,6 @@ test_that("imputation errors", {
   expect_error(hot_deck_impute(data_w_gaps, obs),
                regexp = "gap")
 
-
   # multi-key tsibble
   data_w_keys = tibble(
     datetime = c(
@@ -215,7 +214,6 @@ test_that("imputation errors", {
     as_tsibble(index = datetime, key = k)
   expect_error(hot_deck_impute(data_w_keys, obs),
                regexp = "key")
-
 
   # tsibble index not Date
   data_w_posix = tibble(

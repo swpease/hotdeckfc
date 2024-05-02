@@ -477,9 +477,9 @@ trim_nas <- function(vec) {
 #'
 #' Checks that:
 #'   1. The data is a `tsibble`.
-#'   2. The tsibble is not multi-keyed (i.e. multiple time serieses).
-#'   3. The data has no gaps (i.e. missing rows; NA observations okay).
-#'   4. The index is a Date.
+#'   2. The index is a Date.
+#'   3. The tsibble is not multi-keyed (i.e. multiple time serieses).
+#'   4. The data has no gaps (i.e. missing rows; NA observations okay).
 #'
 #' @inheritParams hot_deck_impute
 #'
@@ -487,6 +487,14 @@ trim_nas <- function(vec) {
 validate_impute_input_data <- function(data, .observation) {
   if (isFALSE(tsibble::is_tsibble(data))) {
     stop("Your data needs to be a `tsibble`.", call. = FALSE)
+  }
+
+  is_date = data %>%
+    dplyr::pull(tsibble::index(.)) %>%
+    is.Date()
+  if (isFALSE(is_date)) {
+    stop("Your tsibble's index needs to be a `Date`.",
+         call. = FALSE)
   }
 
   # keyless tsibbles have n_keys == 1
@@ -500,14 +508,6 @@ validate_impute_input_data <- function(data, .observation) {
   if (isTRUE(tsibble::has_gaps(data) %>% pull())) {
     stop(paste("Your tsibble contains gaps.\n",
                "Try using `tsibble::fill_gaps`."),
-         call. = FALSE)
-  }
-
-  is_date = data %>%
-    dplyr::pull(tsibble::index(.)) %>%
-    is.Date()
-  if (isFALSE(is_date)) {
-    stop("Your tsibble's index needs to be a `Date`.",
          call. = FALSE)
   }
 }
