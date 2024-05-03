@@ -42,6 +42,7 @@
 #' the conclusion on which hyperparameter values to select.
 #'
 #' @inheritParams hot_deck_forecast
+#' @param .datetime tmp
 #' @param offset integer. Offset (in +- days) from the most recent row of .data
 #' to use as the starting point.
 #' @param sampler Sampler function to generate forecasted values.
@@ -148,8 +149,7 @@ cv_hot_deck_forecast <- function(.data,
     # Forecasting
     fc = tryCatch(
       expr = train_data %>%
-        hot_deck_forecast({{ .datetime }},
-                          {{ .observation }},
+        hot_deck_forecast({{ .observation }},
                           times = times,
                           h = h,
                           window_back = window_back,

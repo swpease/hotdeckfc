@@ -35,7 +35,6 @@ For \code{n_closest}, \code{dplyr::slice_min} is used, and tie values are includ
 data = append_lead(hotdeckts::SUGG_temp, observation)
 data = trim_leading_nas(data, observation)
 out = hot_deck_forecast(data,
-                        .datetime = date,
                         .observation = observation,
                         times = 3,
                         h = 20,

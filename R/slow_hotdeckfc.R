@@ -48,7 +48,7 @@ slow_hot_deck_forecast <- function(.data,
                               window_back,
                               window_fwd,
                               n_closest) {
-  .data %>% validate_data({{ .datetime }}, {{ .observation }})
+  .data %>% validate_data({{ .observation }})
 
   forecasts = NULL
   n_time = 1

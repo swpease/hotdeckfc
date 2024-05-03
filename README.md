@@ -86,7 +86,6 @@ my_data = append_lead(hotdeckts::SUGG_temp, observation)
 Then forecast. Note that you need to *call* the `sampler`, because they all use `purrr::partial()` internally.
 ```
 fc = hot_deck_forecast(my_data,
-                       .datetime = date,
                        .observation = observation,
                        times = 30,
                        h = 30,

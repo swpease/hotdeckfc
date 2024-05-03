@@ -6,7 +6,6 @@
 \usage{
 hot_deck_forecast(
   .data,
-  .datetime,
   .observation,
   times,
   h,
@@ -19,8 +18,6 @@ hot_deck_forecast(
 }
 \arguments{
 \item{.data}{tsibble. The data.}
-
-\item{.datetime}{symbol. The datetime column of \code{.data}.}
 
 \item{.observation}{symbol. The observation column of \code{.data}.}
 
@@ -109,7 +106,6 @@ the ceiling of (\code{times} / (# of covariate simulations))
 data = append_diff(hotdeckts::SUGG_temp, observation)
 data = trim_leading_nas(data, observation)
 out = hot_deck_forecast(data,
-                        .datetime = date,
                         .observation = observation,
                         times = 3,
                         h = 20,

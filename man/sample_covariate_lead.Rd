@@ -51,7 +51,6 @@ data = dplyr::mutate(hotdeckts::SUGG_temp,
 data = append_lead_cov_lead(data, cov_obs, "observation")
 data = trim_leading_nas(data, observation)
 out = hot_deck_forecast(data,
-                        .datetime = date,
                         .observation = observation,
                         times = 3,
                         h = 5,

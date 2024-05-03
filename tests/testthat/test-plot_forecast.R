@@ -1,7 +1,8 @@
 suppressWarnings(shiny::testServer(
-  app = shiny_visualize_forecast(append_lead(SUGG_temp, observation),
-                                                 date,
-                                                 observation),
+  app = shiny_visualize_forecast(append_lead(hotdeckts::SUGG_temp %>% as_tsibble(),
+                                             observation),
+                                 date,
+                                 observation),
   expr = {
     session$setInputs(sampler = "lead",
                       times = 5,
@@ -39,10 +40,9 @@ suppressWarnings(shiny::testServer(
 
 
 test_that("plot_forecast snapshot", {
-  data = append_lead(hotdeckts::SUGG_temp, observation)
+  data = append_lead(hotdeckts::SUGG_temp %>% as_tsibble(), observation)
   set.seed(3)
   fc = hot_deck_forecast(data,
-                         date,
                          observation,
                          times = 3,
                          h = 10,

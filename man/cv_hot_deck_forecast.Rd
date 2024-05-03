@@ -23,7 +23,7 @@ cv_hot_deck_forecast(
 \arguments{
 \item{.data}{tsibble. The data.}
 
-\item{.datetime}{symbol. The datetime column of \code{.data}.}
+\item{.datetime}{tmp}
 
 \item{.observation}{symbol. The observation column of \code{.data}.}
 

@@ -22,7 +22,6 @@
 #' data = append_lead(hotdeckts::SUGG_temp, observation)
 #' data = trim_leading_nas(data, observation)
 #' out = hot_deck_forecast(data,
-#'                         .datetime = date,
 #'                         .observation = observation,
 #'                         times = 3,
 #'                         h = 20,
@@ -102,7 +101,6 @@ internal_sample_lead <- function(local_rows,
 #' data = append_lead_cov_lead(data, cov_obs, "observation")
 #' data = trim_leading_nas(data, observation)
 #' out = hot_deck_forecast(data,
-#'                         .datetime = date,
 #'                         .observation = observation,
 #'                         times = 3,
 #'                         h = 5,
@@ -237,7 +235,6 @@ internal_sample_covariate_lead <- function(local_rows,
 #'                                index = date,
 #'                                key = sim_num)
 #' out = hot_deck_forecast(data,
-#'                         .datetime = date,
 #'                         .observation = observation,
 #'                         times = 3,
 #'                         h = 5,
@@ -372,7 +369,6 @@ internal_sample_forecasted_covariate <- function(local_rows,
 #' data = append_diff(hotdeckts::SUGG_temp, observation)
 #' data = trim_leading_nas(data, observation)
 #' out = hot_deck_forecast(data,
-#'                         .datetime = date,
 #'                         .observation = observation,
 #'                         times = 3,
 #'                         h = 20,

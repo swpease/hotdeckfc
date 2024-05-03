@@ -41,7 +41,6 @@
 #' the ceiling of (`times` / (# of covariate simulations))
 #'
 #' @param .data tsibble. The data.
-#' @param .datetime symbol. The datetime column of `.data`.
 #' @param .observation symbol. The observation column of `.data`.
 #' @param times integer. The number of simulated sample paths to produce.
 #' @param h integer. How many days to forecast.
@@ -68,7 +67,6 @@
 #' data = append_diff(hotdeckts::SUGG_temp, observation)
 #' data = trim_leading_nas(data, observation)
 #' out = hot_deck_forecast(data,
-#'                         .datetime = date,
 #'                         .observation = observation,
 #'                         times = 3,
 #'                         h = 20,
@@ -79,7 +77,6 @@
 #'
 #' @export
 hot_deck_forecast <- function(.data,
-                              .datetime,
                               .observation,
                               times,
                               h,
@@ -89,7 +86,7 @@ hot_deck_forecast <- function(.data,
                               sampler = sample_lead("next_obs"),
                               covariate_forecasts = NULL) {
   # Validate
-  .data %>% validate_data({{ .datetime }}, {{ .observation }})
+  .data %>% validate_data({{ .observation }})
   window_back = ensure_vector(window_back, h)
   window_fwd = ensure_vector(window_fwd, h)
   n_closest = ensure_vector(n_closest, h)
@@ -98,6 +95,8 @@ hot_deck_forecast <- function(.data,
   }
 
   # Forecast
+  .datetime = tsibble::index(.data)
+
   forecasts = NULL
   if (is.null(covariate_forecasts)) {
     forecasts = .data %>%
@@ -422,12 +421,10 @@ trim_leading_nas <- function(.data, .observation) {
 #'   5. The final observation is not NA.
 #'
 #' @param data The input `.data` to `hot_deck_forecast`.
-#' @param .datetime The datetime column of .data. Passed via pipe.
 #' @param .observation The observation column of .data. Passed via pipe.
 #'
 #' @noRd
 validate_data <- function(data,
-                          .datetime,
                           .observation) {
   if (isFALSE(tsibble::is_tsibble(data))) {
     stop("Your data needs to be a `tsibble`.", call. = FALSE)
@@ -455,6 +452,7 @@ validate_data <- function(data,
          call. = FALSE)
   }
 
+  .datetime = tsibble::index(data)
   latest_row = data %>% dplyr::slice_max(order_by = {{ .datetime }})
   T_date = latest_row %>% dplyr::pull({{ .datetime }})
   current_obs = latest_row %>% dplyr::pull({{ .observation }})

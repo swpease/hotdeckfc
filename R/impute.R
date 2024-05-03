@@ -247,7 +247,6 @@ backcast <- function(.data,
     h_curr = h
     while (h_curr > 0) {
       one_step_backcast = hot_deck_forecast(data_curr,
-                                            .datetime = {{ .datetime }},
                                             .observation = {{ .observation }},
                                             times = 1,
                                             h = 1,
@@ -357,7 +356,6 @@ forecast_for_imputation <- function(.data,
   .data = append_diff(.data, {{ .observation }})
 
   fcs = hot_deck_forecast(.data,
-                          {{ .datetime }},
                           {{ .observation }},
                           times = n_imputations,
                           h = na_len,

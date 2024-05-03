@@ -9,7 +9,6 @@ test_that("hot deck fc real data", {
   set.seed(3)
   output = data %>%
     hot_deck_forecast(
-      .datetime = datetime,
       .observation = observation,
       times = 3,
       h = 400,
@@ -56,7 +55,6 @@ test_that("hot deck fc basic test", {
 
   output = data %>%
     hot_deck_forecast(
-      .datetime = datetime,
       .observation = obs,
       times = 2,
       h = 2,
@@ -117,7 +115,6 @@ test_that("hot deck fc vector test", {
   set.seed(3)
   output = data %>%
     hot_deck_forecast(
-      .datetime = datetime,
       .observation = obs,
       times = 2,
       h = 2,
@@ -156,8 +153,7 @@ test_that("hot deck fc covs", {
                                    target_obs_col_name = "observation")
   sampler = sample_forecasted_covariate()
 
-  out = data %>% hot_deck_forecast(datetime,
-                                   cov_obs,
+  out = data %>% hot_deck_forecast(cov_obs,
                                    times = 1,
                                    h = 2,
                                    window_back = 5,
@@ -240,7 +236,6 @@ test_that("hot deck fc data validators", {
 
   expect_error(data_not_tsib %>%
     hot_deck_forecast(
-      .datetime = datetime,
       .observation = obs,
       times = 2,
       h = 2,
@@ -251,7 +246,6 @@ test_that("hot deck fc data validators", {
     regexp = "needs to be a `tsibble`")
   expect_error(data_w_posix %>%
                  hot_deck_forecast(
-                   .datetime = datetime,
                    .observation = obs,
                    times = 2,
                    h = 2,
@@ -262,7 +256,6 @@ test_that("hot deck fc data validators", {
                regexp = "needs to be a `Date`")
   expect_error(data_w_gaps %>%
                  hot_deck_forecast(
-                   .datetime = datetime,
                    .observation = obs,
                    times = 2,
                    h = 2,
@@ -273,7 +266,6 @@ test_that("hot deck fc data validators", {
                regexp = "gap")
   expect_error(data_w_keys %>%
                  hot_deck_forecast(
-                   .datetime = datetime,
                    .observation = obs,
                    times = 2,
                    h = 2,
@@ -284,7 +276,6 @@ test_that("hot deck fc data validators", {
                regexp = "key")
   expect_error(data_missing_last_obs %>%
                  hot_deck_forecast(
-                   .datetime = datetime,
                    .observation = obs,
                    times = 1,
                    h = 1,
@@ -305,7 +296,6 @@ test_that("hot deck fc vector errors", {
 
   expect_error(data %>%
                  hot_deck_forecast(
-                   .datetime = datetime,
                    .observation = obs,
                    times = 2,
                    h = 5,
@@ -316,7 +306,6 @@ test_that("hot deck fc vector errors", {
               regexp = "window_back.*is length 2.*h, 5")
   expect_error(data %>%
                  hot_deck_forecast(
-                   .datetime = datetime,
                    .observation = obs,
                    times = 2,
                    h = 5,
@@ -327,7 +316,6 @@ test_that("hot deck fc vector errors", {
                regexp = "window_fwd.*is length 2.*h, 5")
   expect_error(data %>%
                  hot_deck_forecast(
-                   .datetime = datetime,
                    .observation = obs,
                    times = 2,
                    h = 5,
@@ -384,7 +372,6 @@ test_that("hot deck fc covariate validators", {
 
   expect_error(data %>%
                  hot_deck_forecast(
-                   .datetime = datetime,
                    .observation = obs,
                    times = 2,
                    h = 2,
@@ -397,7 +384,6 @@ test_that("hot deck fc covariate validators", {
 
   expect_error(data %>%
                  hot_deck_forecast(
-                   .datetime = datetime,
                    .observation = obs,
                    times = 2,
                    h = 2,
@@ -410,7 +396,6 @@ test_that("hot deck fc covariate validators", {
 
   expect_error(data %>%
                  hot_deck_forecast(
-                   .datetime = datetime,
                    .observation = obs,
                    times = 2,
                    h = 2,
@@ -448,7 +433,6 @@ test_that("hot deck fc warning then error in h incrementing up to empty window",
   expect_error(
     expect_warning(data %>%
       hot_deck_forecast(
-        .datetime = datetime,
         .observation = obs,
         times = 2,
         h = 20,

@@ -47,7 +47,6 @@ spiky blob.
 \examples{
 data = append_lead(hotdeckts::SUGG_temp, observation)
 fc = hot_deck_forecast(data,
-                       date,
                        observation,
                        times = 5,
                        h = 20,

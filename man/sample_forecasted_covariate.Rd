@@ -93,7 +93,6 @@ cov_fc_data = tsibble::tsibble(date = c(as.Date("2024-01-23") + 0:4,
                                index = date,
                                key = sim_num)
 out = hot_deck_forecast(data,
-                        .datetime = date,
                         .observation = observation,
                         times = 3,
                         h = 5,

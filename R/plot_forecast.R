@@ -20,7 +20,6 @@
 #' @examples
 #' data = append_lead(hotdeckts::SUGG_temp, observation)
 #' fc = hot_deck_forecast(data,
-#'                        date,
 #'                        observation,
 #'                        times = 5,
 #'                        h = 20,
@@ -262,7 +261,6 @@ shiny_visualize_forecast <- function(.data,
 
     forecast = shiny::reactive({
       hot_deck_forecast(.data,
-                        .datetime = {{ .datetime }},
                         .observation = {{ .observation }},
                         times = input$times,
                         h = input$h,
