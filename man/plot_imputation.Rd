@@ -18,3 +18,10 @@ Plot output of \code{\link[=hot_deck_impute]{hot_deck_impute()}}.
 This is a basic plot of your data over time, with the imputations added
 as colored lines.
 }
+\examples{
+3
+# imputed = hot_deck_impute(hotdeckts::SUGG_temp \%>\%
+#   tsibble::as_tsibble(), observation)
+# plot_imputation(imputed, observation)
+
+}

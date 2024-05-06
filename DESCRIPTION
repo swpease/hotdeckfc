@@ -17,6 +17,7 @@ Suggests:
     vdiffr
 Imports: 
     dplyr,
+    feasts,
     ggplot2,
     lubridate,
     magrittr,
