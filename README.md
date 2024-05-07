@@ -1,5 +1,5 @@
 # hotdeckts
-Seasonally-local, hot-deck-based simulated sample path forecasting
+Seasonally-local, hot-deck-based simulated sample path forecasting and multiple imputation for daily data with yearly seasonality.
 
 
 ## Introduction
@@ -10,14 +10,22 @@ By "hot-deck-based", I mean that forecasts are derived from historical observati
 
 By "simulated sample path", I mean that every particular forecast is produced via a random sampling, using said seasonally-local data.
 
+By "daily data with yearly seasonality", I mean you have one observation per Date, and you can expect a given day of the year to have similar observations across years.
+
 ### Premise
+#### Forecasting
 The basic idea is to perform similarly to a climatology model (i.e. use the average and spread of historical observations for a particular day of the year as the forecast), but with (_audience_) "More! Power!".
 
 In it's basic form, it loosens up the climatology model's statement that "a day of the year will be similar to its historical observations" to "a day of the year will be similar to historical observations around its time of year".
 
 That is to say, it can be made to perform like a simple moving average over the climatology model. However, it can do more, such as take into account recent observations, incorporate covariate observations, and use different sampling methods.
 
-### What does it do?
+#### Imputation
+The idea for this whole package originated with predictive mean matching imputation: [Flexible Imputation of Missing Data, 2nd Ed. by Stef van Buuren](https://web.archive.org/web/20220823155812/https://stefvanbuuren.name/fimd/sec-pmm.html).
+
+### How does it work?
+An approximate image of what's happening can be found at [Flexible Imputation of Missing Data, 2nd Ed. by Stef van Buuren](https://web.archive.org/web/20220823155812/https://stefvanbuuren.name/fimd/sec-pmm.html).
+
 The basic use goes like this:
   - Forecast a day:
     - Say it's October 3 2024, and you have three years of historical daily data.
@@ -27,6 +35,9 @@ The basic use goes like this:
     - Take that sample's tomorrow's observation (Sep 29 2023) as the forecast for October 4 2024.
   - Shift everything over by a day to forecast Oct 5 2024 ... repeating through to your desired horizon.
   - Loop through this several times to produce multiple forecast paths.
+  
+#### Imputation
+Imputation follows the same outline as above, except it both forecasts and backcasts, then melds the two casts together at their closest point, taking the mean at that point, using the forecasts prior to the point, and the backcasts after the point.
 
 ### Why I made it
 I made this for the [NEON Ecological Forecasting Challenge](https://projects.ecoforecast.org/neon4cast-ci/).
@@ -40,7 +51,7 @@ I made this for the [NEON Ecological Forecasting Challenge](https://projects.eco
     - You can supply your own `sampler`s, with some limitations. The two current limitations I'm aware of are below. I'm fairly sure I know how to incorporate them, I just haven't had a pressing interest yet:
       1. Multivariable models don't work
       2. Returning a distribution (e.g. mean + sd) doesn't work
-  - Cross validation can be performed normally.
+  - Cross validation and grid search functionality included.
       
 ### Cons
   - Seasonal gaps (i.e. no data at a particular region of the season across all seasons) can be problematic.
@@ -49,13 +60,13 @@ I made this for the [NEON Ecological Forecasting Challenge](https://projects.eco
   - Particular sample path simulations can get trapped by unique sections of the historical data.
   
 ### Limitations
-  - Currently this only works with daily observations of annual data. You might be wondering why I've named all these functions parameters as "datetime" then. Optimism, I suppose.
+  - This only works with daily observations of annual data. You might be wondering why I've named all these functions parameters as "datetime" then. Optimism, I suppose.
   - Multivariable models don't work.
   - Returning a distribution (e.g. mean + sd) doesn't work.
 
 # Usage
 ## Example Code
-### Basic Workflow
+### Basic Forecast Workflow
 This package operates on [`tsibble`s](https://tsibble.tidyverts.org/). Also, it is currently limited to operating on daily observations of annual data, and assumes that the temporal column (the `tsibble`'s `index`) is a `Date`. It also requires the latest observation to have been, well, observed (not `NA`). So, the data preparation requirements are:
   - Temporal column is of class `Date`.
   - Data is a `tsibble`.
@@ -172,7 +183,17 @@ gs_crps_k_sums = gs_crps %>%
   reduce(\(acc, nxt) mutate(acc, nxt))
 ```
 
+### Imputation
+Imputation is straightforward.
+```
+imputed = hot_deck_impute(hotdeckts::SUGG_temp, observation)
+```
+Badda-bing, badda-boom. 
+
+The imputation will fail if there are gaps in your data (across all seasons) that exceed your window. For instance, if you have November-February always missing, then a one-month window (+- 15 days) will fail. To avoid this, there is a `max_gap` parameter that will skip any gaps exceeding that size.
+
 ### Parameter Guidelines
+#### Forecasting
 The higher you set `n_closest`, the closer your model approaches just taking all of the local data and giving you something approaching a simple moving average of the climatology model.
 
 `sample_lead()` tends to work well for data that has fairly consistent seasonality. 
@@ -181,24 +202,40 @@ The higher you set `n_closest`, the closer your model approaches just taking all
 
 `sample_covariate_lead()` only seems to be useful if you're desperate, such as forecasting in Spring a dataset that only has target variable observations for Summers. Similarly, I haven't impressed by the results I've gotten using `sample_forecasted_covariate()` (which is why I haven't gotten around to writing up how to use it in this README), but maybe I just need to try a few more datasets.
 
+#### Imputing
+I would hesitate to bump up the `n_closest` much, lest the paths become nonsense.
+
+The `sampler` selection should be similar to the above advice for forecasting.
+
+[How many imputations?](https://web.archive.org/web/20231130105636/https://stefvanbuuren.name/fimd/sec-howmany.html) Though, I suppose it'd probably be different for time series -- how long ago the missing data is, how big it is...
+
 ## Concerning Defaults
-For the data that I have worked with, the parameters used in the example above, namely:
+For the data that I have worked with, the parameters used in the forecasting example above, namely:
   - window_back = 20,
   - window_fwd = 20,
   - n_closest = 5,
   - sampler = sample_lead()
   
-Seem to work well often. However, I have not worked with enough different data sources to feel comfortable foisting these upon others as defaults (except for the Shiny visualizer).
+Seem to work well often. However, I have not worked with enough different data sources to feel comfortable saying that these are always sensible defaults.
 
 ## Concerning `sampler`s
 Aside from the data and some fairly straightforward parameters, the forecast depends upon a `sampler`. The `sampler` is what gives you your forecasts. All current samplers depend upon some data-derived column added to your existing data. For instance, the default `sampler`, `sampler_lead`, depends upon a column of leads of your observations existing in the data. Each `sampler` currently implemented in this package has a corresponding `append_*` function for adding these required columns.
 
-# `hotdeckts` in action
+
+
+# `hotdeckts` Forecasting in Action
 I've been using it to submit forecasts to the forementioned NEON forecasting challenge. 
 
 ## Performance vs Climatology Model After 1-2 Months
-Here is the relative performance of this model vs the climatology model across all sites that I have submitted forecasts of to the NEON EFC, with per-site submission counts ranging from about 1 to 2 months.
-![](images/CRPS_comp_graph.png)
+Here is the relative performance (via skill scores, i.e. (clim - h.d.) / clim) of this model vs the climatology model across all sites that I have submitted forecasts of to the NEON EFC, with per-site submission counts ranging from about 1 to 2 months.
+
+![](images/Skill_scores.png)
+
+And here are boxplots by forecast horizon, aggregated across all sites. There's not a whole lot in it on average:
+
+![](images/CRPS_over_h.png)
+
+This suggests that I should probably revisit my long-horizon forecasting.
 
 ## Single Forecasts
 Below are a few forecasts. In all images, the grey lines are historical data, the red dot is the latest observation, the thin colored lines / dots are forecasts, and the red line is the forecast mean.
@@ -231,10 +268,15 @@ I made a Shiny widget for interactive experimenting. I've found it a great way t
 
 ![](images/Shiny_screenshot.png)
 
-## Imputation?
-It has been in the back of my mind that this could be a useful way to generate plausible sample paths for multiple imputation, particulary for longer gaps. I haven't really investigated it yet, but here is an (unoptimized) example of a 326-day 5-fold imputation:
+# `hotdeckts` Imputation in Action
+Here are a couple of imputations.
 
-![](images/SUGG_imputation.png)
+Can handle a highly aberrant path (2024), though some paths are unlikely (e.g. imputation_5, 2019):
+![](images/LECO_imputation.png)
+![](images/LECO_imputation_2.png)
+
+Can handle large gaps:
+![](images/BARC_imputation.png)
 
 # TODO
   - [x] Provide plotting functions. I have several written, I just need more experience with them to see which might be useful to a wider audience.
