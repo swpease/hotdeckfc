@@ -45,7 +45,6 @@ grid = build_grid(
   )
 )
 out = grid_search_hot_deck_cv(hotdeckts::SUGG_temp,
-                              .datetime = date,
                               .observation = observation,
                               grid = grid)
 plot_grid_search_crps(out, "observation", 5)

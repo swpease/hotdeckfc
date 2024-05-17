@@ -8,7 +8,6 @@
 #' `echo` prints progress like: "Finished CV 3 of 8.".
 #'
 #' @param .data tsibble. The data.
-#' @param .datetime symbol. The datetime column of .data.
 #' @param .observation symbol. The observation column of .data.
 #' @param grid tibble. Created using [build_grid()].
 #' @param echo boolean. Print progress?
@@ -30,13 +29,11 @@
 #'   )
 #' )
 #' out = grid_search_hot_deck_cv(hotdeckts::SUGG_temp,
-#'                               .datetime = date,
 #'                               .observation = observation,
 #'                               grid = grid)
 #'
 #' @export
 grid_search_hot_deck_cv <- function(.data,
-                                    .datetime,
                                     .observation,
                                     grid,
                                     echo = TRUE) {

@@ -4,12 +4,10 @@
 \alias{grid_search_hot_deck_cv}
 \title{Grid search cross-validation of \code{\link[=hot_deck_forecast]{hot_deck_forecast()}}.}
 \usage{
-grid_search_hot_deck_cv(.data, .datetime, .observation, grid, echo = TRUE)
+grid_search_hot_deck_cv(.data, .observation, grid, echo = TRUE)
 }
 \arguments{
 \item{.data}{tsibble. The data.}
-
-\item{.datetime}{symbol. The datetime column of .data.}
 
 \item{.observation}{symbol. The observation column of .data.}
 
@@ -47,7 +45,6 @@ grid = build_grid(
   )
 )
 out = grid_search_hot_deck_cv(hotdeckts::SUGG_temp,
-                              .datetime = date,
                               .observation = observation,
                               grid = grid)
 

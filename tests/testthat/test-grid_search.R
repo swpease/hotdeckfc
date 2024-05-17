@@ -27,7 +27,6 @@ test_that("grid search gridding", {
 
   out = data %>%
     grid_search_hot_deck_cv(
-      datetime,
       obs,
       grid = grid,
       echo = FALSE

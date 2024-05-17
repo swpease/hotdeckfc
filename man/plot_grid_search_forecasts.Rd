@@ -51,7 +51,6 @@ grid = build_grid(
   )
 )
 out = grid_search_hot_deck_cv(hotdeckts::SUGG_temp,
-                              .datetime = date,
                               .observation = observation,
                               grid = grid)
 suppressWarnings(plot_grid_search_forecasts(out, hotdeckts::SUGG_temp))

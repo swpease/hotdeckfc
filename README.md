@@ -145,7 +145,6 @@ After building the grid, just pass it to the grid search:
 
 ```
 out = grid_search_hot_deck_cv(hotdeckts::SUGG_temp,
-                              .datetime = date,
                               .observation = observation,
                               grid = grid)
 ```
