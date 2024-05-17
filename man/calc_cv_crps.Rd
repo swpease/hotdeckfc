@@ -30,7 +30,6 @@ for each row in the test data.
 }
 \examples{
 cv_out = cv_hot_deck_forecast(hotdeckts::SUGG_temp,
-                              .datetime = date,
                               .observation = observation,
                               times = 3,
                               h = 20,

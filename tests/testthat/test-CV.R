@@ -53,7 +53,6 @@ test_that("cv works", {
 
   out = data %>%
     cv_hot_deck_forecast(
-      datetime,
       obs,
       offset = 0,
       times = 2,
@@ -115,7 +114,6 @@ test_that("cv w/ cov fc getter", {
 
   out = data %>%
     cv_hot_deck_forecast(
-      datetime,
       cov_obs,
       offset = 0,
       times = 2,
@@ -156,7 +154,6 @@ test_that("cv empty window err", {
   expect_error(
     expect_warning(data %>%
       cv_hot_deck_forecast(
-        datetime,
         obs,
         offset = 0,
         times = 2,
@@ -179,7 +176,6 @@ test_that("cv train-test split wrong arg err", {
 
   expect_error(data %>%
     cv_hot_deck_forecast(
-      datetime,
       obs,
       offset = 0,
       times = 2,
@@ -519,7 +515,6 @@ test_that("calc_cv_crps", {
 
   out = data %>%
     cv_hot_deck_forecast(
-      datetime,
       obs,
       offset = 0,
       times = 2,
@@ -569,7 +564,6 @@ test_that("calc_cv_crps NAs", {
   set.seed(3)  # gets 04-01 then 04-02
   out = data %>%
     cv_hot_deck_forecast(
-      datetime,
       cov,
       offset = 0,
       times = 2,
@@ -610,7 +604,6 @@ test_that("calc_cv_crps NAs", {
   set.seed(3)  # gets 04-01 then 04-02
   out = data %>%
     cv_hot_deck_forecast(
-      datetime,
       cov,
       offset = 0,
       times = 2,
@@ -651,7 +644,6 @@ test_that("calc_cv_crps NAs", {
   set.seed(3)  # gets 04-01 then 04-02
   out = data %>%
     cv_hot_deck_forecast(
-      datetime,
       cov,
       offset = 0,
       times = 2,
@@ -693,7 +685,6 @@ test_that("calc_cv_crps NAs", {
   set.seed(3)  # gets 04-01 then 04-02
   out = data %>%
     cv_hot_deck_forecast(
-      datetime,
       cov,
       offset = 0,
       times = 2,

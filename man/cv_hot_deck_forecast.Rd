@@ -6,7 +6,6 @@
 \usage{
 cv_hot_deck_forecast(
   .data,
-  .datetime,
   .observation,
   times,
   h,
@@ -22,8 +21,6 @@ cv_hot_deck_forecast(
 }
 \arguments{
 \item{.data}{tsibble. The data.}
-
-\item{.datetime}{tmp}
 
 \item{.observation}{symbol. The observation column of \code{.data}.}
 
@@ -115,7 +112,6 @@ the conclusion on which hyperparameter values to select.
 }
 \examples{
 out = cv_hot_deck_forecast(hotdeckts::SUGG_temp,
-                           .datetime = date,
                            .observation = observation,
                            times = 30,
                            h = 20,

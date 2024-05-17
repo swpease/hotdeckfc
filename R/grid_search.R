@@ -52,8 +52,7 @@ grid_search_hot_deck_cv <- function(.data,
     # Don't want the sa_name passed; would error as unused arg.
     passed_arg_list = arg_list %>%
       purrr::list_assign(sa_name = rlang::zap())
-    cv_out = rlang::inject(.data %>% cv_hot_deck_forecast({{ .datetime }},
-                                                          {{ .observation }},
+    cv_out = rlang::inject(.data %>% cv_hot_deck_forecast({{ .observation }},
                                                           !!!passed_arg_list))
     output = list(
       arg_list = arg_list,

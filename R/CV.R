@@ -42,7 +42,6 @@
 #' the conclusion on which hyperparameter values to select.
 #'
 #' @inheritParams hot_deck_forecast
-#' @param .datetime tmp
 #' @param offset integer. Offset (in +- days) from the most recent row of .data
 #' to use as the starting point.
 #' @param sampler Sampler function to generate forecasted values.
@@ -66,7 +65,6 @@
 #'
 #' @examples
 #' out = cv_hot_deck_forecast(hotdeckts::SUGG_temp,
-#'                            .datetime = date,
 #'                            .observation = observation,
 #'                            times = 30,
 #'                            h = 20,
@@ -76,7 +74,6 @@
 #'
 #' @export
 cv_hot_deck_forecast <- function(.data,
-                                 .datetime,
                                  .observation,
                                  times,
                                  h,
@@ -91,6 +88,8 @@ cv_hot_deck_forecast <- function(.data,
   # TODO: validate data
   train_test_split_type = match.arg(train_test_split_type)
 
+
+  .datetime = tsibble::index(.data)
   max_date = .data %>%
     dplyr::pull({{ .datetime }}) %>%
     max()
@@ -297,7 +296,6 @@ train_test_split <- function(.data,
 #'
 #' @examples
 #' cv_out = cv_hot_deck_forecast(hotdeckts::SUGG_temp,
-#'                               .datetime = date,
 #'                               .observation = observation,
 #'                               times = 3,
 #'                               h = 20,

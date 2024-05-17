@@ -78,10 +78,10 @@ test_that("grid search gridding", {
   )
 
   expect_equal(out[[1]]$arg_list, expected_args_list_1)
-  expect_equal(tail(out[[1]]$cv_out, -3), expected_passed_args_list_1)
+  expect_equal(tail(out[[1]]$cv_out, -2), expected_passed_args_list_1)
   expect_equal(out[[1]]$cv_out[[1]], data)
   expect_equal(out[[2]]$arg_list, expected_args_list_2)
-  expect_equal(tail(out[[2]]$cv_out, -3), expected_passed_args_list_2)
+  expect_equal(tail(out[[2]]$cv_out, -2), expected_passed_args_list_2)
   expect_equal(out[[2]]$cv_out[[1]], data)
   # expect_equal(out[[1]]$cv_out[[1]], data)
   # expect_equal(out[[2]]$arg_list, expected_out_2)
