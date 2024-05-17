@@ -14,6 +14,13 @@
 #'   - Repeats, using this new forecasted value and its respective date as
 #'   the new "most recent observation", up to h forecasts.
 #'
+#' The following restrictions exist for your `.data`:
+#'   1. The data is a `tsibble`.
+#'   2. The index is a Date.
+#'   3. The tsibble is not multi-keyed (i.e. multiple time serieses).
+#'   4. The data has no gaps (i.e. missing rows; NA observations okay).
+#'   5. The final observation is not NA.
+#'
 #' `window_back`, `window_fwd`, and `n_closest` can either each be a scalar
 #' (i.e. length 1), or a vector of length h. If a scalar, the same value is
 #' used for every horizon. If a vector, then for horizon h_i, the ith value

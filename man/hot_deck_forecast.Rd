@@ -74,6 +74,15 @@ the same portion of the season.
 the new "most recent observation", up to h forecasts.
 }
 
+The following restrictions exist for your \code{.data}:
+\enumerate{
+\item The data is a \code{tsibble}.
+\item The index is a Date.
+\item The tsibble is not multi-keyed (i.e. multiple time serieses).
+\item The data has no gaps (i.e. missing rows; NA observations okay).
+\item The final observation is not NA.
+}
+
 \code{window_back}, \code{window_fwd}, and \code{n_closest} can either each be a scalar
 (i.e. length 1), or a vector of length h. If a scalar, the same value is
 used for every horizon. If a vector, then for horizon h_i, the ith value
