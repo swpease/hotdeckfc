@@ -1,7 +1,6 @@
 suppressWarnings(shiny::testServer(
   app = shiny_visualize_forecast(append_lead(hotdeckts::SUGG_temp %>% as_tsibble(),
                                              observation),
-                                 date,
                                  observation),
   expr = {
     session$setInputs(sampler = "lead",

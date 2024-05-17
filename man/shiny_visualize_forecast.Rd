@@ -6,7 +6,6 @@
 \usage{
 shiny_visualize_forecast(
   .data,
-  .datetime,
   .observation,
   samplers = list(lead = sample_lead(), diff = sample_diff()),
   covariate_forecasts = NULL,
@@ -15,8 +14,6 @@ shiny_visualize_forecast(
 }
 \arguments{
 \item{.data}{tsibble. The data.}
-
-\item{.datetime}{symbol. The datetime column of \code{.data}.}
 
 \item{.observation}{symbol. The observation column of \code{.data}.}
 

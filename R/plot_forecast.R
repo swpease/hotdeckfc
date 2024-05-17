@@ -130,7 +130,6 @@ plot_forecast = function(forecast,
 #' forecasting parameters that can take vectors (`window_*`, `n_closest`).
 #'
 #' @param .data tsibble. The data.
-#' @param .datetime symbol. The datetime column of `.data`.
 #' @param .observation symbol. The observation column of `.data`.
 #' @param samplers list. Any samplers you want to have to option to use.
 #' @param covariate_forecasts optional tsibble.
@@ -144,7 +143,6 @@ plot_forecast = function(forecast,
 #'
 #' @export
 shiny_visualize_forecast <- function(.data,
-                                     .datetime,
                                      .observation,
                                      samplers = list(lead = sample_lead(),
                                                      diff = sample_diff()),

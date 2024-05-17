@@ -60,7 +60,7 @@ I made this for the [NEON Ecological Forecasting Challenge](https://projects.eco
   - Particular sample path simulations can get trapped by unique sections of the historical data.
   
 ### Limitations
-  - This only works with daily observations of annual data. You might be wondering why I've named all these functions parameters as "datetime" then. Optimism, I suppose.
+  - This only works with daily observations of annual data.
   - Multivariable models don't work.
   - Returning a distribution (e.g. mean + sd) doesn't work.
 
@@ -114,7 +114,7 @@ Using the Shiny widget is straightforward:
 ```
 my_data = append_lead(hotdeckts::SUGG_temp, observation)
 my_data = append_diff(my_data, observation)
-shiny_visualize_forecast(my_data, .datetime = date, .observation = observation)
+shiny_visualize_forecast(my_data, .observation = observation)
 ```
 
 #### Grid search
