@@ -64,6 +64,13 @@ plot_imputation <- function(.imputation, .observation) {
 #'
 #' @export
 plot_imputation_gg_season <- function(.imputation, .observation) {
+  if (!requireNamespace("feasts", quietly = TRUE)) {
+    stop(
+      "Package \"feasts\" must be installed to use this function.",
+      call. = FALSE
+    )
+  }
+
   long_imputed = .imputation %>%
     tidyr::pivot_longer(c({{ .observation }}, dplyr::starts_with("imputation_"))) %>%
     tsibble::as_tsibble(key = name)

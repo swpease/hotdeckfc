@@ -148,6 +148,13 @@ shiny_visualize_forecast <- function(.data,
                                                      diff = sample_diff()),
                                      covariate_forecasts = NULL,
                                      title = ggplot2::waiver()) {
+  if (!requireNamespace("shiny", quietly = TRUE)) {
+    stop(
+      "Package \"shiny\" version (>= 1.8.1) must be installed to use this function.",
+      call. = FALSE
+    )
+  }
+
   ui <- shiny::fluidPage(
     shiny::titlePanel("Widget to play around with forecasting parameters."),
     shiny::sidebarLayout(

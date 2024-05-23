@@ -4,12 +4,12 @@
 \name{hotdeckts-package}
 \alias{hotdeckts}
 \alias{hotdeckts-package}
-\title{hotdeckts: What the Package Does (One Line, Title Case)}
+\title{hotdeckts: Hot-Deck Time Series Forecasting And Imputation}
 \description{
-What the package does (one paragraph).
+Seasonally-local, hot-deck-based simulated sample path forecasting and multiple imputation for daily data with yearly seasonality. The basic idea is to behave similarly to a climatology model (i.e. use the average and spread of historical observations for a particular day of the year as the forecast), but operate on a sliding window.
 }
 \author{
-\strong{Maintainer}: First Last \email{first.last@example.com} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID})
+\strong{Maintainer}: Scott Pease \email{swpease@gmail.com} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID})
 
 }
 \keyword{internal}
